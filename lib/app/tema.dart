@@ -5,11 +5,21 @@ abstract final class Tema {
   /// Çekirdek renk — fidan yeşili.
   static const Color _cekirdekRenk = Color(0xFF2E7D32);
 
-  /// Borç ve negatif değerler için.
-  static const Color borcRengi = Color(0xFFC62828);
+  /// Carinin işletmeye borçlu olduğu (pozitif) bakiye rengi.
+  ///
+  /// Koyu temada koyu kırmızı okunmuyor; iki ton da `ColorScheme` dışında elle
+  /// tutuluyor çünkü borç/alacak ayrımı temaya göre değişmemeli — ekstredeki
+  /// renkle aynı anlamı taşıyor.
+  static Color borcRengi(Brightness parlaklik) =>
+      parlaklik == Brightness.dark
+      ? const Color(0xFFEF9A9A)
+      : const Color(0xFFC62828);
 
-  /// Alacak ve tahsilat için.
-  static const Color alacakRengi = Color(0xFF2E7D32);
+  /// İşletmenin cariye borçlu olduğu (negatif) bakiye rengi.
+  static Color alacakRengi(Brightness parlaklik) =>
+      parlaklik == Brightness.dark
+      ? const Color(0xFFA5D6A7)
+      : const Color(0xFF2E7D32);
 
   static ThemeData acik() => _olustur(Brightness.light);
 

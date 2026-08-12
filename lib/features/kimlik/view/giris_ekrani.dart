@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../app/yollar.dart';
 import '../../../core/dogrulama/form_dogrulama.dart';
 import '../../../core/hata/hatalar.dart';
+import '../../../core/metin/metinler.dart';
 import '../viewmodel/kimlik_viewmodel.dart';
 
 class GirisEkrani extends ConsumerStatefulWidget {
@@ -42,7 +43,7 @@ class _GirisEkraniDurumu extends ConsumerState<GirisEkrani> {
   Future<void> _sifremiUnuttum() async {
     final hata = FormDogrulama.ePosta(_ePostaKontrolcu.text);
     if (hata != null) {
-      _mesajGoster('Şifre sıfırlamak için önce e-posta adresinizi girin.');
+      _mesajGoster(Metinler.sifreOncePosta);
       return;
     }
 
@@ -52,7 +53,7 @@ class _GirisEkraniDurumu extends ConsumerState<GirisEkrani> {
 
     if (!mounted) return;
     if (basarili) {
-      _mesajGoster('Şifre sıfırlama bağlantısı e-postanıza gönderildi.');
+      _mesajGoster(Metinler.sifreBaglantisiGonderildi);
     } else {
       _hatayiGoster();
     }
@@ -61,7 +62,7 @@ class _GirisEkraniDurumu extends ConsumerState<GirisEkrani> {
   void _hatayiGoster() {
     final hata = ref.read(kimlikViewModelSaglayici).error;
     _mesajGoster(
-      hata is UygulamaHatasi ? hata.mesaj : 'Bir hata oluştu.',
+      hata is UygulamaHatasi ? hata.mesaj : Metinler.beklenmeyenHata,
     );
   }
 
@@ -92,14 +93,14 @@ class _GirisEkraniDurumu extends ConsumerState<GirisEkrani> {
                     Icon(Icons.park, size: 64, color: renkSemasi.primary),
                     const SizedBox(height: 12),
                     Text(
-                      'FidanCari',
+                      Metinler.uygulamaAdi,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.headlineMedium
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Cari hesap ve ön muhasebe takibi',
+                      Metinler.uygulamaTanimi,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: renkSemasi.onSurfaceVariant,
@@ -109,7 +110,7 @@ class _GirisEkraniDurumu extends ConsumerState<GirisEkrani> {
                     TextFormField(
                       controller: _ePostaKontrolcu,
                       decoration: const InputDecoration(
-                        labelText: 'E-posta',
+                        labelText: Metinler.ePosta,
                         prefixIcon: Icon(Icons.mail_outline),
                       ),
                       keyboardType: TextInputType.emailAddress,
@@ -122,7 +123,7 @@ class _GirisEkraniDurumu extends ConsumerState<GirisEkrani> {
                     TextFormField(
                       controller: _sifreKontrolcu,
                       decoration: InputDecoration(
-                        labelText: 'Şifre',
+                        labelText: Metinler.sifre,
                         prefixIcon: const Icon(Icons.lock_outline),
                         suffixIcon: IconButton(
                           icon: Icon(
@@ -130,7 +131,9 @@ class _GirisEkraniDurumu extends ConsumerState<GirisEkrani> {
                                 ? Icons.visibility_outlined
                                 : Icons.visibility_off_outlined,
                           ),
-                          tooltip: _sifreGizli ? 'Şifreyi göster' : 'Şifreyi gizle',
+                          tooltip: _sifreGizli
+                              ? Metinler.sifreyiGoster
+                              : Metinler.sifreyiGizle,
                           onPressed: () =>
                               setState(() => _sifreGizli = !_sifreGizli),
                         ),
@@ -147,7 +150,7 @@ class _GirisEkraniDurumu extends ConsumerState<GirisEkrani> {
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: islemSuruyor ? null : _sifremiUnuttum,
-                        child: const Text('Şifremi unuttum'),
+                        child: const Text(Metinler.sifremiUnuttum),
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -158,18 +161,18 @@ class _GirisEkraniDurumu extends ConsumerState<GirisEkrani> {
                               dimension: 22,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Giriş Yap'),
+                          : const Text(Metinler.girisYap),
                     ),
                     const SizedBox(height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text('Hesabınız yok mu?'),
+                        const Text(Metinler.hesabinizYokMu),
                         TextButton(
                           onPressed: islemSuruyor
                               ? null
                               : () => context.push(Yollar.kayit),
-                          child: const Text('Kayıt olun'),
+                          child: const Text(Metinler.kayitOlun),
                         ),
                       ],
                     ),

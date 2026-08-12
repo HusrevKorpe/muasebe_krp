@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/dogrulama/form_dogrulama.dart';
 import '../../../core/hata/hatalar.dart';
+import '../../../core/metin/metinler.dart';
 import '../viewmodel/kimlik_viewmodel.dart';
 
 class KayitEkrani extends ConsumerStatefulWidget {
@@ -43,7 +44,7 @@ class _KayitEkraniDurumu extends ConsumerState<KayitEkrani> {
       ..showSnackBar(
         SnackBar(
           content: Text(
-            hata is UygulamaHatasi ? hata.mesaj : 'Kayıt oluşturulamadı.',
+            hata is UygulamaHatasi ? hata.mesaj : Metinler.beklenmeyenHata,
           ),
         ),
       );
@@ -54,7 +55,7 @@ class _KayitEkraniDurumu extends ConsumerState<KayitEkrani> {
     final islemSuruyor = ref.watch(kimlikViewModelSaglayici).isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Kayıt Ol')),
+      appBar: AppBar(title: const Text(Metinler.kayitOl)),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -68,9 +69,7 @@ class _KayitEkraniDurumu extends ConsumerState<KayitEkrani> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Verileriniz bu hesaba bağlanır. Telefonunuzu '
-                      'değiştirseniz bile aynı e-posta ile giriş yaparak '
-                      'cari kayıtlarınıza ulaşırsınız.',
+                      Metinler.kayitAciklama,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
@@ -79,7 +78,7 @@ class _KayitEkraniDurumu extends ConsumerState<KayitEkrani> {
                     TextFormField(
                       controller: _ePostaKontrolcu,
                       decoration: const InputDecoration(
-                        labelText: 'E-posta',
+                        labelText: Metinler.ePosta,
                         prefixIcon: Icon(Icons.mail_outline),
                       ),
                       keyboardType: TextInputType.emailAddress,
@@ -92,7 +91,7 @@ class _KayitEkraniDurumu extends ConsumerState<KayitEkrani> {
                     TextFormField(
                       controller: _sifreKontrolcu,
                       decoration: InputDecoration(
-                        labelText: 'Şifre',
+                        labelText: Metinler.sifre,
                         helperText:
                             'En az ${FormDogrulama.enAzSifreUzunlugu} karakter',
                         prefixIcon: const Icon(Icons.lock_outline),
@@ -103,7 +102,9 @@ class _KayitEkraniDurumu extends ConsumerState<KayitEkrani> {
                                 : Icons.visibility_off_outlined,
                           ),
                           tooltip:
-                              _sifreGizli ? 'Şifreyi göster' : 'Şifreyi gizle',
+                              _sifreGizli
+                              ? Metinler.sifreyiGoster
+                              : Metinler.sifreyiGizle,
                           onPressed: () =>
                               setState(() => _sifreGizli = !_sifreGizli),
                         ),
@@ -118,7 +119,7 @@ class _KayitEkraniDurumu extends ConsumerState<KayitEkrani> {
                     TextFormField(
                       controller: _sifreTekrarKontrolcu,
                       decoration: const InputDecoration(
-                        labelText: 'Şifre (tekrar)',
+                        labelText: Metinler.sifreTekrari,
                         prefixIcon: Icon(Icons.lock_outline),
                       ),
                       obscureText: _sifreGizli,
@@ -138,7 +139,7 @@ class _KayitEkraniDurumu extends ConsumerState<KayitEkrani> {
                               dimension: 22,
                               child: CircularProgressIndicator(strokeWidth: 2),
                             )
-                          : const Text('Hesap Oluştur'),
+                          : const Text(Metinler.hesapOlustur),
                     ),
                   ],
                 ),

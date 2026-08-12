@@ -25,7 +25,7 @@ Sırayla ilerlenir. Bir faz, kendi dosyasındaki kabul kriterleri sağlanmadan k
 | Faz | Konu | Durum |
 |---|---|---|
 | [0](fazlar/faz-0-iskelet.md) | İskelet: klasör yapısı, tema, Riverpod, Auth, çekirdek yardımcılar | **Sürüyor** |
-| [1](fazlar/faz-1-cari.md) | Cari: işletme profili, liste, arama, detay sayfası | Başlanmadı |
+| [1](fazlar/faz-1-cari.md) | Cari: işletme profili, liste, arama, detay sayfası | **Sürüyor** |
 | [2](fazlar/faz-2-islemler.md) | İşlemler: fatura, tahsilat, kalemler, KDV, yürüyen bakiye | Başlanmadı |
 | [3](fazlar/faz-3-katalog.md) | Fidan katalogu: Tür/Çeşit/Anaç/Yaş/Kök tipi, fiyat listesi | Başlanmadı |
 | [4](fazlar/faz-4-ekstre.md) | PDF ekstre: şablon, tarih aralığı, paylaşma | Başlanmadı |
@@ -41,8 +41,21 @@ flutter test                           # tüm testler geçmeli
 flutter build ios --release            # faz kapanışında başarılı olmalı
 flutter run                            # cihazda çalıştır
 
-firebase emulators:start --only firestore   # repository testleri burada koşar
-firebase deploy --only firestore:rules      # güvenlik kurallarını yayınla
+firebase emulators:start --only firestore,auth   # repository testleri burada koşar
+firebase deploy --only firestore:rules,firestore:indexes   # kural ve index yayını
+
+# Emulator'e bağlı testler (emulator ayakta olmalı, cihaz/simülatör gerekir)
+flutter test integration_test -d <simulator-id>
+
+# Uygulamayı canlı veriye dokunmadan denemek
+flutter run --dart-define=EMULATOR=true
+```
+
+Not: `firebase-tools` Java 21+ istiyor. Sistemde eski bir JDK varsa emulator'ü
+şöyle açın:
+
+```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 21) firebase emulators:start --only firestore,auth
 ```
 
 Not: `pod install` çalıştırmak gerekirse `ios/` dizinine geçilir. CocoaPods spec
@@ -81,3 +94,10 @@ lib/
 - **Bir cari hem müşteri hem tedarikçi olabilir.** Fidancılıkta alım-satım aynı kişiyle yapılır.
 - **Fidan kimliği:** Tür → Çeşit → Anaç (+ Yaş, Kök tipi). Örnek: Elma / Scarlet / M9.
 - **CocoaPods desteği Ekim 2026'da bitiyor** — Faz 5'te SPM'e geçilecek.
+- **Çevrimdışı yazma:** Repository'ler `set`/`update` future'ını **beklemez**.
+  Firestore çevrimdışıyken bu future yalnızca sunucu onayında tamamlanır;
+  beklenirse uçak modunda ekran kilitlenir. Yerel yazma anında görünür, kayıt
+  `hasPendingWrites` ile "Kaydedilmedi" olarak işaretlenir.
+- **Firestore metin araması öntakıyla sınırlı.** `aramaAnahtari` alanı adın
+  normalize hâlini tutar; "koyuncu" yazarak "Ahmet Koyuncu" bulunamaz. Cari
+  sayısı birkaç bini geçerse ayrı arama çözümü gerekir.

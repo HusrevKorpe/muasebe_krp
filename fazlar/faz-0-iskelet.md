@@ -94,8 +94,9 @@ kullanıcı yalnızca kendi `uid`'si altındaki belgelere erişebilir.
 - [x] `firestore.indexes.json` oluşturuldu (boş başlıyor)
 - [x] `firebase.json`'a firestore ve emulator yapılandırması eklendi
 - [ ] **Firebase Console'da Email/Password sağlayıcısını etkinleştir** (manuel adım)
-- [ ] Güvenlik kurallarını yayınla: `firebase deploy --only firestore:rules`
-- [ ] Emulator'de güvenlik kuralı testi (başka uid'nin verisi okunamamalı)
+- [ ] Güvenlik kurallarını ve index'leri yayınla:
+      `firebase deploy --only firestore:rules,firestore:indexes`
+- [x] Emulator'de güvenlik kuralı testi — `integration_test/guvenlik_kurallari_test.dart`
 
 ---
 
