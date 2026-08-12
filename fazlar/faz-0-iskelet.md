@@ -22,23 +22,21 @@ bir özellik yok, ama tüm kuralları zorlayan altyapı hazır.
 
 ---
 
-## Karar bekleyen konu: Auth
+## Karar: Auth — **e-posta + şifre** ✅
 
-Firestore'da her kurulumun kendi verisini görmesi gerekiyor. İki seçenek:
+Firestore'da her kurulumun kendi verisini görmesi gerekiyor. Karar verildi:
+**e-posta + şifre** ile giriş.
 
-| Seçenek | Artı | Eksi |
-|---|---|---|
-| **E-posta + şifre** (öneri) | Telefon kaybolursa veri kurtarılır, yeni cihazdan girilir | Bir giriş ekranı gerekir |
-| Anonim giriş | Giriş ekranı yok, açınca kullanılır | **Telefon kaybolursa 4 yıllık cari geçmişi gider** |
+Gerekçe: Bu bir muhasebe uygulaması, veri kaybı kabul edilemez. Anonim girişte
+kullanıcı kimliği cihaza bağlıdır — telefon kaybolursa yılların cari geçmişi
+kurtarılamaz. E-posta + şifre ile kullanıcı yeni cihazdan girip verisine ulaşır.
 
-**Öneri: e-posta + şifre.** Bu bir muhasebe uygulaması; veri kaybı kabul edilemez.
-Anonim girişte kullanıcı kimliği cihaza bağlıdır ve kurtarılamaz.
-
-> Apple notu: Google/Facebook gibi üçüncü taraf girişi eklersek App Store
+> Apple notu: Google/Facebook gibi üçüncü taraf girişi eklenirse App Store
 > "Sign in with Apple" seçeneğini de zorunlu tutar. Sadece e-posta + şifre
-> kullanırsak bu zorunluluk doğmaz.
+> kullandığımız için bu zorunluluk doğmuyor.
 
-Karar verilmeden §Görevler'deki Auth maddeleri başlatılmaz.
+**Manuel adım:** Firebase Console → Authentication → Sign-in method →
+Email/Password sağlayıcısı etkinleştirilmeli. Bu CLI ile yapılamıyor.
 
 ---
 
@@ -61,33 +59,43 @@ kullanıcı yalnızca kendi `uid`'si altındaki belgelere erişebilir.
 - [x] İlk commit ve push
 
 ### Klasör yapısı
-- [ ] `lib/app`, `lib/core`, `lib/domain`, `lib/data`, `lib/features` oluştur
-- [ ] `lib/main.dart` içindeki geçici Firebase doğrulama ekranını kaldır
+- [x] `lib/app`, `lib/core`, `lib/data`, `lib/features` oluşturuldu
+      (`lib/domain` Faz 1'de model gelince açılacak)
+- [x] `lib/main.dart` içindeki geçici Firebase doğrulama ekranı kaldırıldı
+- [x] Dart paket adı `muasebe` → `fidancari`, görünen ad `FidanCari`
 
 ### Paketler
-- [ ] `flutter_riverpod`
-- [ ] `cloud_firestore`
-- [ ] `firebase_auth`
-- [ ] `intl` (TR para/tarih biçimi)
-- [ ] `go_router` (yönlendirme)
+- [x] `flutter_riverpod` 3.3.2
+- [x] `cloud_firestore` 6.8.0
+- [x] `firebase_auth` 6.5.7
+- [x] `intl` 0.20.2 — `flutter_localizations` bu sürümü sabitliyor, yükseltilemez
+- [x] `go_router` 17.5.0
+- [x] `flutter_localizations` (TR yerelleştirme)
 
 ### Çekirdek yardımcılar (`lib/core/`) — **hepsinin unit testi zorunlu**
-- [ ] `Kurus` değer tipi: `int` sarmalayıcı, toplama/çıkarma, `1.234,56 ₺` biçimleme
-- [ ] Yuvarlama: en yakın kuruşa yuvarlama, birim fiyat geri hesabı
-- [ ] Türkçe arama normalizasyonu (`I/ı/İ/i` sorunu) — ekranlarda `toLowerCase()` yasak
-- [ ] Tarih biçimleme: `17 Eylül 2021` ve `17.09.2021`
-- [ ] Logger (`print` yerine)
+- [x] `Kurus` değer tipi: `int` sarmalayıcı, aritmetik işleçler, karşılaştırma
+- [x] `kurusBicimle`: `9400000` → `94.000,00 ₺`
+- [x] Yuvarlama: `bolVeYuvarla`, `yuzdesi` (KDV), `birimFiyatHesapla` (geri hesap)
+- [x] Türkçe metin: `turkceKucuk`, `turkceBuyuk`, `aramaAnahtari`, `turkceKarsilastir`
+- [x] Tarih biçimleme: `17 Eylül 2021`, `17.09.2021`, ekstre başlık/alt bilgisi
+- [x] `Log` (`print` yerine), sürüm derlemesinde yalnızca hata geçer
+- [x] `UygulamaHatasi` hiyerarşisi — Firebase hata kodları Türkçe mesaja çevriliyor
+- [x] `FormDogrulama` — e-posta, şifre, zorunlu alan
 
 ### Uygulama katmanı
-- [ ] Material 3 tema, yeşil tonlu palet, TR yerelleştirme (`Locale('tr','TR')`)
-- [ ] `go_router` iskeleti: giriş → ana ekran
-- [ ] Riverpod `ProviderScope` kurulumu
+- [x] Material 3 tema, yeşil palet, açık/koyu, TR yerelleştirme
+- [x] `go_router`: açılış → giriş/kayıt → ana ekran, oturuma göre yönlendirme
+- [x] Riverpod `ProviderScope` kurulumu
+- [x] Giriş, kayıt ve şifre sıfırlama ekranları
 
 ### Firebase
-- [ ] Firestore offline persistence açık
-- [ ] `firestore.rules`: kullanıcı yalnızca `isletmeler/{uid}` altına erişir
-- [ ] `firestore.indexes.json` dosyasını oluştur (boş başlar)
-- [ ] Firestore emulator kurulumu, testlerin emulator'e bağlanması
+- [x] Firestore offline persistence açık (`main.dart`)
+- [x] `firestore.rules`: kullanıcı yalnızca `isletmeler/{uid}` altına erişir
+- [x] `firestore.indexes.json` oluşturuldu (boş başlıyor)
+- [x] `firebase.json`'a firestore ve emulator yapılandırması eklendi
+- [ ] **Firebase Console'da Email/Password sağlayıcısını etkinleştir** (manuel adım)
+- [ ] Güvenlik kurallarını yayınla: `firebase deploy --only firestore:rules`
+- [ ] Emulator'de güvenlik kuralı testi (başka uid'nin verisi okunamamalı)
 
 ---
 

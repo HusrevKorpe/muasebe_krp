@@ -24,7 +24,7 @@ Sırayla ilerlenir. Bir faz, kendi dosyasındaki kabul kriterleri sağlanmadan k
 
 | Faz | Konu | Durum |
 |---|---|---|
-| [0](fazlar/faz-0-iskelet.md) | İskelet: klasör yapısı, tema, Riverpod, Auth, çekirdek yardımcılar | Başlanmadı |
+| [0](fazlar/faz-0-iskelet.md) | İskelet: klasör yapısı, tema, Riverpod, Auth, çekirdek yardımcılar | **Sürüyor** |
 | [1](fazlar/faz-1-cari.md) | Cari: işletme profili, liste, arama, detay sayfası | Başlanmadı |
 | [2](fazlar/faz-2-islemler.md) | İşlemler: fatura, tahsilat, kalemler, KDV, yürüyen bakiye | Başlanmadı |
 | [3](fazlar/faz-3-katalog.md) | Fidan katalogu: Tür/Çeşit/Anaç/Yaş/Kök tipi, fiyat listesi | Başlanmadı |

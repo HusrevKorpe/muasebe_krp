@@ -1,0 +1,34 @@
+rules_version = '2';
+
+// FidanCari erişim kuralları.
+//
+// Tek kullanıcılı model: her kurulum yalnızca kendi verisini görür.
+// Tüm veri `isletmeler/{isletmeId}` altında yaşar ve `isletmeId`, kullanıcının
+// Firebase Auth `uid` değeridir. Kullanıcı başka bir isletmeId altına
+// hiçbir koşulda erişemez.
+//
+// Bkz. KURALLAR.md §4.1
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Kullanıcının kendi işletme belgesi ve altındaki her şey.
+    match /isletmeler/{isletmeId} {
+      allow read, write: if sahibiMi(isletmeId);
+
+      // cariler, cariler/*/islemler, fidanlar — hepsi aynı sahiplik kuralına tabi.
+      match /{belgeYolu=**} {
+        allow read, write: if sahibiMi(isletmeId);
+      }
+    }
+
+    // Yukarıda eşleşmeyen her yol reddedilir.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+function sahibiMi(isletmeId) {
+  return request.auth != null && request.auth.uid == isletmeId;
+}

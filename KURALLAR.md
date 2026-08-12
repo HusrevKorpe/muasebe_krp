@@ -206,7 +206,11 @@ Saf görsel widget'lar için test zorlanmaz. Test yazmak uğruna anlamsız test 
 
 ### 6.1 Türkçe arama tuzağı
 
-`"İstanbul".toLowerCase()` Dart'ta beklenen sonucu vermez; `I/ı/İ/i` dönüşümü bozuktur.
+Dart'ın büyük/küçük harf dönüşümü Türkçe'de `ı` ve `i` harflerini ayırmaz:
+
+- `"ISPARTA".toLowerCase()` → `"isparta"`, oysa doğrusu `"ısparta"` — **arama tutmaz**
+- `"izmir".toUpperCase()` → `"IZMIR"`, oysa doğrusu `"İZMİR"` — **başlık yanlış görünür**
+
 Cari isminde arama yapacağımız için bu kesinlikle karşımıza çıkar.
 
 **Kural:** Arama ve sıralama normalizasyonu `core/` altındaki tek bir yardımcı
