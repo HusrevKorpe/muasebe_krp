@@ -27,7 +27,7 @@ Sırayla ilerlenir. Bir faz, kendi dosyasındaki kabul kriterleri sağlanmadan k
 | [0](fazlar/faz-0-iskelet.md) | İskelet: klasör yapısı, tema, Riverpod, Auth, çekirdek yardımcılar | **Sürüyor** |
 | [1](fazlar/faz-1-cari.md) | Cari: işletme profili, liste, arama, detay sayfası | **Sürüyor** |
 | [2](fazlar/faz-2-islemler.md) | İşlemler: fatura, tahsilat, kalemler, KDV, yürüyen bakiye | Başlanmadı |
-| [3](fazlar/faz-3-katalog.md) | Fidan katalogu: Tür/Çeşit/Anaç/Yaş/Kök tipi, fiyat listesi | Başlanmadı |
+| [3](fazlar/faz-3-katalog.md) | Fidan katalogu: Tür/Çeşit/Anaç/Yaş/Kök tipi, fiyat listesi | **Sürüyor** |
 | [4](fazlar/faz-4-ekstre.md) | PDF ekstre: şablon, tarih aralığı, paylaşma | Başlanmadı |
 | [5](fazlar/faz-5-magaza.md) | Mağaza: ikon, gizlilik, SPM geçişi, TestFlight, App Store | Başlanmadı |
 
@@ -51,11 +51,14 @@ flutter test integration_test -d <simulator-id>
 flutter run --dart-define=EMULATOR=true
 ```
 
-Not: `firebase-tools` Java 21+ istiyor. Sistemde eski bir JDK varsa emulator'ü
-şöyle açın:
+Not: `firebase-tools` Java 21+ istiyor. Homebrew'un kurduğu JDK 21
+`/usr/libexec/java_home` listesine girmez (keg-only) ve `JAVA_HOME` vermek de
+yetmez — `firebase` komutu `java`'yı `PATH`'ten bulur. Emulator'ü şöyle açın:
 
 ```bash
-JAVA_HOME=$(/usr/libexec/java_home -v 21) firebase emulators:start --only firestore,auth
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+export PATH="$JAVA_HOME/bin:$PATH"
+firebase emulators:start --only firestore,auth
 ```
 
 Not: `pod install` çalıştırmak gerekirse `ios/` dizinine geçilir. CocoaPods spec
@@ -93,6 +96,10 @@ lib/
   birinde uygulanmış.
 - **Bir cari hem müşteri hem tedarikçi olabilir.** Fidancılıkta alım-satım aynı kişiyle yapılır.
 - **Fidan kimliği:** Tür → Çeşit → Anaç (+ Yaş, Kök tipi). Örnek: Elma / Scarlet / M9.
+  Görünen ad bu alanlardan üretilir (`Fidan.goruntuAdi`) ve faturaya o metin yazılır.
+- **Katalog zorunlu değil.** Fatura kalemi katalogdan seçilebilir, ama serbest
+  metin girişi kaldırılmaz — "nakliye" gibi kalemler katalogda yer almaz.
+  Katalogdan seçilen kalem `fidanId` taşır; serbest metin kalemde bu alan boştur.
 - **CocoaPods desteği Ekim 2026'da bitiyor** — Faz 5'te SPM'e geçilecek.
 - **Çevrimdışı yazma:** Repository'ler `set`/`update` future'ını **beklemez**.
   Firestore çevrimdışıyken bu future yalnızca sunucu onayında tamamlanır;

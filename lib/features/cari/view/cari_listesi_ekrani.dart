@@ -239,6 +239,14 @@ class _GenelMenu extends StatelessWidget {
       onSelected: (eylem) => eylem(),
       itemBuilder: (context) => [
         PopupMenuItem<VoidCallback>(
+          value: () => context.push(Yollar.fidanlar),
+          child: const ListTile(
+            leading: Icon(Icons.park_outlined),
+            title: Text(Metinler.fidanKatalogMenu),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ),
+        PopupMenuItem<VoidCallback>(
           value: () => context.push(Yollar.isletme),
           child: const ListTile(
             leading: Icon(Icons.storefront_outlined),

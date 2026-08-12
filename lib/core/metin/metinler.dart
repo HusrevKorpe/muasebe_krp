@@ -127,4 +127,52 @@ abstract final class Metinler {
   static const String islemYokAciklama =
       'Fatura ve tahsilat girişi bir sonraki sürümde açılacak.';
   static const String sonIslem = 'Son işlem';
+
+  // ─── Fidan katalogu ──────────────────────────────────────────────────────
+  static const String fidanKatalogu = 'Fidan Katalogu';
+  static const String fidanKatalogMenu = 'Fidan katalogu';
+  static const String fidanAra = 'Fidan ara';
+  static const String fidanEkle = 'Fidan Ekle';
+  static const String fidanDuzenle = 'Fidanı Düzenle';
+  static const String fidanSec = 'Fidan Seç';
+  static const String fidanBulunamadi = 'Fidan bulunamadı.';
+  static const String fidanYokBaslik = 'Katalog boş';
+  static const String fidanYokAciklama =
+      'Sattığınız fidanları ekleyin; fatura keserken listeden seçersiniz.';
+  static const String fidanPasifeAl = 'Katalogdan kaldır';
+  static const String fidanPasifeAlOnay =
+      'Fidan katalogdan kaldırılsın mı? Kayıt silinmez, geçmiş faturalar '
+      'olduğu gibi kalır.';
+  static const String fidanPasifeAlindi = 'Fidan katalogdan kaldırıldı.';
+
+  // ─── Fidan alanları ──────────────────────────────────────────────────────
+  static const String tur = 'Tür';
+  static const String turIpucu = 'Elma';
+  static const String cesit = 'Çeşit';
+  static const String cesitIpucu = 'Scarlet';
+  static const String anac = 'Anaç';
+  static const String anacIpucu = 'M9';
+  static const String yas = 'Yaş';
+  static const String yasIpucu = '2';
+
+  /// Görünen adın sonundaki yaş eki: `… · 2 Yaş`
+  static const String yasSoneki = 'Yaş';
+
+  static const String kokTipi = 'Kök tipi';
+  static const String kokTipiTuplu = 'Tüplü';
+  static const String kokTipiCiplakKok = 'Çıplak Kök';
+  static const String kokTipiYok = 'Belirtilmedi';
+  static const String fidanOnizlemeBaslik = 'Faturada görünecek ad';
+  static const String fidanOnizlemeBos =
+      'Tür ve çeşit yazınca burada görünür.';
+  static const String varsayilanFiyat = 'Varsayılan fiyat';
+  static const String varsayilanFiyatAciklama =
+      'Faturada ön dolgu olarak gelir; orada değiştirebilirsiniz.';
+  static const String fiyatYok = 'Fiyat girilmedi';
+  static const String oneriler = 'Öneriler';
+
+  /// Mükerrer kayıt uyarısı — aynı tür/çeşit/anaç/yaş/kök tipi.
+  static const String fidanMukerrer =
+      'Bu fidan katalogda zaten kayıtlı. Aynı kaydı ikinci kez eklemek yerine '
+      'mevcut kaydı düzenleyin.';
 }

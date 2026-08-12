@@ -41,6 +41,18 @@ int haritaTamSayi(
   return varsayilan;
 }
 
+/// İsteğe bağlı tam sayı alanı. Alan yoksa ya da sayı değilse `null` döner.
+///
+/// Fidanın yaşı gibi "girilmemiş olabilir" alanlar için: sıfır ile boş
+/// birbirinden ayrılmalı, `0` yaş bilgisi ile yaşın hiç girilmemesi aynı şey
+/// değil.
+int? haritaTamSayiOpsiyonel(Map<String, Object?> veri, String alan) {
+  final deger = veri[alan];
+  if (deger is int) return deger;
+  if (deger is double) return deger.round();
+  return null;
+}
+
 bool haritaMantiksal(
   Map<String, Object?> veri,
   String alan, {

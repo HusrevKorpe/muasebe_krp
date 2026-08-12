@@ -10,6 +10,9 @@ import '../features/cari/view/cari_detay_ekrani.dart';
 import '../features/cari/view/cari_duzenle_ekrani.dart';
 import '../features/cari/view/cari_form_ekrani.dart';
 import '../features/cari/view/cari_listesi_ekrani.dart';
+import '../features/fidan/view/fidan_duzenle_ekrani.dart';
+import '../features/fidan/view/fidan_form_ekrani.dart';
+import '../features/fidan/view/fidan_listesi_ekrani.dart';
 import '../features/isletme/view/isletme_ekrani.dart';
 import '../features/kimlik/view/giris_ekrani.dart';
 import '../features/kimlik/view/kayit_ekrani.dart';
@@ -125,6 +128,22 @@ final yonlendiriciSaglayici = Provider<GoRouter>((ref) {
         path: Yollar.cariDetay,
         builder: (context, durum) => CariDetayEkrani(
           cariId: durum.pathParameters[Yollar.cariIdParametresi]!,
+        ),
+      ),
+      GoRoute(
+        path: Yollar.fidanlar,
+        builder: (context, durum) => const FidanListesiEkrani(),
+      ),
+      // `/fidanlar/yeni`, `/fidanlar/:fidanId` kalıbından **önce** tanımlanmalı;
+      // aksi hâlde "yeni" bir fidan kimliği sanılır.
+      GoRoute(
+        path: Yollar.fidanYeni,
+        builder: (context, durum) => const FidanFormEkrani(),
+      ),
+      GoRoute(
+        path: Yollar.fidanDuzenle,
+        builder: (context, durum) => FidanDuzenleEkrani(
+          fidanId: durum.pathParameters[Yollar.fidanIdParametresi]!,
         ),
       ),
     ],

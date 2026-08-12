@@ -26,6 +26,33 @@
         { "fieldPath": "sonIslemTarihi", "order": "DESCENDING" },
         { "fieldPath": "__name__", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "fidanlar",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "aktif", "order": "ASCENDING" },
+        { "fieldPath": "aramaAnahtari", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "fidanlar",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "aktif", "order": "ASCENDING" },
+        { "fieldPath": "turAnahtari", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "fidanlar",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "aktif", "order": "ASCENDING" },
+        { "fieldPath": "anacAnahtari", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
