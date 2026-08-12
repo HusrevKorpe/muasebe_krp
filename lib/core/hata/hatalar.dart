@@ -32,6 +32,11 @@ class KimlikHatasi extends UygulamaHatasi {
           'İnternet bağlantısı yok. Bağlantınızı kontrol edin.',
         'operation-not-allowed' =>
           'E-posta ile giriş bu projede etkin değil.',
+        // Hesap silme gibi hassas işlemlerde Firebase yakın zamanda giriş
+        // yapılmasını ister. Kullanıcı şifresini yanlış girmiş olabileceği için
+        // mesaj tekrar denemeye yönlendirir.
+        'requires-recent-login' =>
+          'Güvenlik için şifrenizi tekrar girmeniz gerekiyor.',
         _ => 'Giriş yapılamadı. Lütfen tekrar deneyin.',
       });
 }
@@ -43,6 +48,12 @@ class VeriHatasi extends UygulamaHatasi {
   const VeriHatasi.yazilamadi() : super('Kayıt yapılamadı. Tekrar deneyin.');
 
   const VeriHatasi.okunamadi() : super('Veriler yüklenemedi. Tekrar deneyin.');
+
+  /// Hesap silme sırasında verinin bir kısmı silinememişse. Auth kullanıcısı
+  /// bu durumda **silinmez**; kullanıcı tekrar deneyebilsin diye oturum kalır.
+  const VeriHatasi.silinemedi()
+      : super('Verileriniz silinemedi. Bağlantınızı kontrol edip tekrar '
+            'deneyin.');
 
   const VeriHatasi.yetkisiz()
       : super('Bu veriye erişim yetkiniz yok.');

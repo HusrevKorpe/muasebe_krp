@@ -26,3 +26,11 @@ final oturumDurumuSaglayici = StreamProvider<User?>((ref) {
 final isletmeKimligiSaglayici = Provider<String?>((ref) {
   return ref.watch(oturumDurumuSaglayici).value?.uid;
 });
+
+/// Giriş yapmış kullanıcının e-posta adresi.
+///
+/// Ekranın `User` tipini tanıması gerekmesin diye ayrı sağlayıcı: hesap ekranı
+/// yalnızca gösterilecek metni ister.
+final kullaniciEPostasiSaglayici = Provider<String?>((ref) {
+  return ref.watch(oturumDurumuSaglayici).value?.email;
+});

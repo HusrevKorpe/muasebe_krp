@@ -20,6 +20,7 @@ hem alım hem satım yapıldığı için bir cari aynı anda müşteri ve tedari
 - **Fidan katalogu** — Tür/Çeşit/Anaç/Yaş/Kök tipi ve fiyat listesi
 - **PDF ekstre** — tarih aralığına göre işlem dökümü, banka bilgileri ve toplamlarla
 - **Çevrimdışı çalışma** — internet olmadan veri girilir, bağlantı gelince eşitlenir
+- **Hesap silme** — uygulama içinden hesap ve tüm veri kalıcı olarak silinir
 
 ## Teknik
 
@@ -38,6 +39,10 @@ flutter pub get
 cd ios && pod install && cd ..
 flutter run
 ```
+
+Firebase bağımlılıkları Swift Package Manager üzerinden çözülür; Xcode paketleri
+ilk derlemede kendisi indirir. `pod install` hâlâ gerekli çünkü `printing`
+eklentisi yalnızca CocoaPods yayınlıyor.
 
 Firebase yapılandırması repoda mevcuttur (`lib/firebase_options.dart`,
 `ios/Runner/GoogleService-Info.plist`). Bunlar istemci anahtarıdır; erişim güvenliği

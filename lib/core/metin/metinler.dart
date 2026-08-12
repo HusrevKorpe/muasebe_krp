@@ -45,6 +45,25 @@ abstract final class Metinler {
   static const String sifreBaglantisiGonderildi =
       'Şifre sıfırlama bağlantısı e-postanıza gönderildi.';
 
+  // ─── Hesap ───────────────────────────────────────────────────────────────
+  static const String hesapBaslik = 'Hesap';
+  static const String hesapMenu = 'Hesap';
+  static const String hesapGirisYapan = 'Giriş yapan';
+  static const String hesapSil = 'Hesabı sil';
+  static const String hesapSilBaslik = 'Hesabı sil';
+  static const String hesapSilAciklama =
+      'Hesabınız ve bu hesaba bağlı tüm veriler kalıcı olarak silinir: '
+      'cariler, faturalar, tahsilatlar ve fidan katalogu. Bu işlem geri '
+      'alınamaz.';
+  static const String hesapSilOnayIpucu =
+      'Devam etmek için şifrenizi girin.';
+  static const String hesapSilOnayla = 'Hesabımı kalıcı olarak sil';
+  static const String hesapSilindi = 'Hesabınız ve tüm verileriniz silindi.';
+  static const String hesapSilmeSuruyor =
+      'Veriler siliniyor. Uygulamayı kapatmayın.';
+  static const String hesapSilInternet =
+      'Hesap silme işlemi internet bağlantısı gerektirir.';
+
   // ─── Kurulum ─────────────────────────────────────────────────────────────
   static const String kurulumBaslik = 'İşletme Bilgileri';
   static const String kurulumHosGeldiniz = 'Hoş geldiniz';

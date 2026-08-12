@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FidanCari — Gizlilik Politikası</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --zemin: #ffffff;
+    --metin: #1b1c1a;
+    --soluk: #5c625a;
+    --yesil: #2e7d32;
+    --cizgi: #dce3da;
+    --kutu: #f4f7f3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --zemin: #14170f;
+      --metin: #e6e9e1;
+      --soluk: #a7ad9f;
+      --yesil: #9cd49f;
+      --cizgi: #333a30;
+      --kutu: #1c2118;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 40px 20px 80px;
+    background: var(--zemin);
+    color: var(--metin);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 4px; }
+  h2 { font-size: 1.2rem; margin: 40px 0 10px; padding-top: 16px; border-top: 1px solid var(--cizgi); }
+  h3 { font-size: 1rem; margin: 24px 0 8px; color: var(--soluk); }
+  .tarih { color: var(--soluk); font-size: .9rem; margin: 0 0 28px; }
+  ul { padding-left: 20px; }
+  li { margin: 6px 0; }
+  a { color: var(--yesil); }
+  .kutu {
+    background: var(--kutu);
+    border: 1px solid var(--cizgi);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 18px 0;
+  }
+  .tablo-sarma { overflow-x: auto; margin: 16px 0; }
+  table { border-collapse: collapse; width: 100%; min-width: 460px; font-size: .95rem; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--cizgi); vertical-align: top; }
+  th { color: var(--soluk); font-weight: 600; }
+  footer { margin-top: 56px; color: var(--soluk); font-size: .9rem; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>FidanCari — Gizlilik Politikası</h1>
+<p class="tarih">Son güncelleme: 12 Ağustos 2026</p>
+
+<p>Bu politika, <strong>FidanCari</strong> iOS uygulamasının hangi verileri
+işlediğini açıklar.</p>
+
+<h2>1. Veri sorumlusu</h2>
+<p>FidanCari, Hüsrev Körpe tarafından geliştirilen bağımsız bir uygulamadır.
+Sorularınız için: <a href="mailto:ILETISIM@ORNEK.COM">ILETISIM@ORNEK.COM</a></p>
+
+<h2>2. Toplanan veriler</h2>
+<p>Uygulama yalnızca çalışması için gereken veriyi işler. Reklam ağı, analiz
+aracı ve üçüncü taraf izleyici <strong>kullanılmaz</strong>.</p>
+
+<h3>2.1 Hesap bilgisi</h3>
+<div class="tablo-sarma">
+<table>
+  <tr><th>Veri</th><th>Neden</th><th>Nerede saklanır</th></tr>
+  <tr><td>E-posta adresi</td><td>Giriş ve şifre sıfırlama</td><td>Firebase Authentication</td></tr>
+  <tr><td>Şifre</td><td>Girişin doğrulanması</td><td>Firebase Authentication (karma olarak; geliştirici göremez)</td></tr>
+</table>
+</div>
+
+<h3>2.2 Kullanıcı içeriği</h3>
+<p>Uygulamaya <strong>kendi girdiğiniz</strong> ön muhasebe kayıtları:</p>
+<ul>
+  <li>İşletme bilgileriniz: ad, adres, telefon, vergi dairesi ve numarası, banka hesap bilgileri (IBAN)</li>
+  <li>Cari (müşteri/tedarikçi) kayıtları: ad, telefon, adres, vergi bilgileri, not</li>
+  <li>İşlemler: satış/alış faturaları, tahsilat ve ödemeler, fatura kalemleri</li>
+  <li>Fidan katalogu: tür, çeşit, anaç, yaş, kök tipi, fiyat</li>
+</ul>
+<p>Bu kayıtlar <strong>yalnızca sizin hesabınıza bağlıdır</strong>. Uygulama,
+verinizi başka kullanıcılara göstermez; geliştirici de bu veriyi görüntülemez.</p>
+
+<h3>2.3 Toplanmayan veriler</h3>
+<ul>
+  <li>Konum</li>
+  <li>Kişi rehberi, fotoğraflar, takvim</li>
+  <li>Reklam kimliği (IDFA) — uygulamada reklam yoktur</li>
+  <li>Kullanım analitiği, çökme takibi veya davranış izleme</li>
+</ul>
+<div class="kutu">
+Uygulama Apple'ın tanımladığı anlamda <strong>“tracking” (izleme) yapmaz</strong>;
+bu yüzden App Tracking Transparency izni de istemez.
+</div>
+
+<h2>3. Verinin saklandığı yer</h2>
+<p>Veriler Google Firebase (Firebase Authentication ve Cloud Firestore) üzerinde
+saklanır. Firebase, Google Ireland Limited / Google LLC tarafından işletilir ve
+veri Google'ın sunucularında barındırılır. Google bu hizmette “veri işleyen”
+sıfatıyla hareket eder.</p>
+<p>Firebase güvenlik kuralları, her kullanıcının <strong>yalnızca kendi
+verisine</strong> erişmesine izin verecek şekilde yapılandırılmıştır.</p>
+<p>Uygulama çevrimdışı çalışabilmek için verinin bir kopyasını cihazınızda tutar.
+Uygulamayı sildiğinizde bu yerel kopya da silinir.</p>
+
+<h2>4. Verinin paylaşılması</h2>
+<p>Veriniz satılmaz, kiralanmaz, pazarlama amacıyla paylaşılmaz.</p>
+<p>Tek paylaşım yolu <strong>sizin başlattığınız</strong> paylaşımdır: bir cari
+için PDF ekstre ürettiğinizde, bu dosyayı iOS paylaşım penceresi üzerinden
+seçtiğiniz kişiye ya da uygulamaya siz gönderirsiniz. Bu dosya bizim
+sunucularımıza yüklenmez.</p>
+<p>Yasal zorunluluk hâlinde (mahkeme kararı vb.) veri, yalnızca yasanın
+gerektirdiği ölçüde yetkili makamlarla paylaşılabilir.</p>
+
+<h2>5. Saklama süresi ve hesap silme</h2>
+<p>Verileriniz, siz silene kadar saklanır.</p>
+<div class="kutu">
+Uygulama içinden <strong>Menü → Hesap → Hesabı sil</strong> yolunu izleyerek
+hesabınızı ve ona bağlı tüm verileri kalıcı olarak silebilirsiniz.
+</div>
+<p>Silme işlemi şunları kapsar:</p>
+<ul>
+  <li>Tüm cari kayıtları ve bunlara bağlı işlemler</li>
+  <li>Fidan katalogu</li>
+  <li>İşletme profili</li>
+  <li>Firebase Authentication hesabınız</li>
+</ul>
+<p>Bu işlem <strong>geri alınamaz</strong> ve yedeği tutulmaz.</p>
+
+<h2>6. Haklarınız</h2>
+<p>KVKK ve GDPR kapsamında; verilerinize erişme, düzeltme, silme ve taşıma
+haklarınız vardır. Veriye erişim ve düzeltme uygulama içinden doğrudan
+yapılabilir; silme için yukarıdaki hesap silme yolu kullanılır. Diğer
+talepleriniz için
+<a href="mailto:ILETISIM@ORNEK.COM">ILETISIM@ORNEK.COM</a> adresine
+yazabilirsiniz.</p>
+
+<h2>7. Çocukların gizliliği</h2>
+<p>FidanCari bir işletme uygulamasıdır ve 13 yaş altındaki çocuklara yönelik
+değildir. Bilerek çocuklardan veri toplanmaz.</p>
+
+<h2>8. Değişiklikler</h2>
+<p>Bu politika değişirse, yeni sürüm bu adreste yayımlanır ve yukarıdaki
+“Son güncelleme” tarihi güncellenir.</p>
+
+<footer>
+  <p><a href="./">← FidanCari</a></p>
+</footer>
+
+</main>
+</body>
+</html>

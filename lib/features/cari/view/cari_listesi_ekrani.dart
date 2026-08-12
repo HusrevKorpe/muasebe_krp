@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import '../../../app/yollar.dart';
 import '../../../core/metin/metinler.dart';
 import '../../../domain/cari/cari_siralamasi.dart';
-import '../../kimlik/viewmodel/kimlik_viewmodel.dart';
 import '../../ortak/view/bos_durum.dart';
 import '../../ortak/view/hata_durumu.dart';
 import '../viewmodel/cari_listesi_durumu.dart';
@@ -69,7 +68,7 @@ class _CariListesiEkraniDurumu extends ConsumerState<CariListesiEkrani> {
                 .read(cariListesiViewModelSaglayici.notifier)
                 .siralamayiDegistir(siralama),
           ),
-          _GenelMenu(onCikis: _cikisYap),
+          const _GenelMenu(),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(64),
@@ -162,9 +161,6 @@ class _CariListesiEkraniDurumu extends ConsumerState<CariListesiEkrani> {
 
   Future<void> _yenile() =>
       ref.read(cariListesiViewModelSaglayici.notifier).yenile();
-
-  Future<void> _cikisYap() =>
-      ref.read(kimlikViewModelSaglayici.notifier).cikisYap();
 }
 
 class _AramaAlani extends StatelessWidget {
@@ -229,9 +225,7 @@ class _SiralamaMenusu extends StatelessWidget {
 }
 
 class _GenelMenu extends StatelessWidget {
-  const _GenelMenu({required this.onCikis});
-
-  final VoidCallback onCikis;
+  const _GenelMenu();
 
   @override
   Widget build(BuildContext context) {
@@ -254,11 +248,13 @@ class _GenelMenu extends StatelessWidget {
             contentPadding: EdgeInsets.zero,
           ),
         ),
+        // Çıkış ve hesap silme birlikte hesap ekranında duruyor: Apple, hesap
+        // silmenin uygulama içinden bulunabilir olmasını şart koşuyor.
         PopupMenuItem<VoidCallback>(
-          value: onCikis,
+          value: () => context.push(Yollar.hesap),
           child: const ListTile(
-            leading: Icon(Icons.logout),
-            title: Text(Metinler.cikisYap),
+            leading: Icon(Icons.account_circle_outlined),
+            title: Text(Metinler.hesapMenu),
             contentPadding: EdgeInsets.zero,
           ),
         ),

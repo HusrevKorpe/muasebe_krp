@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Muasebe</string>
+	<string>FidanCari</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -18,6 +18,11 @@
 	<string>FidanCari</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
+	<!-- Uygulama yalnızca HTTPS/TLS kullanıyor; ihracat kısıtına giren özel
+	     şifreleme yok. Bu anahtar olmadan her yüklemede App Store Connect
+	     ihracat uygunluğu sorusunu tekrar sorar. -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>

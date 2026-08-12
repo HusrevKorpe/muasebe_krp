@@ -54,6 +54,46 @@ class KimlikRepository {
   }
 
   Future<void> cikisYap() => _kimlik.signOut();
+
+  /// Kullanıcıyı şifresiyle yeniden doğrular.
+  ///
+  /// Firebase, hesap silme gibi hassas işlemlerde yakın zamanda giriş yapılmış
+  /// olmasını şart koşar; aksi hâlde `requires-recent-login` döner. Bu çağrı
+  /// sunucuya gider, yani çevrimdışıyken ağ hatasıyla düşer — hesap silme
+  /// akışının bağlantı kontrolü de böylece burada yapılmış olur.
+  Future<void> yenidenDogrula(String sifre) async {
+    final kullanici = _kimlik.currentUser;
+    final ePosta = kullanici?.email;
+    if (kullanici == null || ePosta == null) {
+      throw const KimlikHatasi('Oturum bulunamadı. Tekrar giriş yapın.');
+    }
+
+    try {
+      await kullanici.reauthenticateWithCredential(
+        EmailAuthProvider.credential(email: ePosta, password: sifre),
+      );
+    } on FirebaseAuthException catch (hata) {
+      throw KimlikHatasi.koddan(hata.code);
+    }
+  }
+
+  /// Firebase Auth kullanıcısını siler.
+  ///
+  /// Yalnızca kullanıcının Firestore verisi silindikten **sonra** çağrılır:
+  /// hesap gittiğinde `isletmeler/{uid}` altına yazma yetkisi de gider ve
+  /// arkada erişilemez veri kalır (bkz. `firestore.rules`).
+  Future<void> hesabiSil() async {
+    final kullanici = _kimlik.currentUser;
+    if (kullanici == null) {
+      throw const KimlikHatasi('Oturum bulunamadı. Tekrar giriş yapın.');
+    }
+
+    try {
+      await kullanici.delete();
+    } on FirebaseAuthException catch (hata) {
+      throw KimlikHatasi.koddan(hata.code);
+    }
+  }
 }
 
 final kimlikRepositorySaglayici = Provider<KimlikRepository>((ref) {

@@ -38,6 +38,10 @@ Future<void> emulatoreBaglan() async {
   );
 }
 
+/// Test kullanıcılarının şifresi. Hesap silme akışı yeniden doğrulama istediği
+/// için testin şifreyi bilmesi gerekiyor.
+const String testSifresi = 'sifre123';
+
 /// Her test için yeni bir kullanıcı açar ve `uid` değerini döner.
 ///
 /// Testler birbirinin verisini görmesin diye her çağrı ayrı bir hesap üretir;
@@ -46,7 +50,7 @@ Future<String> yeniKullaniciAc(FirebaseAuth kimlik) async {
   final benzersiz = DateTime.now().microsecondsSinceEpoch;
   final sonuc = await kimlik.createUserWithEmailAndPassword(
     email: 'test$benzersiz@fidancari.test',
-    password: 'sifre123',
+    password: testSifresi,
   );
   return sonuc.user!.uid;
 }

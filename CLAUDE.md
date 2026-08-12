@@ -29,7 +29,7 @@ Sırayla ilerlenir. Bir faz, kendi dosyasındaki kabul kriterleri sağlanmadan k
 | [2](fazlar/faz-2-islemler.md) | İşlemler: fatura, tahsilat, kalemler, KDV, yürüyen bakiye | **Sürüyor** |
 | [3](fazlar/faz-3-katalog.md) | Fidan katalogu: Tür/Çeşit/Anaç/Yaş/Kök tipi, fiyat listesi | **Sürüyor** |
 | [4](fazlar/faz-4-ekstre.md) | PDF ekstre: şablon, tarih aralığı, paylaşma | **Sürüyor** |
-| [5](fazlar/faz-5-magaza.md) | Mağaza: ikon, gizlilik, SPM geçişi, TestFlight, App Store | Başlanmadı |
+| [5](fazlar/faz-5-magaza.md) | Mağaza: ikon, gizlilik, SPM geçişi, TestFlight, App Store | **Sürüyor** |
 
 Faz kapandığında bu tablodaki durumu ve ilgili faz dosyasının başlığındaki durumu güncelle.
 
@@ -49,6 +49,9 @@ flutter test integration_test -d <simulator-id>
 
 # Uygulamayı canlı veriye dokunmadan denemek
 flutter run --dart-define=EMULATOR=true
+
+# Uygulama ikonunu ve açılış görselini yeniden üret (PNG'ler elle düzenlenmez)
+swift tool/ikon_uret.swift
 ```
 
 Not: `firebase-tools` Java 21+ istiyor. Homebrew'un kurduğu JDK 21
@@ -86,6 +89,10 @@ lib/
     └── <ozellik>/
         ├── view/
         └── viewmodel/
+
+docs/              # GitHub Pages: destek sayfası ve gizlilik politikası
+magaza/            # App Store Connect metinleri, gizlilik politikası kaynağı
+tool/              # Varlık üreticileri (uygulama ikonu)
 ```
 
 ## Bilinmesi gerekenler
@@ -100,7 +107,13 @@ lib/
 - **Katalog zorunlu değil.** Fatura kalemi katalogdan seçilebilir, ama serbest
   metin girişi kaldırılmaz — "nakliye" gibi kalemler katalogda yer almaz.
   Katalogdan seçilen kalem `fidanId` taşır; serbest metin kalemde bu alan boştur.
-- **CocoaPods desteği Ekim 2026'da bitiyor** — Faz 5'te SPM'e geçilecek.
+- **Firebase SPM'e taşındı** (Faz 5). `firebase-ios-sdk` artık Swift Package
+  Manager üzerinden geliyor; CocoaPods'un Ekim 2026 riski kapandı. Geriye tek
+  eklenti kaldı: `printing` henüz `Package.swift` yayınlamıyor, o yüzden
+  `Podfile` duruyor. `pod install` hâlâ gerekli.
+- **Hesap silme sırası bozulmaz:** yeniden doğrula → Firestore verisini sil →
+  Auth kullanıcısını sil. Hesap önce silinirse güvenlik kuralları yazma
+  yetkisini geri çeker ve arkada erişilemez veri kalır.
 - **Çevrimdışı yazma:** Repository'ler `set`/`update` future'ını **beklemez**.
   Firestore çevrimdışıyken bu future yalnızca sunucu onayında tamamlanır;
   beklenirse uçak modunda ekran kilitlenir. Yerel yazma anında görünür, kayıt

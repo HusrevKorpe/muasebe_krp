@@ -13,6 +13,10 @@ abstract final class Yollar {
   static const String ana = '/';
 
   static const String isletme = '/isletme';
+
+  /// Hesap: giriş yapılan e-posta, çıkış ve hesap silme.
+  static const String hesap = '/hesap';
+
   static const String cariYeni = '/cari/yeni';
 
   /// Yol kalıpları. Gezinirken doğrudan kullanılmaz; [cariDetayYolu] ve

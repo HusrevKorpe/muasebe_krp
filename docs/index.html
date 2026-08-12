@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FidanCari — Fidancılık Ön Muhasebe</title>
+<meta name="description" content="Fidancılar için cari hesap takibi: fatura, tahsilat, yürüyen bakiye ve PDF ekstre.">
+<style>
+  :root {
+    color-scheme: light dark;
+    --zemin: #ffffff;
+    --metin: #1b1c1a;
+    --soluk: #5c625a;
+    --yesil: #2e7d32;
+    --cizgi: #dce3da;
+    --kutu: #f4f7f3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --zemin: #14170f;
+      --metin: #e6e9e1;
+      --soluk: #a7ad9f;
+      --yesil: #9cd49f;
+      --cizgi: #333a30;
+      --kutu: #1c2118;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 56px 20px 80px;
+    background: var(--zemin);
+    color: var(--metin);
+    font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 640px; margin: 0 auto; }
+  .rozet {
+    width: 96px; height: 96px; border-radius: 22px;
+    background: linear-gradient(#3d9242, #1b5e20);
+    display: grid; place-items: center; margin-bottom: 20px;
+  }
+  h1 { font-size: 2rem; margin: 0 0 6px; }
+  .alt { color: var(--soluk); margin: 0 0 32px; font-size: 1.05rem; }
+  h2 { font-size: 1.15rem; margin: 36px 0 10px; padding-top: 16px; border-top: 1px solid var(--cizgi); }
+  ul { padding-left: 20px; }
+  li { margin: 7px 0; }
+  a { color: var(--yesil); }
+  .kutu {
+    background: var(--kutu);
+    border: 1px solid var(--cizgi);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin: 18px 0;
+  }
+  footer { margin-top: 56px; color: var(--soluk); font-size: .9rem; }
+</style>
+</head>
+<body>
+<main>
+
+<div class="rozet">
+  <svg width="60" height="60" viewBox="0 0 1024 1024" aria-hidden="true">
+    <g fill="none" stroke="#fff" stroke-linecap="round">
+      <path d="M512 700 C468 590 548 450 512 300" stroke-width="46"/>
+      <path d="M276 790 H748" stroke-width="52"/>
+      <path d="M366 898 H658" stroke-width="52"/>
+    </g>
+    <path d="M508 552 Q300 596 236 372 Q400 300 508 552Z" fill="#fff"/>
+    <path d="M516 442 Q724 486 788 262 Q624 190 516 442Z" fill="#fff"/>
+  </svg>
+</div>
+
+<h1>FidanCari</h1>
+<p class="alt">Fidancılar için cari hesap ve ön muhasebe takibi.</p>
+
+<p>FidanCari, fidan üretici ve satıcılarının müşteri hesaplarını telefondan
+izlemesi için yapıldı. Defter yerine geçer: kim ne aldı, ne kadar ödedi, ne kadar
+borcu kaldı — hepsi tek ekranda.</p>
+
+<h2>Ne yapar?</h2>
+<ul>
+  <li><strong>Cari kayıtları.</strong> Müşteri ve tedarikçileriniz tek listede;
+      Türkçe karakterle doğru çalışan arama.</li>
+  <li><strong>Fatura ve tahsilat.</strong> Kalem kalem satış/alış faturası,
+      isteğe bağlı %1 KDV, tahsilat ve ödeme girişi.</li>
+  <li><strong>Yürüyen bakiye.</strong> Her işlemden sonra güncel borç/alacak
+      durumu.</li>
+  <li><strong>PDF ekstre.</strong> Tarih aralığı seçip müşterinize
+      gönderebileceğiniz hesap dökümü.</li>
+  <li><strong>Fidan katalogu.</strong> Tür, çeşit, anaç, yaş ve kök tipiyle
+      fidan tanımları; faturaya tek dokunuşla eklenir.</li>
+  <li><strong>Çevrimdışı çalışır.</strong> Serada internet yoksa da kayıt
+      girilir, bağlantı gelince eşitlenir.</li>
+</ul>
+
+<h2>Destek</h2>
+<div class="kutu">
+  Soru, hata bildirimi ve öneriler için:
+  <a href="mailto:ILETISIM@ORNEK.COM">ILETISIM@ORNEK.COM</a><br>
+  Genellikle birkaç iş günü içinde dönüş yapılır.
+</div>
+
+<h2>Hesabımı nasıl silerim?</h2>
+<p>Uygulamada <strong>sağ üst menü → Hesap → Hesabı sil</strong> yolunu izleyin.
+Hesabınız ve tüm kayıtlarınız kalıcı olarak silinir.</p>
+
+<h2>Gizlilik</h2>
+<p>Verileriniz satılmaz, reklam için kullanılmaz; uygulamada izleyici yoktur.
+Ayrıntılar için <a href="gizlilik.html">Gizlilik Politikası</a>.</p>
+
+<footer>
+  <p>FidanCari · <a href="gizlilik.html">Gizlilik Politikası</a></p>
+</footer>
+
+</main>
+</body>
+</html>
