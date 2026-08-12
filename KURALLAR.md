@@ -154,10 +154,20 @@ Bu kural Firestore'da saklanan alanları da kapsar — veritabanına da `int` ya
 - **Muhasebe kaydı fiziksel olarak silinmez.** Yanlış giriş için iptal işaretlemesi
   veya ters kayıt kullanılır. Silinen bir tahsilat, sonraki tüm bakiyeleri kaydırır.
 - Tarih alanlarında `FieldValue.serverTimestamp()` kullanılır. Cihaz saati değiştirilebilir
-  ve işlem sıralamasını bozar.
-- Cari kaydındaki önbelleklenmiş bakiye **yalnızca Firestore transaction içinde**
-  güncellenir. Ayrıca "bakiyeyi işlemlerden yeniden hesapla" fonksiyonu bulunur ve
-  test edilir.
+  ve kaydın gerçekte ne zaman girildiğini bozar. **Sıralamada bu alana güvenilmez:**
+  sunucu onaylayana kadar `null` okunur ve çevrimdışı girilen kayıt listede yerini
+  bulamaz. Sıralama, kullanıcının seçtiği iş tarihine ve belge kimliğine dayanır;
+  kimlikler zaman sıralı üretilir (`data/islem/islem_kimligi.dart`).
+- Cari kaydındaki önbelleklenmiş bakiye, işlem kaydıyla **aynı atomik yazmada**
+  güncellenir: `WriteBatch` içinde `FieldValue.increment` ile. Ayrıca "bakiyeyi
+  işlemlerden yeniden hesapla" fonksiyonu bulunur ve test edilir.
+
+  **Neden `runTransaction` değil:** transaction sunucu bağlantısı ister, kuyruğa
+  alınmaz ve çevrimdışı hata verir — kullanıcı serada fatura giremezdi (§4.4).
+  Batch ise normal yazma gibi kuyruğa alınır, `increment` de sunucuda atomik
+  uygulanır: iki cihaz aynı anda işlem girse artışlar üst üste biner, biri
+  diğerini ezmez. Yani okuma-değiştirme-yazma yerine "ne kadar değişti" yazılır.
+  Bakiyeye mutlak değer yalnızca yeniden hesaplama onarımında yazılır.
 
 ### 4.3 Maliyet ve performans
 

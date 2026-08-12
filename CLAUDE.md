@@ -26,7 +26,7 @@ Sırayla ilerlenir. Bir faz, kendi dosyasındaki kabul kriterleri sağlanmadan k
 |---|---|---|
 | [0](fazlar/faz-0-iskelet.md) | İskelet: klasör yapısı, tema, Riverpod, Auth, çekirdek yardımcılar | **Sürüyor** |
 | [1](fazlar/faz-1-cari.md) | Cari: işletme profili, liste, arama, detay sayfası | **Sürüyor** |
-| [2](fazlar/faz-2-islemler.md) | İşlemler: fatura, tahsilat, kalemler, KDV, yürüyen bakiye | Başlanmadı |
+| [2](fazlar/faz-2-islemler.md) | İşlemler: fatura, tahsilat, kalemler, KDV, yürüyen bakiye | **Sürüyor** |
 | [3](fazlar/faz-3-katalog.md) | Fidan katalogu: Tür/Çeşit/Anaç/Yaş/Kök tipi, fiyat listesi | **Sürüyor** |
 | [4](fazlar/faz-4-ekstre.md) | PDF ekstre: şablon, tarih aralığı, paylaşma | Başlanmadı |
 | [5](fazlar/faz-5-magaza.md) | Mağaza: ikon, gizlilik, SPM geçişi, TestFlight, App Store | Başlanmadı |

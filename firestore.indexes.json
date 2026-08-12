@@ -53,6 +53,22 @@
         { "fieldPath": "anacAnahtari", "order": "ASCENDING" },
         { "fieldPath": "__name__", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "islemler",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "islemTarihi", "order": "DESCENDING" },
+        { "fieldPath": "__name__", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "islemler",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "islemTarihi", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

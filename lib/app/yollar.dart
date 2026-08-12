@@ -1,3 +1,5 @@
+import '../domain/islem/islem_tipi.dart';
+
 /// Uygulama gezinme yolları. Metin sabitleri tek yerde tutulur.
 abstract final class Yollar {
   static const String acilis = '/acilis';
@@ -18,6 +20,12 @@ abstract final class Yollar {
   static const String cariDetay = '/cari/:cariId';
   static const String cariDuzenle = '/cari/:cariId/duzenle';
 
+  /// Yeni işlem formu: `/cari/{cariId}/islem/yeni/{tip}`
+  static const String islemYeni = '/cari/:cariId/islem/yeni/:tip';
+
+  /// İşlem detayı: `/cari/{cariId}/islem/{islemId}`
+  static const String islemDetay = '/cari/:cariId/islem/:islemId';
+
   /// Fidan katalogu.
   static const String fidanlar = '/fidanlar';
   static const String fidanYeni = '/fidanlar/yeni';
@@ -27,11 +35,19 @@ abstract final class Yollar {
 
   /// Yol parametrelerinin adı.
   static const String cariIdParametresi = 'cariId';
+  static const String islemIdParametresi = 'islemId';
   static const String fidanIdParametresi = 'fidanId';
+  static const String tipParametresi = 'tip';
 
   static String cariDetayYolu(String cariId) => '/cari/$cariId';
 
   static String cariDuzenleYolu(String cariId) => '/cari/$cariId/duzenle';
+
+  static String islemYeniYolu(String cariId, IslemTipi tip) =>
+      '/cari/$cariId/islem/yeni/${tip.anahtar}';
+
+  static String islemDetayYolu(String cariId, String islemId) =>
+      '/cari/$cariId/islem/$islemId';
 
   static String fidanDuzenleYolu(String fidanId) => '/fidanlar/$fidanId';
 

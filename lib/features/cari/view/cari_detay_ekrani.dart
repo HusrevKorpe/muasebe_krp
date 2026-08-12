@@ -3,45 +3,95 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../app/yollar.dart';
+import '../../../core/hata/hatalar.dart';
 import '../../../core/metin/metinler.dart';
 import '../../../core/tarih/tarih_bicimi.dart';
 import '../../../data/cari/cari_kaydi.dart';
 import '../../../domain/cari/cari.dart';
+import '../../islem/view/widget/islem_listesi_bolumu.dart';
+import '../../islem/view/widget/islem_tipi_secici.dart';
+import '../../islem/viewmodel/islem_form_viewmodel.dart';
+import '../../islem/viewmodel/islem_listesi_viewmodel.dart';
 import '../../ortak/view/bos_durum.dart';
 import '../../ortak/view/hata_durumu.dart';
 import '../viewmodel/cari_saglayici.dart';
 import 'widget/bakiye_metni.dart';
 
 /// Cari detay sayfası: üstte özet, altta işlem listesi.
-///
-/// İşlem listesi Faz 1'de bilerek boş duruyor — yeri hazır, içeriği Faz 2'de
-/// dolacak (bkz. `fazlar/faz-2-islemler.md`).
-class CariDetayEkrani extends ConsumerWidget {
+class CariDetayEkrani extends ConsumerStatefulWidget {
   const CariDetayEkrani({required this.cariId, super.key});
 
   final String cariId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final kayit = ref.watch(cariSaglayici(cariId));
+  ConsumerState<CariDetayEkrani> createState() => _CariDetayEkraniDurumu();
+}
+
+class _CariDetayEkraniDurumu extends ConsumerState<CariDetayEkrani> {
+  /// Listenin sonuna bu kadar kala sonraki sayfa istenir.
+  static const double _yuklemeEsigi = 400;
+
+  final _kaydirmaKontrolcu = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _kaydirmaKontrolcu.addListener(_kaydirmayiDinle);
+  }
+
+  @override
+  void dispose() {
+    _kaydirmaKontrolcu
+      ..removeListener(_kaydirmayiDinle)
+      ..dispose();
+    super.dispose();
+  }
+
+  void _kaydirmayiDinle() {
+    if (!_kaydirmaKontrolcu.hasClients) return;
+    final konum = _kaydirmaKontrolcu.position;
+    if (konum.pixels >= konum.maxScrollExtent - _yuklemeEsigi) {
+      ref
+          .read(islemListesiViewModelSaglayici(widget.cariId).notifier)
+          .dahaYukle();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final kayit = ref.watch(cariSaglayici(widget.cariId));
 
     return Scaffold(
       appBar: AppBar(
         title: Text(kayit.value?.cari.ad ?? Metinler.cariler),
         actions: [
-          if (kayit.value != null)
+          if (kayit.value != null) ...[
             IconButton(
               icon: const Icon(Icons.edit_outlined),
               tooltip: Metinler.duzenle,
-              onPressed: () => _duzenlemeyeGit(context),
+              onPressed: _duzenlemeyeGit,
             ),
+            PopupMenuButton<VoidCallback>(
+              onSelected: (eylem) => eylem(),
+              itemBuilder: (context) => [
+                PopupMenuItem<VoidCallback>(
+                  value: _bakiyeyiYenidenHesapla,
+                  child: const ListTile(
+                    leading: Icon(Icons.calculate_outlined),
+                    title: Text(Metinler.bakiyeYenidenHesapla),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
       body: kayit.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (hata, _) => HataDurumu.hatadan(
           hata,
-          yenidenDene: () => ref.invalidate(cariSaglayici(cariId)),
+          yenidenDene: () => ref.invalidate(cariSaglayici(widget.cariId)),
         ),
         data: (deger) => deger == null
             ? const BosDurum(
@@ -49,21 +99,73 @@ class CariDetayEkrani extends ConsumerWidget {
                 baslik: Metinler.cariBulunamadi,
                 aciklama: Metinler.cariYokAciklama,
               )
-            : _Govde(kayit: deger),
+            : _govde(deger),
       ),
+      floatingActionButton: kayit.value == null
+          ? null
+          : FloatingActionButton.extended(
+              onPressed: _islemEkle,
+              icon: const Icon(Icons.add),
+              label: const Text(Metinler.islemEkle),
+            ),
     );
+  }
+
+  Widget _govde(CariKaydi kayit) {
+    return CustomScrollView(
+      controller: _kaydirmaKontrolcu,
+      slivers: [
+        SliverToBoxAdapter(child: _Ust(kayit: kayit)),
+        IslemListesiBolumu(cariId: widget.cariId),
+        const SliverToBoxAdapter(child: SizedBox(height: 96)),
+      ],
+    );
+  }
+
+  Future<void> _islemEkle() async {
+    final tip = await IslemTipiSecici.goster(context);
+    if (tip == null || !mounted) return;
+
+    await context.push<bool>(Yollar.islemYeniYolu(widget.cariId, tip));
   }
 
   /// Düzenleme ekranı `false` dönerse cari pasife alınmıştır; detay sayfasının
   /// da kapanması gerekir, aksi hâlde listede olmayan bir kayda bakılır.
-  Future<void> _duzenlemeyeGit(BuildContext context) async {
-    final sonuc = await context.push<bool>(Yollar.cariDuzenleYolu(cariId));
-    if (sonuc == false && context.mounted) context.pop();
+  Future<void> _duzenlemeyeGit() async {
+    final sonuc = await context.push<bool>(
+      Yollar.cariDuzenleYolu(widget.cariId),
+    );
+    if (sonuc == false && mounted) context.pop();
+  }
+
+  /// Bakiyeyi tüm işlemlerden baştan hesaplar. Önbelleklenmiş bakiye ile
+  /// işlemler ayrışmışsa tek onarım yolu budur (bkz. KURALLAR.md §4.2).
+  Future<void> _bakiyeyiYenidenHesapla() async {
+    final sonuc = await ref
+        .read(islemFormViewModelSaglayici.notifier)
+        .bakiyeyiYenidenHesapla(widget.cariId);
+
+    if (!mounted) return;
+    final hata = ref.read(islemFormViewModelSaglayici).error;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            sonuc != null
+                ? Metinler.bakiyeYenidenHesaplandi
+                : (hata is UygulamaHatasi
+                      ? hata.mesaj
+                      : Metinler.beklenmeyenHata),
+          ),
+        ),
+      );
   }
 }
 
-class _Govde extends StatelessWidget {
-  const _Govde({required this.kayit});
+/// Özet kartı, bilgi bölümleri ve işlem listesi başlığı.
+class _Ust extends StatelessWidget {
+  const _Ust({required this.kayit});
 
   final CariKaydi kayit;
 
@@ -71,81 +173,79 @@ class _Govde extends StatelessWidget {
   Widget build(BuildContext context) {
     final cari = kayit.cari;
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      children: [
-        _OzetKarti(kayit: kayit),
-        const SizedBox(height: 24),
-        if (_iletisimVarMi(cari)) ...[
-          _Bolum(
-            baslik: Metinler.iletisim,
-            satirlar: [
-              if (cari.telefon != null)
-                _BilgiSatiri(
-                  simge: Icons.phone_outlined,
-                  etiket: Metinler.telefon,
-                  deger: cari.telefon!,
-                ),
-              if (cari.sehir != null)
-                _BilgiSatiri(
-                  simge: Icons.location_city_outlined,
-                  etiket: Metinler.sehir,
-                  deger: cari.sehir!,
-                ),
-              if (cari.adres != null)
-                _BilgiSatiri(
-                  simge: Icons.home_outlined,
-                  etiket: Metinler.adres,
-                  deger: cari.adres!,
-                ),
-            ],
-          ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _OzetKarti(kayit: kayit),
           const SizedBox(height: 24),
-        ],
-        if (cari.vergiDairesi != null || cari.vergiNo != null) ...[
-          _Bolum(
-            baslik: Metinler.vergiBilgileri,
-            satirlar: [
-              if (cari.vergiDairesi != null)
+          if (_iletisimVarMi(cari)) ...[
+            _Bolum(
+              baslik: Metinler.iletisim,
+              satirlar: [
+                if (cari.telefon != null)
+                  _BilgiSatiri(
+                    simge: Icons.phone_outlined,
+                    etiket: Metinler.telefon,
+                    deger: cari.telefon!,
+                  ),
+                if (cari.sehir != null)
+                  _BilgiSatiri(
+                    simge: Icons.location_city_outlined,
+                    etiket: Metinler.sehir,
+                    deger: cari.sehir!,
+                  ),
+                if (cari.adres != null)
+                  _BilgiSatiri(
+                    simge: Icons.home_outlined,
+                    etiket: Metinler.adres,
+                    deger: cari.adres!,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
+          if (cari.vergiDairesi != null || cari.vergiNo != null) ...[
+            _Bolum(
+              baslik: Metinler.vergiBilgileri,
+              satirlar: [
+                if (cari.vergiDairesi != null)
+                  _BilgiSatiri(
+                    simge: Icons.account_balance_outlined,
+                    etiket: Metinler.vergiDairesi,
+                    deger: cari.vergiDairesi!,
+                  ),
+                if (cari.vergiNo != null)
+                  _BilgiSatiri(
+                    simge: Icons.numbers,
+                    etiket: Metinler.vergiNo,
+                    deger: cari.vergiNo!,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
+          if (cari.notlar != null) ...[
+            _Bolum(
+              baslik: Metinler.notlar,
+              satirlar: [
                 _BilgiSatiri(
-                  simge: Icons.account_balance_outlined,
-                  etiket: Metinler.vergiDairesi,
-                  deger: cari.vergiDairesi!,
+                  simge: Icons.notes_outlined,
+                  etiket: Metinler.notlar,
+                  deger: cari.notlar!,
                 ),
-              if (cari.vergiNo != null)
-                _BilgiSatiri(
-                  simge: Icons.numbers,
-                  etiket: Metinler.vergiNo,
-                  deger: cari.vergiNo!,
-                ),
-            ],
+              ],
+            ),
+            const SizedBox(height: 24),
+          ],
+          Text(
+            Metinler.islemler,
+            style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
         ],
-        if (cari.notlar != null) ...[
-          _Bolum(
-            baslik: Metinler.notlar,
-            satirlar: [
-              _BilgiSatiri(
-                simge: Icons.notes_outlined,
-                etiket: Metinler.notlar,
-                deger: cari.notlar!,
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-        ],
-        Text(Metinler.islemler, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 8),
-        const SizedBox(
-          height: 220,
-          child: BosDurum(
-            simge: Icons.receipt_long_outlined,
-            baslik: Metinler.islemYokBaslik,
-            aciklama: Metinler.islemYokAciklama,
-          ),
-        ),
-      ],
+      ),
     );
   }
 

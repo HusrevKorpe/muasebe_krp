@@ -125,8 +125,82 @@ abstract final class Metinler {
   static const String islemler = 'İşlemler';
   static const String islemYokBaslik = 'Henüz işlem yok';
   static const String islemYokAciklama =
-      'Fatura ve tahsilat girişi bir sonraki sürümde açılacak.';
+      'Bu cariye ilk faturayı veya tahsilatı ekleyin.';
   static const String sonIslem = 'Son işlem';
+
+  // ─── İşlem tipleri ───────────────────────────────────────────────────────
+  static const String satisFaturasi = 'Satış Faturası';
+  static const String alisFaturasi = 'Alış Faturası';
+  static const String tahsilat = 'Tahsilat';
+  static const String odeme = 'Ödeme';
+
+  /// Ekstrede tahsilat satırının açıklaması.
+  static const String musteridenTahsilat = 'Müşteriden Tahsilat';
+  static const String cariyeOdeme = 'Cariye Ödeme';
+
+  // ─── İşlem listesi ───────────────────────────────────────────────────────
+  static const String islemEkle = 'İşlem ekle';
+  static const String islemDetayi = 'İşlem Detayı';
+  static const String sonrakiIslemlerYuklenemedi =
+      'Sonraki işlemler yüklenemedi. Dokunup tekrar deneyin.';
+  static const String borc = 'Borç';
+  static const String alacak = 'Alacak';
+  static const String iptalEdildi = 'İptal edildi';
+  static const String teslimEdildi = 'Teslim edildi';
+  static const String beklemede = 'Beklemede';
+
+  // ─── Fatura formu ────────────────────────────────────────────────────────
+  static const String yeniSatisFaturasi = 'Yeni Satış Faturası';
+  static const String yeniAlisFaturasi = 'Yeni Alış Faturası';
+  static const String yeniTahsilat = 'Yeni Tahsilat';
+  static const String yeniOdeme = 'Yeni Ödeme';
+  static const String islemTipi = 'İşlem tipi';
+  static const String aciklama = 'Açıklama';
+  static const String aciklamaIpucu = 'Zeytin-Hurma';
+  static const String islemTarihi = 'İşlem tarihi';
+  static const String vadeTarihi = 'Vade tarihi';
+  static const String vadeYok = 'Vade tarihi yok';
+  static const String tutar = 'Tutar';
+
+  static const String kalemler = 'Kalemler';
+  static const String kalemEkle = 'Kalem ekle';
+  static const String kalemDuzenle = 'Kalemi düzenle';
+  static const String kalemYok = 'Henüz kalem eklenmedi.';
+  static const String kalemYokAciklama =
+      'Faturayı kaydetmek için en az bir kalem ekleyin.';
+  static const String kalemAdi = 'Kalem adı';
+  static const String kalemAdiIpucu = 'zeytin';
+  static const String miktar = 'Miktar';
+  static const String birimFiyat = 'Birim fiyat';
+
+  static const String girisModu = 'Giriş şekli';
+  static const String birimFiyatGir = 'Birim fiyat';
+  static const String toplamGir = 'Toplam tutar';
+  static const String toplamGirAciklama =
+      'Toplamı yazın, birim fiyat hesaplansın.';
+  static const String birimFiyatGirAciklama =
+      'Birim fiyatı yazın, tutar hesaplansın.';
+
+  /// Birim fiyat, toplamdan geri hesaplandığı için yuvarlanmış olabilir.
+  static const String birimFiyatYaklasik =
+      'Birim fiyat yuvarlanmıştır; fatura tutarı girdiğiniz toplamdır.';
+
+  static const String araToplam = 'Ara toplam';
+  static const String kdv = 'KDV';
+  static const String kdvUygula = 'KDV uygula (%1)';
+  static const String genelToplam = 'Genel toplam';
+
+  // ─── İşlem detayı ────────────────────────────────────────────────────────
+  static const String islemiIptalEt = 'İşlemi iptal et';
+  static const String islemIptalOnay =
+      'Bu işlem iptal edilsin mi? Kayıt silinmez, listede üstü çizili kalır ve '
+      'bakiyeye katkısı geri alınır.';
+  static const String iptalNedeni = 'İptal nedeni';
+  static const String islemIptalEdildi = 'İşlem iptal edildi.';
+  static const String iptalliIslemUyarisi =
+      'Bu işlem iptal edilmiştir; bakiyeye katılmaz.';
+  static const String bakiyeYenidenHesapla = 'Bakiyeyi yeniden hesapla';
+  static const String bakiyeYenidenHesaplandi = 'Bakiye yeniden hesaplandı.';
 
   // ─── Fidan katalogu ──────────────────────────────────────────────────────
   static const String fidanKatalogu = 'Fidan Katalogu';
@@ -175,4 +249,21 @@ abstract final class Metinler {
   static const String fidanMukerrer =
       'Bu fidan katalogda zaten kayıtlı. Aynı kaydı ikinci kez eklemek yerine '
       'mevcut kaydı düzenleyin.';
+
+  // ─── Katalog ↔ fatura kalemi ─────────────────────────────────────────────
+  static const String katalogdanSec = 'Katalogdan seç';
+  static const String katalogBagi = 'Katalog';
+  static const String katalogBaginiKaldir = 'Katalog bağını kaldır';
+  static const String katalogSerbestMetinAciklama =
+      'Katalog zorunlu değil: "nakliye" gibi kalemleri elle yazabilirsiniz.';
+
+  // ─── İşlem doğrulama ─────────────────────────────────────────────────────
+  static const String aciklamaGerekli = 'Açıklama gerekli.';
+  static const String kalemGerekli = 'En az bir kalem ekleyin.';
+  static const String kalemAdiGerekli = 'Kalem adı gerekli.';
+  static const String miktarGerekli = 'Miktar gerekli.';
+  static const String miktarGecersiz = 'Miktar sıfırdan büyük olmalı.';
+  static const String tutarGerekli = 'Tutar gerekli.';
+  static const String tutarGecersiz = 'Geçerli bir tutar yazın: 31.000,00';
+  static const String tutarSifirOlamaz = 'Tutar sıfırdan büyük olmalı.';
 }

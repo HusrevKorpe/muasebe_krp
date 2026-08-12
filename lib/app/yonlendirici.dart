@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../data/firebase/firebase_saglayicilar.dart';
 import '../data/isletme/isletme_repository.dart';
+import '../domain/islem/islem_tipi.dart';
 import '../domain/isletme/isletme.dart';
 import '../features/cari/view/cari_detay_ekrani.dart';
 import '../features/cari/view/cari_duzenle_ekrani.dart';
@@ -13,6 +14,9 @@ import '../features/cari/view/cari_listesi_ekrani.dart';
 import '../features/fidan/view/fidan_duzenle_ekrani.dart';
 import '../features/fidan/view/fidan_form_ekrani.dart';
 import '../features/fidan/view/fidan_listesi_ekrani.dart';
+import '../features/islem/view/fatura_form_ekrani.dart';
+import '../features/islem/view/islem_detay_ekrani.dart';
+import '../features/islem/view/tahsilat_form_ekrani.dart';
 import '../features/isletme/view/isletme_ekrani.dart';
 import '../features/kimlik/view/giris_ekrani.dart';
 import '../features/kimlik/view/kayit_ekrani.dart';
@@ -122,6 +126,30 @@ final yonlendiriciSaglayici = Provider<GoRouter>((ref) {
         path: Yollar.cariDuzenle,
         builder: (context, durum) => CariDuzenleEkrani(
           cariId: durum.pathParameters[Yollar.cariIdParametresi]!,
+        ),
+      ),
+      // İşlem yolları da kök yol olarak tanımlı — bkz. yukarıdaki düzenleme
+      // yolu notu. `yeni` yolu, işlem kimliği kalıbından önce gelmeli.
+      GoRoute(
+        path: Yollar.islemYeni,
+        builder: (context, durum) {
+          final cariId = durum.pathParameters[Yollar.cariIdParametresi]!;
+          final tip =
+              IslemTipi.anahtardan(
+                durum.pathParameters[Yollar.tipParametresi],
+              ) ??
+              IslemTipi.satisFaturasi;
+
+          return tip.faturaMi
+              ? FaturaFormEkrani(cariId: cariId, tip: tip)
+              : TahsilatFormEkrani(cariId: cariId, tip: tip);
+        },
+      ),
+      GoRoute(
+        path: Yollar.islemDetay,
+        builder: (context, durum) => IslemDetayEkrani(
+          cariId: durum.pathParameters[Yollar.cariIdParametresi]!,
+          islemId: durum.pathParameters[Yollar.islemIdParametresi]!,
         ),
       ),
       GoRoute(

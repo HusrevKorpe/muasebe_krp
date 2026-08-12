@@ -1,6 +1,7 @@
 # Faz 2 — İşlemler
 
-**Durum:** Başlanmadı
+**Durum:** Sürüyor — kod, birim ve emulator testleri tamam; iki kabul kriteri
+(referans ekstrenin cihazda elle girilmesi, uçak modu) cihazda doğrulanmayı bekliyor
 **Ön koşul:** Faz 1 kapalı
 **Amaç:** Uygulamanın kalbi. Cariye fatura ve tahsilat girmek, kalemleri kaydetmek,
 KDV uygulamak ve **yürüyen bakiyeyi** doğru hesaplamak.
@@ -45,7 +46,15 @@ KDV uygulamak ve **yürüyen bakiyeyi** doğru hesaplamak.
 | `toplamKurus` | **int** | **Saklanan tutar esastır**, yeniden hesaplanmaz |
 | `iptal` | bool | |
 | `iptalNedeni` | string? | |
-| `olusturmaTarihi` | timestamp | `serverTimestamp()` — sıralamada esas |
+| `olusturmaTarihi` | timestamp | `serverTimestamp()` — kayıt izi, **sıralamada kullanılmaz** |
+
+> **Sıralama neden `olusturmaTarihi` değil:** `serverTimestamp()` sunucu onaylayana
+> kadar `null` okunur. Çevrimdışı girilen bir fatura, sıralama ona bakarsa listede
+> yerini bulamaz (KURALLAR.md §4.4). Sıralama `(islemTarihi, belge kimliği)`
+> ölçütüne dayanır; belge kimlikleri `data/islem/islem_kimligi.dart` içinde zaman
+> sıralı üretilir, böylece **aynı güne düşen** işlemler giriş sırasını korur.
+> Referans ekstrede bu şart görünüyor: 17 Eylül 2021'de önce fatura, sonra
+> tahsilat işlenmiş; ters dizilirse ara bakiye tutmaz.
 
 ### Kalem yapısı (`kalemler` dizisi içinde)
 
@@ -82,11 +91,24 @@ Negatif bakiye ekranda ayırt edilir.
 
 ### Önbelleklenmiş bakiye
 
-`cariler/{cariId}.bakiyeKurus` alanı **yalnızca Firestore transaction içinde** güncellenir.
-İki işlem aynı anda yazılırsa transaction dışı güncelleme bakiyeyi bozar.
+`cariler/{cariId}.bakiyeKurus` alanı, işlem kaydıyla **aynı atomik yazmada**
+güncellenir: `WriteBatch` içinde `FieldValue.increment` ile.
+
+> **Plandan sapma — `runTransaction` kullanılmadı.** Bu faz dosyası başlangıçta
+> bakiyenin Firestore transaction içinde güncellenmesini yazıyordu. Transaction
+> sunucu bağlantısı ister, çevrimdışı kuyruğa alınmaz ve hata verir; bu hâliyle
+> **kabul kriteri 7'yi (uçak modunda fatura girme) doğrudan çiğnerdi.** Batch
+> normal yazma gibi kuyruğa alınır, `increment` de sunucuda atomik uygulanır —
+> iki cihazın artışı üst üste biner (kabul kriteri 8). Yani her iki kriter de
+> ancak bu yolla sağlanıyor. KURALLAR.md §4.2 buna göre güncellendi.
+
+`sonIslemTarihi` alanı bunun istisnası: yalnızca cari listesini sıralamak için
+kullanıldığından atomik değil, önbellekten okunup karşılaştırılarak yazılır —
+geriye tarihli bir işlem girildiğinde alan geri kaymasın diye.
 
 Ayrıca **"bakiyeyi işlemlerden yeniden hesapla"** fonksiyonu bulunur. Bu, hem
-tutarsızlık onarımı hem de testin doğruluk ölçütüdür.
+tutarsızlık onarımı hem de testin doğruluk ölçütüdür. Ekranda cari detayının
+üst menüsünden çağrılır.
 
 ### İptal
 
@@ -99,25 +121,36 @@ yürüyen bakiyeleri kaydırır ve geri dönüşü olmaz.
 ## Görevler
 
 ### Domain (`lib/domain/`) — saf Dart, **testi zorunlu**
-- [ ] `Islem`, `IslemKalemi` modelleri
-- [ ] `IslemTipi` enum + borç/alacak yönü eşlemesi
-- [ ] `KalemHesaplayici`: miktar × birim fiyat → tutar
-- [ ] `FaturaHesaplayici`: ara toplam → KDV → genel toplam
-- [ ] `BakiyeHesaplayici`: işlem listesi → yürüyen bakiye dizisi + toplamlar
-- [ ] Birim fiyat geri hesabı: toplam ÷ miktar, en yakın kuruşa yuvarlama
+- [x] `Islem`, `IslemKalemi` modelleri
+- [x] `IslemTipi` enum + borç/alacak yönü eşlemesi
+- [x] Kalem hesabı: miktar × birim fiyat → tutar (`IslemKalemi.birimFiyattan`)
+- [x] `FaturaHesaplayici`: ara toplam → KDV → genel toplam
+- [x] `BakiyeHesaplayici`: işlem listesi → yürüyen bakiye dizisi + toplamlar
+- [x] Birim fiyat geri hesabı: toplam ÷ miktar, en yakın kuruşa yuvarlama
+      (`IslemKalemi.toplamdan`)
+
+`KalemHesaplayici` ayrı bir sınıf olarak yazılmadı: yapacağı iki hesap
+(`kalemTutari`, `birimFiyatHesapla`) Faz 0'da `core/para/yuvarlama.dart` içinde
+zaten vardı. `IslemKalemi`'nin iki fabrikası bunları çağırıyor — araya yalnızca
+onları yeniden yayınlayan bir sınıf koymak katman eklerdi, kural değil.
 
 ### Data (`lib/data/`)
-- [ ] `IslemRepository`: listele (tarih aralığı + sayfalı), ekle, güncelle, iptal et
-- [ ] Ekleme/iptal işlemleri Firestore transaction içinde, cari bakiyesiyle birlikte
-- [ ] `bakiyeYenidenHesapla(cariId)` fonksiyonu
-- [ ] Gerekli composite index'ler `firestore.indexes.json`'a eklenir
+- [x] `IslemRepository`: listele (tarih aralığı + sayfalı), ekle, iptal et
+- [x] Ekleme/iptal işlemleri tek atomik yazmada, cari bakiyesiyle birlikte
+      (batch + `increment` — yukarıdaki sapma notuna bakın)
+- [x] `bakiyeYenidenHesapla(cariId)` fonksiyonu
+- [x] Gerekli composite index'ler `firestore.indexes.json`'a eklendi
+
+İşlem **güncelleme** yolu bilerek yazılmadı: kaydedilmiş bir muhasebe kaydının
+tutarını yerinde değiştirmek, bakiyeyi ve geçmiş ekstreyi sessizce kaydırır.
+Yanlış giriş iptal edilip yeniden girilir (KURALLAR.md §4.2).
 
 ### Features
-- [ ] `cari_detay_ekrani` işlem listesiyle doldurulur — her satırda yürüyen bakiye
-- [ ] `features/islem/view/fatura_form_ekrani.dart` — kalem ekle/çıkar, KDV anahtarı, vade
-- [ ] `features/islem/view/tahsilat_form_ekrani.dart` — tutar, tarih, açıklama
-- [ ] `features/islem/view/islem_detay_ekrani.dart` — kalemler, iptal butonu
-- [ ] Kalem girişinde **iki mod**: birim fiyat gir · toplam gir (birim fiyat hesaplansın)
+- [x] `cari_detay_ekrani` işlem listesiyle doldurulur — her satırda yürüyen bakiye
+- [x] `features/islem/view/fatura_form_ekrani.dart` — kalem ekle/çıkar, KDV anahtarı, vade
+- [x] `features/islem/view/tahsilat_form_ekrani.dart` — tutar, tarih, açıklama
+- [x] `features/islem/view/islem_detay_ekrani.dart` — kalemler, iptal butonu
+- [x] Kalem girişinde **iki mod**: birim fiyat gir · toplam gir (birim fiyat hesaplansın)
 
 ### Kalem giriş modu — neden zorunlu
 
@@ -130,31 +163,55 @@ kullanıcıyı kendi çalışma şeklinden koparırız ve faturası tutmaz.
 
 ## Kabul kriterleri
 
-1. `flutter analyze` sıfır uyarı, `flutter test` geçer, `flutter build ios --release` başarılı
-2. **Referans ekstredeki 9 işlem elle girildiğinde, ekrandaki yürüyen bakiye
-   PDF'teki bakiye kolonuyla kuruşu kuruşuna aynı çıkıyor**
-3. Üçüncü faturaya %1 KDV uygulandığında toplam `142.031,25 ₺` çıkıyor
-4. Hurma kalemi "toplam 31.000 ₺" olarak girildiğinde birim fiyat `18,79 ₺` gösteriliyor
-   ve fatura toplamı `94.000,00 ₺` çıkıyor — `94.003,50` değil
-5. İşlem iptal edilince bakiye geri alınıyor, kayıt listede üstü çizili duruyor
-6. `bakiyeYenidenHesapla` çağrıldığında sonuç önbelleklenmiş bakiyeyle aynı
-7. Uçak modunda fatura girilebiliyor, internet gelince sunucuya yazılıyor
-8. Aynı cariye iki cihazdan/hızlı ardışık iki işlem girildiğinde bakiye bozulmuyor
+| # | Kriter | Durum |
+|---|---|---|
+| 1 | `flutter analyze` sıfır uyarı, `flutter test` geçer, `flutter build ios --release` başarılı | ✅ |
+| 2 | **Referans ekstredeki 9 işlem elle girildiğinde, ekrandaki yürüyen bakiye PDF'teki bakiye kolonuyla kuruşu kuruşuna aynı çıkıyor** | ⏳ birim testi geçiyor, cihazda elle girilmeli |
+| 3 | Üçüncü faturaya %1 KDV uygulandığında toplam `142.031,25 ₺` çıkıyor | ✅ birim testi |
+| 4 | Hurma kalemi "toplam 31.000 ₺" olarak girildiğinde birim fiyat `18,79 ₺` gösteriliyor ve fatura toplamı `94.000,00 ₺` çıkıyor — `94.003,50` değil | ✅ birim testi |
+| 5 | İşlem iptal edilince bakiye geri alınıyor, kayıt listede üstü çizili duruyor | ✅ bakiye ve kayıt emulator testinde; üstü çizili gösterim cihazda göz kontrolü bekliyor |
+| 6 | `bakiyeYenidenHesapla` çağrıldığında sonuç önbelleklenmiş bakiyeyle aynı | ✅ emulator testi |
+| 7 | Uçak modunda fatura girilebiliyor, internet gelince sunucuya yazılıyor | ⏳ kod hazır (batch + `increment`), cihazda elle denenmeli |
+| 8 | Aynı cariye iki cihazdan/hızlı ardışık iki işlem girildiğinde bakiye bozulmuyor | ✅ emulator testi — beş eşzamanlı yazma |
+
+### 2 ve 7 neden otomatik doğrulanmadı
+
+- **2** fazın ana ölçütü ve domain testinde geçiyor
+  (`referans_ekstre_test.dart`, dokuz satırın tamamı kuruşu kuruşuna). Kalan iş,
+  aynı dokuz işlemi cihazda **elle girip** ekrandaki kolonu PDF ile karşılaştırmak;
+  bu, formların girilen değerleri domain'e doğru taşıdığını da doğrular.
+- **7** uçuş modunu açıp kapatmayı gerektiriyor, simülatörde ağ kesintisi taklit
+  edilemiyor. Yazma tarafı buna göre kuruldu: batch commit future'ı beklenmiyor
+  ve `increment` çevrimdışı kuyruğa alınıyor.
+
+**Emulator testlerini koşmak için** `firebase-tools` JDK 21 istiyor; Homebrew'un
+kurduğu sürüm `java_home` listesine girmediği için `PATH`'e elle eklenmeli:
+
+```bash
+export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+export PATH="$JAVA_HOME/bin:$PATH"
+firebase emulators:start --only firestore,auth
+flutter test integration_test -d <simulator-id>
+```
 
 ---
 
 ## Testler
 
-| Ne test edilir | Neden |
-|---|---|
-| Referans ekstrenin 9 işlemi → beklenen bakiye dizisi | Fazın ana doğruluk ölçütü |
-| KDV %1: `140.625` → `142.031,25` | Referans ekstredeki gerçek vaka |
-| KDV %0: toplam = ara toplam | |
-| Birim fiyat geri hesabı: `31.000 ÷ 1.650` → `18,79` gösterilir, toplam `31.000` kalır | Yuvarlama sızıntısı testi |
-| Alış faturası bakiyeyi negatife düşürür | Çift yönlü cari |
-| İptal edilen işlem bakiyeye katılmaz | |
-| `bakiyeYenidenHesapla` == önbelleklenmiş bakiye | Tutarsızlık yakalama |
-| Eşzamanlı iki işlem — emulator | Transaction doğrulaması |
+| Ne test edilir | Nerede | Durum |
+|---|---|---|
+| Referans ekstrenin 9 işlemi → beklenen bakiye dizisi | `test/domain/islem/referans_ekstre_test.dart` | ✅ |
+| KDV %1: `140.625` → `142.031,25` | `test/domain/islem/fatura_hesaplayici_test.dart` | ✅ |
+| KDV %0: toplam = ara toplam | `test/domain/islem/fatura_hesaplayici_test.dart` | ✅ |
+| Birim fiyat geri hesabı: `31.000 ÷ 1.650` → `18,79` gösterilir, toplam `31.000` kalır | `test/domain/islem/islem_kalemi_test.dart` | ✅ |
+| Alış faturası bakiyeyi negatife düşürür | `test/domain/islem/bakiye_hesaplayici_test.dart` | ✅ |
+| İptal edilen işlem bakiyeye katılmaz | `test/domain/islem/bakiye_hesaplayici_test.dart` | ✅ |
+| Tutar metni ayrıştırma (`31.000,50` → kuruş), `double`'a düşmeden | `test/core/para/para_girisi_test.dart` | ✅ |
+| Kimlik sıralaması aynı günün işlemlerini giriş sırasında tutar | `test/data/islem/islem_kimligi_test.dart` | ✅ |
+| `bakiyeYenidenHesapla` == önbelleklenmiş bakiye | `integration_test/islem_repository_test.dart` | ✅ |
+| Eşzamanlı beş işlem — bakiye bozulmuyor | `integration_test/islem_repository_test.dart` | ✅ |
+| İptal: kayıt duruyor, bakiye geri alınıyor, ikinci iptal iki kez düşmüyor | `integration_test/islem_repository_test.dart` | ✅ |
+| Sayfalama ve tarih aralığı süzgeci | `integration_test/islem_repository_test.dart` | ✅ |
 
 ---
 
@@ -164,4 +221,12 @@ kullanıcıyı kendi çalışma şeklinden koparırız ve faturası tutmaz.
   başarısız olur. Domain testleri yazılmadan UI'a geçilmez.
 - **`double` sızıntısı.** Kalem hesabı, KDV ve yuvarlama `double`'a düşerse hata
   kuruşlarda başlar, ekstrede lirada görünür. Kod incelemesinde özellikle bakılacak.
-- **Transaction unutulursa** bakiye sessizce bozulur ve fark edilmesi aylar sürer.
+  Kullanıcının yazdığı tutar metni de bu yüzden `double.parse` ile değil,
+  `core/para/para_girisi.dart` içinde tam sayı aritmetiğiyle ayrıştırılıyor.
+- **Atomik yazma unutulursa** bakiye sessizce bozulur ve fark edilmesi aylar sürer.
+  Bakiyeye dokunan her yol `WriteBatch` + `increment` kullanmalı; tek istisna
+  `bakiyeYenidenHesapla` onarımıdır.
+- **Ekrandaki yürüyen bakiye önbelleğe dayanıyor.** Liste, carinin
+  `bakiyeKurus` alanından geriye sayarak kolonu üretir; alan bozuksa satırların
+  hepsi birden kayar. Kullanıcının elindeki tek onarım, cari detayındaki
+  "Bakiyeyi yeniden hesapla" menüsüdür.
