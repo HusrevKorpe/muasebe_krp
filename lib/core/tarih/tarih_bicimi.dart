@@ -30,9 +30,18 @@ const List<String> _gunler = <String>[
   'Pazar',
 ];
 
-/// Ekstre tablosunda kullanılan uzun biçim: `17 Eylül 2021`
+/// Uzun biçim: `17 Eylül 2021`
 String uzunTarih(DateTime tarih) =>
     '${tarih.day} ${_aylar[tarih.month - 1]} ${tarih.year}';
+
+/// Ekstre tablosunun tarih biçimi: `05 Aralık 2024`
+///
+/// [uzunTarih]'ten tek farkı günün iki haneye tamamlanmasıdır. Tabloda tarihler
+/// alt alta dizildiği için tek haneli gün kolonu tırtıklı gösteriyor; referans
+/// ekstre de bu kolonda günü sıfırla dolduruyor. Cümle içinde ise `5 Aralık`
+/// doğru yazımdır — bu yüzden iki ayrı biçim var.
+String tabloTarihi(DateTime tarih) =>
+    '${_ikiHane(tarih.day)} ${_aylar[tarih.month - 1]} ${tarih.year}';
 
 /// Dar alanlarda kullanılan kısa biçim: `17.09.2021`
 String kisaTarih(DateTime tarih) =>

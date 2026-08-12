@@ -257,6 +257,54 @@ abstract final class Metinler {
   static const String katalogSerbestMetinAciklama =
       'Katalog zorunlu değil: "nakliye" gibi kalemleri elle yazabilirsiniz.';
 
+  // ─── Ekstre ──────────────────────────────────────────────────────────────
+  static const String ekstre = 'Ekstre';
+  static const String ekstreAl = 'Ekstre Al';
+  static const String ekstrePaylas = 'Paylaş';
+  static const String ekstreUretiliyor = 'Ekstre hazırlanıyor…';
+  static const String ekstreUretilemedi = 'Ekstre hazırlanamadı.';
+  static const String ekstreBosBaslik = 'Bu aralıkta işlem yok';
+  static const String ekstreBosAciklama =
+      'Ekstre yine de üretilir; tabloda yalnızca devreden bakiye görünür.';
+
+  /// Tablo ile toplamlar tutmuyorsa PDF üretilmez — referans yazılımın
+  /// düştüğü hataya düşmemek için (bkz. `fazlar/faz-4-ekstre.md`).
+  static const String ekstreTutarsiz =
+      'Ekstre toplamları tutmuyor. Bakiyeyi yeniden hesaplayıp tekrar deneyin.';
+
+  // Hazır tarih aralıkları
+  static const String aralikBuAy = 'Bu ay';
+  static const String aralikBuYil = 'Bu yıl';
+  static const String aralikTumu = 'Tümü';
+  static const String aralikOzel = 'Özel aralık';
+  static const String aralikBaslangic = 'Başlangıç';
+  static const String aralikBitis = 'Bitiş';
+
+  // ─── Ekstre PDF'i ────────────────────────────────────────────────────────
+  static const String ekstreBaslik = 'İŞLEM DÖKÜMÜ';
+  static const String ekstreIlgiliFirma = 'İLGİLİ FİRMA';
+  static const String ekstreKolonIslemTarihi = 'İŞLEM TARİHİ';
+  static const String ekstreKolonAciklama = 'AÇIKLAMA';
+  static const String ekstreKolonVadeTarihi = 'VADE TARİHİ';
+  static const String ekstreKolonBorc = 'BORÇ';
+  static const String ekstreKolonAlacak = 'ALACAK';
+  static const String ekstreKolonBakiye = 'BAKİYE ₺';
+  static const String ekstreDevreden = 'Devreden bakiye';
+  static const String ekstreToplamBorc = 'TOPLAM BORÇ';
+  static const String ekstreToplamAlacak = 'TOPLAM ALACAK';
+  static const String ekstreBakiye = 'BAKİYE';
+  static const String ekstreBankaBilgileri = 'Banka Hesap Bilgileri';
+  static const String ekstreHesapNo = 'HESAP NO';
+  static const String ekstreIban = 'IBAN';
+  static const String ekstreTelefon = 'TEL';
+  static const String ekstreFaks = 'FAX';
+  static const String ekstreVergiDairesi = 'VD';
+  static const String ekstreVergiNo = 'VKN';
+
+  /// `SAYFA 1 / 2` — ilk parça kalın basılır, ikincisi soluk.
+  static String ekstreSayfa(int sayfa) => 'SAYFA $sayfa';
+  static String ekstreSayfaToplami(int toplam) => ' / $toplam';
+
   // ─── İşlem doğrulama ─────────────────────────────────────────────────────
   static const String aciklamaGerekli = 'Açıklama gerekli.';
   static const String kalemGerekli = 'En az bir kalem ekleyin.';

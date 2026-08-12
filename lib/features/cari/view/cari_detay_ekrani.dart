@@ -67,6 +67,11 @@ class _CariDetayEkraniDurumu extends ConsumerState<CariDetayEkrani> {
         actions: [
           if (kayit.value != null) ...[
             IconButton(
+              icon: const Icon(Icons.picture_as_pdf_outlined),
+              tooltip: Metinler.ekstreAl,
+              onPressed: () => context.push(Yollar.ekstreYolu(widget.cariId)),
+            ),
+            IconButton(
               icon: const Icon(Icons.edit_outlined),
               tooltip: Metinler.duzenle,
               onPressed: _duzenlemeyeGit,

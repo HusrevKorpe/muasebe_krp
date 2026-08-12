@@ -55,4 +55,18 @@ void main() {
       );
     });
   });
+
+  group('tabloTarihi', () {
+    test('ekstre tablosunda gün iki haneye tamamlanır', () {
+      expect(tabloTarihi(DateTime(2024, 12, 5)), '05 Aralık 2024');
+      expect(tabloTarihi(DateTime(2025, 1, 1)), '01 Ocak 2025');
+    });
+
+    test('iki haneli günde uzunTarih ile aynı sonucu verir', () {
+      final tarih = DateTime(2021, 9, 17);
+
+      expect(tabloTarihi(tarih), '17 Eylül 2021');
+      expect(tabloTarihi(tarih), uzunTarih(tarih));
+    });
+  });
 }

@@ -46,6 +46,14 @@ class VeriHatasi extends UygulamaHatasi {
 
   const VeriHatasi.yetkisiz()
       : super('Bu veriye erişim yetkiniz yok.');
+
+  /// Ekstre, açılış bakiyesi için aralıktan önceki tüm işlemleri okumak
+  /// zorundadır ve sayfalanamaz. Okuma sınırı aşılırsa eksik veriyle ekstre
+  /// üretmek yerine kullanıcıdan aralığı daraltması istenir — yanlış bakiye
+  /// göstermek, ekstre üretememekten kötüdür.
+  const VeriHatasi.cokFazlaIslem()
+      : super('Bu cari için çok fazla işlem var. Daha dar bir tarih aralığı '
+            'seçin.');
 }
 
 /// Girdi doğrulama hatası — form alanları için.

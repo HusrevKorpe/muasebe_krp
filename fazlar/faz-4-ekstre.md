@@ -1,6 +1,6 @@
 # Faz 4 — PDF Ekstre
 
-**Durum:** Başlanmadı
+**Durum:** Sürüyor — kod tamam, cihazda doğrulama bekliyor
 **Ön koşul:** Faz 2 kapalı (Faz 3 şart değil)
 **Amaç:** Bir carinin belirli tarih aralığındaki işlem dökümünü PDF olarak üretmek ve
 WhatsApp/e-posta ile paylaşmak. Hedef çıktı, kullanıcının verdiği referans ekstrenin
@@ -85,54 +85,97 @@ satırın bakiyesine eşit olmalıdır.
 ## Görevler
 
 ### Paketler
-- [ ] `pdf` — PDF üretimi
-- [ ] `printing` veya `share_plus` — paylaşma
-- [ ] Türkçe karakter destekli font gömülür (varsayılan fontlar `ğ ş ı İ` basmaz)
+- [x] `pdf` — PDF üretimi
+- [x] `printing` — önizleme, paylaşma ve yazdırma (`PdfPreview`)
+- [x] Türkçe karakter destekli font gömülür (varsayılan fontlar `ğ ş ı İ` basmaz)
+      → Roboto, `assets/fonts/` (Apache 2.0, Flutter SDK kopyası). Testi fontun
+      karakter tablosunu tarıyor: `₺ ğ ş ı İ ç ö ü —` hepsi doğrulanıyor.
 
 ### Domain — **testi zorunlu**
-- [ ] `EkstreOlusturucu`: cari + tarih aralığı + işlemler → ekstre veri modeli
-- [ ] Açılış bakiyesi hesabı: aralık başlangıcından önceki işlemlerin toplamı
-- [ ] Toplam borç / toplam alacak / kapanış bakiyesi
-- [ ] Tutarlılık kontrolü: `toplamBorç − toplamAlacak == kapanışBakiyesi`
+- [x] `EkstreOlusturucu`: cari + tarih aralığı + işlemler → ekstre veri modeli
+- [x] Açılış bakiyesi hesabı: aralık başlangıcından önceki işlemlerin toplamı
+- [x] Toplam borç / toplam alacak / kapanış bakiyesi
+- [x] Tutarlılık kontrolü: `açılış + toplamBorç − toplamAlacak == kapanışBakiyesi`
+      **ve** kapanış bakiyesi = son satırın bakiyesi. Tutmazsa PDF üretilmez,
+      `DogrulamaHatasi` fırlar (`EkstreBelgesi.uret`).
 
 ### Sunum
-- [ ] `features/ekstre/` — tarih aralığı seçimi, önizleme, paylaş
-- [ ] PDF şablonu: başlık, tablo, kalem satırları, alt bilgi
-- [ ] Çok sayfa desteği: tablo başlığı her sayfada tekrarlanır, `SAYFA n / m`
-- [ ] Uzun açıklama satır kaydırma (referansta `(TESL İM EDİLDİ)` diye bölünmüş — bizde bölünmeyecek)
+- [x] `features/ekstre/` — tarih aralığı seçimi, önizleme, paylaş
+- [x] PDF şablonu: başlık, tablo, kalem satırları, alt bilgi
+- [x] Çok sayfa desteği: tablo başlığı her sayfada tekrarlanır, `SAYFA n / m`
+- [x] Uzun açıklama satır kaydırma (referansta `(TESL İM EDİLDİ)` diye bölünmüş — bizde bölünmeyecek)
 
 ### Kısayollar
-- [ ] Cari detay sayfasında "Ekstre Al" butonu
-- [ ] Hazır aralıklar: bu ay · bu yıl · tümü · özel aralık
+- [x] Cari detay sayfasında "Ekstre Al" butonu
+- [x] Hazır aralıklar: bu ay · bu yıl · tümü · özel aralık
+
+---
+
+## Referanstan bilerek ayrıldığımız yerler
+
+| Konu | Referans | Bizde | Neden |
+|---|---|---|---|
+| Alış faturasının kolonu | Tabloda **BORÇ**, toplamda alacak | **ALACAK** | Referansın hatası; tablo ile toplamlar tutmuyordu |
+| `TOPLAM BORÇ` | `314.000,00 ₺` (satırlarla tutmuyor) | Satırlardan hesaplanır | Tutarlılık kontrolü zorunlu |
+| Alış faturası etiketi | `Fiş / Fatura` | `Alış Faturası` | Uygulamanın işlem tipi adı |
+| İkinci sayfanın üstü | Boş | İşletme + cari şeridi | Dağılan sayfa kime ait, okunabilmeli |
+| IBAN | Bitişik | Dörtlü gruplu | Kullanıcı bankaya elle giriyor |
+| Sol üst logo | Görsel logo | İşletme adı yazı olarak | Logo yükleme özelliği yok — Faz 5'e kaldı |
+| Satır simgesi | Material simgeleri | Vektör çizim (sayfa / madenî para) | Simge fontu PDF'e gömülemiyor |
+
+## Faz sırasında eklenen çekirdek yardımcılar
+
+- `core/tarih/gun_siniri.dart` — `gunBasi` / `gunSonu`. Aralığın bitişi günün
+  **sonuna** genişler; yoksa o gün girilen işlem ekstreden düşerdi.
+- `core/tarih/tarih_bicimi.dart` → `tabloTarihi` — `05 Aralık 2024`. Tabloda gün
+  iki haneli; cümle içinde (`uzunTarih`) tek haneli kalır.
+- `core/metin/turkce.dart` → `ilkHarfBuyuk` — kalem birimi `adet` → `Adet`.
+- `data/islem/islem_repository.dart` → `ekstreIcinGetir` — **sayfalama yok**
+  (KURALLAR.md §4.3'ten bilinçli sapma): açılış bakiyesi aralıktan önceki tüm
+  işlemlerin toplamıdır, bir sayfayla hesaplanamaz. 2000 kayıtlık okuma sınırı
+  aşılırsa eksik veriyle ekstre üretmek yerine hata verilir.
 
 ---
 
 ## Kabul kriterleri
 
-1. `flutter analyze` sıfır uyarı, `flutter test` geçer, `flutter build ios --release` başarılı
-2. **Referans ekstredeki 9 işlem girilip aynı tarih aralığı seçildiğinde, üretilen
+1. [x] `flutter analyze` sıfır uyarı, `flutter test` geçer, `flutter build ios --release` başarılı
+2. [x] **Referans ekstredeki 9 işlem girilip aynı tarih aralığı seçildiğinde, üretilen
    PDF'in tablo satırları ve bakiye kolonu referansla birebir aynı**
-3. `TOPLAM BORÇ − TOPLAM ALACAK` değeri son satırın bakiyesine eşit
-4. Türkçe karakterler doğru basılıyor: `Şeftali`, `Ayçiçeği`, `İĞDE`
-5. Para biçimi `94.000,00 ₺` — nokta/virgül karışmıyor
-6. 100+ işlemli cari için çok sayfalı PDF üretiliyor, başlık her sayfada tekrarlanıyor
-7. Banka hesapları ve işletme bilgileri başlıkta/altta doğru görünüyor
-8. WhatsApp'ta paylaşılıp telefonda açılabiliyor
-9. Tarih aralığı seçildiğinde açılış bakiyesi doğru hesaplanıyor
+   — `ekstre_olusturucu_test.dart`; tek fark 9. satırın kolonu (yukarıdaki tablo)
+3. [x] `TOPLAM BORÇ − TOPLAM ALACAK` değeri son satırın bakiyesine eşit
+4. [x] Türkçe karakterler doğru basılıyor: `Şeftali`, `Ayçiçeği`, `İĞDE`
+5. [x] Para biçimi `94.000,00 ₺` — nokta/virgül karışmıyor
+6. [x] 100+ işlemli cari için çok sayfalı PDF üretiliyor, başlık her sayfada tekrarlanıyor
+7. [x] Banka hesapları ve işletme bilgileri başlıkta/altta doğru görünüyor
+8. [ ] WhatsApp'ta paylaşılıp telefonda açılabiliyor — **cihazda elle doğrulanacak**
+9. [x] Tarih aralığı seçildiğinde açılış bakiyesi doğru hesaplanıyor
 
 ---
 
 ## Testler
 
-| Ne test edilir | Neden |
+| Ne test edilir | Nerede |
 |---|---|
-| Referans ekstrenin 9 işlemi → beklenen bakiye kolonu | Fazın ana ölçütü |
-| `toplamBorç − toplamAlacak == kapanışBakiyesi` | Referans yazılımın hatasına düşmemek |
-| Açılış bakiyesi: aralık ortasından başlayan ekstre | En kolay atlanan hesap |
-| Para biçimleme: `9400000` → `94.000,00 ₺` | |
-| Negatif bakiye biçimi | |
-| Boş aralık: hiç işlem yoksa PDF yine üretilir | Çökmemeli |
-| Türkçe karakterli isim PDF'e basılır | Font gömme doğrulaması |
+| Referans ekstrenin 9 işlemi → beklenen bakiye kolonu | `test/domain/ekstre/ekstre_olusturucu_test.dart` |
+| `açılış + toplamBorç − toplamAlacak == kapanışBakiyesi` | aynı dosya, üç ayrı aralıkla |
+| Açılış bakiyesi: aralık ortasından başlayan ekstre | aynı dosya |
+| Aralıktan sonraki işlemler bakiyeye girmez | aynı dosya |
+| İptalli kayıt tabloda kalır, bakiyeye girmez | aynı dosya |
+| Boş aralık / hiç işlemi olmayan cari | aynı dosya + `ekstre_belgesi_test.dart` |
+| Gün sınırları, ters aralık, ay sonu taşması | `test/domain/ekstre/ekstre_araligi_test.dart` |
+| Gömülü fontta `₺ ğ ş ı İ ç ö ü —` var mı | `test/features/ekstre/ekstre_belgesi_test.dart` |
+| PDF'e font gerçekten gömülüyor mu (`/FontFile2`) | aynı dosya |
+| 100+ işlemde çok sayfa üretimi | aynı dosya |
+| Tutarsız ekstre PDF'e basılmıyor | aynı dosya |
+| Açıklama biçimi ve dosya adı | aynı dosya |
+| Para biçimleme `9400000` → `94.000,00 ₺`, negatif bakiye | `test/core/para/para_bicimi_test.dart` (Faz 0) |
+| `ekstreIcinGetir` sıralama, bitiş sınırı, iptalli kayıt | `integration_test/islem_repository_test.dart` |
+| Cari detay → ekstre → önizleme, aralık değiştirme | `integration_test/ekstre_akisi_test.dart` |
+
+> Önizlemenin cihazda rasterlenmesi (`printing` eklentisi) yalnızca
+> `ekstre_akisi_test.dart` ile görülebiliyor — PDF üretimi saf Dart, ama
+> ekranda göstermek platform kanalından geçiyor.
 
 ---
 

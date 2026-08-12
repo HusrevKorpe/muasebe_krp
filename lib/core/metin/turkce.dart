@@ -61,6 +61,14 @@ String turkceBuyuk(String metin) {
   return tampon.toString();
 }
 
+/// İlk harfi Türkçe kurallarına göre büyütür, kalanına dokunmaz.
+/// `'adet'` → `'Adet'`, `'ışık'` → `'Işık'`
+String ilkHarfBuyuk(String metin) {
+  if (metin.isEmpty) return metin;
+  final ilk = String.fromCharCode(metin.runes.first);
+  return turkceBuyuk(ilk) + metin.substring(ilk.length);
+}
+
 /// Arama için normalize edilmiş anahtar üretir.
 ///
 /// Türkçe harfler ASCII'ye katlanır, harfler küçültülür, baştaki/sondaki boşluk

@@ -130,4 +130,17 @@ void main() {
       expect(turler, ['Armut', 'Ceviz', 'Çam', 'Elma', 'Şeftali', 'Zeytin']);
     });
   });
+
+  group('ilkHarfBuyuk', () {
+    test('ilk harfi Türkçe kurallarına göre büyütür', () {
+      expect(ilkHarfBuyuk('adet'), 'Adet');
+      expect(ilkHarfBuyuk('ışık'), 'Işık');
+      expect(ilkHarfBuyuk('istanbul'), 'İstanbul');
+    });
+
+    test('kalan harflere dokunmaz', () {
+      expect(ilkHarfBuyuk('şEFTALİ'), 'ŞEFTALİ');
+      expect(ilkHarfBuyuk(''), '');
+    });
+  });
 }

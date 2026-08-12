@@ -235,6 +235,68 @@ void main() {
     });
   });
 
+  group('ekstreIcinGetir', () {
+    test('işlemleri eskiden yeniye, sayfalamadan döner', () async {
+      await tahsilatEkle(tarih: DateTime(2024, 6, 1));
+      await faturaEkle(tarih: DateTime(2024, 1, 15));
+      await tahsilatEkle(tarih: DateTime(2024, 3, 20));
+
+      final islemler = await repository.ekstreIcinGetir(cariId: cariId);
+
+      expect(
+        islemler.map((islem) => islem.islemTarihi),
+        <DateTime>[
+          DateTime(2024, 1, 15),
+          DateTime(2024, 3, 20),
+          DateTime(2024, 6, 1),
+        ],
+        reason: 'ekstrenin doğal yönü eskiden yeniye',
+      );
+    });
+
+    test('bitiş sınırından sonraki işlemler hiç okunmaz', () async {
+      await faturaEkle(tarih: DateTime(2024, 1, 15));
+      await tahsilatEkle(tarih: DateTime(2025, 2, 1));
+
+      final islemler = await repository.ekstreIcinGetir(
+        cariId: cariId,
+        bitis: DateTime(2024, 12, 31, 23, 59, 59, 999),
+      );
+
+      expect(islemler, hasLength(1));
+      expect(islemler.single.islemTarihi, DateTime(2024, 1, 15));
+    });
+
+    test('açılış bakiyesi için aralık öncesi işlemler de gelir', () async {
+      // Ekstre, aralıktan önceki kayıtları sorguyla dışlamaz: açılış
+      // bakiyesi onlardan toplanır, ayıklamayı domain yapar.
+      await faturaEkle(tarih: DateTime(2023, 5, 1));
+      await tahsilatEkle(tarih: DateTime(2024, 6, 1));
+
+      final islemler = await repository.ekstreIcinGetir(cariId: cariId);
+
+      expect(islemler, hasLength(2));
+    });
+
+    test('iptalli kayıt da döner — ekstrede üstü çizili görünür', () async {
+      final islemId = await faturaEkle(tarih: DateTime(2024, 1, 15));
+      final kayit = await repository
+          .izle(cariId: cariId, islemId: islemId)
+          .firstWhere((kayit) => kayit != null);
+      await repository.iptalEt(cariId: cariId, islem: kayit!.islem);
+      await sunucudaBekle(
+        islemler().doc(islemId),
+        kosul: (veri) => veri[Islem.alanIptal] == true,
+      );
+
+      final ekstreIslemleri = await repository.ekstreIcinGetir(cariId: cariId);
+
+      expect(ekstreIslemleri, hasLength(1));
+      expect(ekstreIslemleri.single.iptalMi, isTrue);
+      expect(ekstreIslemleri.single.bakiyeEtkisi, Kurus.sifir);
+    });
+  });
+
   group('iptalEt', () {
     test('kayıt silinmez, iptal işaretlenir ve bakiye geri alınır', () async {
       final islemId = await faturaEkle(lira: 1000);

@@ -38,6 +38,13 @@ class BakiyeDokumu {
 
   bool get bosMu => satirlar.isEmpty;
 
+  /// Toplamlar bakiyeyle tutuyor mu: `devir + borç − alacak == bakiye`.
+  ///
+  /// Referans ekstredeki yazılım bunu tutturamamış — tabloda borç kolonuna
+  /// yazdığı işlemi toplamda alacak saymış. Ekstre bu kontrolü geçmeden
+  /// PDF'e basılmaz (bkz. `domain/ekstre/ekstre.dart`).
+  bool get tutarliMi => devir + toplamBorc - toplamAlacak == bakiye;
+
   @override
   String toString() =>
       'BakiyeDokumu(${satirlar.length} satır, bakiye: ${bakiye.deger})';

@@ -26,6 +26,9 @@ abstract final class Yollar {
   /// İşlem detayı: `/cari/{cariId}/islem/{islemId}`
   static const String islemDetay = '/cari/:cariId/islem/:islemId';
 
+  /// PDF ekstre: `/cari/{cariId}/ekstre`
+  static const String ekstre = '/cari/:cariId/ekstre';
+
   /// Fidan katalogu.
   static const String fidanlar = '/fidanlar';
   static const String fidanYeni = '/fidanlar/yeni';
@@ -48,6 +51,8 @@ abstract final class Yollar {
 
   static String islemDetayYolu(String cariId, String islemId) =>
       '/cari/$cariId/islem/$islemId';
+
+  static String ekstreYolu(String cariId) => '/cari/$cariId/ekstre';
 
   static String fidanDuzenleYolu(String fidanId) => '/fidanlar/$fidanId';
 

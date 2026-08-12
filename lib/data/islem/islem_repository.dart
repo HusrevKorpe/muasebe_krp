@@ -46,6 +46,13 @@ class IslemRepository {
 
   static const int varsayilanSayfaBoyu = 25;
 
+  /// Tek bir ekstre için okunacak en fazla işlem sayısı.
+  ///
+  /// Firestore okuma başına ücretlendirir; bir carinin binlerce işlemi varsa
+  /// bu sorgu pahalıya patlar. Sınır, gerçek kullanımın çok üstünde tutuldu:
+  /// dört yıllık referans ekstrede dokuz işlem var.
+  static const int ekstreOkumaSiniri = 2000;
+
   final FirebaseFirestore _firestore;
   final String _isletmeId;
 
@@ -86,6 +93,46 @@ class IslemRepository {
       );
     } on FirebaseException catch (hata, yigin) {
       Log.hata('İşlem listesi okunamadı: ${hata.code}', hata, yigin);
+      throw _veriHatasi(hata);
+    }
+  }
+
+  /// Ekstre için carinin işlemlerini eskiden yeniye, **sayfalamadan** getirir.
+  ///
+  /// Liste ekranlarının aksine burada sayfalama yok (KURALLAR.md §4.3'ten
+  /// bilinçli sapma): açılış bakiyesi, aralığın başlangıcından önceki **tüm**
+  /// işlemlerin toplamıdır ve bir sayfayla hesaplanamaz. [bitis] verilirse
+  /// sorgu orada kesilir — aralıktan sonraki işlemler ekstreye hiç girmez,
+  /// boşuna okunmaları da gerekmez.
+  ///
+  /// [ekstreOkumaSiniri] kadar kayıt dönerse eksik veri ihtimali vardır ve
+  /// hata fırlatılır; sessizce kesilen bir ekstre yanlış bakiye gösterirdi.
+  Future<List<Islem>> ekstreIcinGetir({
+    required String cariId,
+    DateTime? bitis,
+  }) async {
+    try {
+      var sorgu = _koleksiyon(cariId).orderBy(Islem.alanIslemTarihi);
+      if (bitis != null) {
+        sorgu = sorgu.where(
+          Islem.alanIslemTarihi,
+          isLessThanOrEqualTo: Timestamp.fromDate(bitis),
+        );
+      }
+
+      final anlik = await sorgu.limit(ekstreOkumaSiniri).get();
+      if (anlik.docs.length == ekstreOkumaSiniri) {
+        Log.uyari('Ekstre okuma sınırına ulaşıldı: $cariId');
+        throw const VeriHatasi.cokFazlaIslem();
+      }
+
+      return anlik.docs
+          .map(
+            (belge) => Islem.fromMap(belge.id, firestoreHaritasi(belge.data())),
+          )
+          .toList(growable: false);
+    } on FirebaseException catch (hata, yigin) {
+      Log.hata('Ekstre işlemleri okunamadı: ${hata.code}', hata, yigin);
       throw _veriHatasi(hata);
     }
   }

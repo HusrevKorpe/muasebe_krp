@@ -11,6 +11,7 @@ import '../features/cari/view/cari_detay_ekrani.dart';
 import '../features/cari/view/cari_duzenle_ekrani.dart';
 import '../features/cari/view/cari_form_ekrani.dart';
 import '../features/cari/view/cari_listesi_ekrani.dart';
+import '../features/ekstre/view/ekstre_ekrani.dart';
 import '../features/fidan/view/fidan_duzenle_ekrani.dart';
 import '../features/fidan/view/fidan_form_ekrani.dart';
 import '../features/fidan/view/fidan_listesi_ekrani.dart';
@@ -144,6 +145,14 @@ final yonlendiriciSaglayici = Provider<GoRouter>((ref) {
               ? FaturaFormEkrani(cariId: cariId, tip: tip)
               : TahsilatFormEkrani(cariId: cariId, tip: tip);
         },
+      ),
+      // Ekstre yolu, `/cari/:cariId/islem/:islemId` kalıbıyla karışmaz ama
+      // sıralama tutarlılığı için işlem yollarının yanında duruyor.
+      GoRoute(
+        path: Yollar.ekstre,
+        builder: (context, durum) => EkstreEkrani(
+          cariId: durum.pathParameters[Yollar.cariIdParametresi]!,
+        ),
       ),
       GoRoute(
         path: Yollar.islemDetay,
