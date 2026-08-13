@@ -58,7 +58,7 @@
 <main>
 
 <h1>FidanCari — Gizlilik Politikası</h1>
-<p class="tarih">Son güncelleme: 12 Ağustos 2026</p>
+<p class="tarih">Son güncelleme: 13 Ağustos 2026</p>
 
 <p>Bu politika, <strong>FidanCari</strong> iOS uygulamasının hangi verileri
 işlediğini açıklar.</p>
@@ -72,24 +72,28 @@ Sorularınız için: <a href="mailto:ILETISIM@ORNEK.COM">ILETISIM@ORNEK.COM</a><
 aracı ve üçüncü taraf izleyici <strong>kullanılmaz</strong>.</p>
 
 <h3>2.1 Hesap bilgisi</h3>
-<div class="tablo-sarma">
-<table>
-  <tr><th>Veri</th><th>Neden</th><th>Nerede saklanır</th></tr>
-  <tr><td>E-posta adresi</td><td>Giriş ve şifre sıfırlama</td><td>Firebase Authentication</td></tr>
-  <tr><td>Şifre</td><td>Girişin doğrulanması</td><td>Firebase Authentication (karma olarak; geliştirici göremez)</td></tr>
-</table>
-</div>
+<p>Uygulamaya <strong>Google hesabınızla</strong> girersiniz. Google, girişi
+doğruladıktan sonra uygulamaya <strong>e-posta adresinizi</strong> ve bir
+kullanıcı kimliğini bildirir; uygulama bu ikisini saklar. Şifreniz uygulamaya
+hiçbir zaman girilmez ve uygulama tarafından görülmez.</p>
+<p>E-posta adresi yalnızca iki iş için kullanılır: oturumunuzu sürdürmek ve
+erişim izninizi denetlemek. Uygulamada kayıt olma adımı yoktur; hangi
+adreslerin girebileceğini uygulamayı kuran kişi elle belirler. Adresiniz
+pazarlama, analiz veya izleme amacıyla kullanılmaz, üçüncü taraflara
+verilmez.</p>
 
 <h3>2.2 Kullanıcı içeriği</h3>
 <p>Uygulamaya <strong>kendi girdiğiniz</strong> ön muhasebe kayıtları:</p>
 <ul>
-  <li>İşletme bilgileriniz: ad, adres, telefon, vergi dairesi ve numarası, banka hesap bilgileri (IBAN)</li>
-  <li>Cari (müşteri/tedarikçi) kayıtları: ad, telefon, adres, vergi bilgileri, not</li>
+  <li>İşletme bilgileriniz: ad, adres, telefon, banka hesap bilgileri (IBAN)</li>
+  <li>Cari (müşteri/tedarikçi) kayıtları: ad, telefon, adres, not</li>
   <li>İşlemler: satış/alış faturaları, tahsilat ve ödemeler, fatura kalemleri</li>
   <li>Fidan katalogu: tür, çeşit, anaç, yaş, kök tipi, fiyat</li>
 </ul>
-<p>Bu kayıtlar <strong>yalnızca sizin hesabınıza bağlıdır</strong>. Uygulama,
-verinizi başka kullanıcılara göstermez; geliştirici de bu veriyi görüntülemez.</p>
+<p>Bu kayıtlar <strong>tek bir ortak deftere</strong> yazılır. Uygulamayı aynı
+işletmede birden fazla kişi kullanabilir; erişim izni verilmiş hesaplar aynı
+kayıtları görür. İzin listesinde olmayan hiç kimse, giriş yapmış olsa bile tek
+bir kaydı göremez.</p>
 
 <h3>2.3 Toplanmayan veriler</h3>
 <ul>
@@ -108,8 +112,9 @@ bu yüzden App Tracking Transparency izni de istemez.
 saklanır. Firebase, Google Ireland Limited / Google LLC tarafından işletilir ve
 veri Google'ın sunucularında barındırılır. Google bu hizmette “veri işleyen”
 sıfatıyla hareket eder.</p>
-<p>Firebase güvenlik kuralları, her kullanıcının <strong>yalnızca kendi
-verisine</strong> erişmesine izin verecek şekilde yapılandırılmıştır.</p>
+<p>Firebase güvenlik kuralları, veriye <strong>yalnızca izin listesindeki
+hesapların</strong> erişmesine izin verecek şekilde yapılandırılmıştır. Liste
+sunucuda tutulur ve uygulama üzerinden değiştirilemez.</p>
 <p>Uygulama çevrimdışı çalışabilmek için verinin bir kopyasını cihazınızda tutar.
 Uygulamayı sildiğinizde bu yerel kopya da silinir.</p>
 
@@ -122,26 +127,31 @@ sunucularımıza yüklenmez.</p>
 <p>Yasal zorunluluk hâlinde (mahkeme kararı vb.) veri, yalnızca yasanın
 gerektirdiği ölçüde yetkili makamlarla paylaşılabilir.</p>
 
-<h2>5. Saklama süresi ve hesap silme</h2>
-<p>Verileriniz, siz silene kadar saklanır.</p>
+<h2>5. Saklama süresi ve verinin silinmesi</h2>
+<p>Verileriniz, silinmesini isteyene kadar saklanır.</p>
 <div class="kutu">
-Uygulama içinden <strong>Menü → Hesap → Hesabı sil</strong> yolunu izleyerek
-hesabınızı ve ona bağlı tüm verileri kalıcı olarak silebilirsiniz.
+Uygulama hesap açtırmaz — Google hesabınızı siz zaten kendiniz açtınız, uygulama
+yalnızca ona erişim izni tanır. Bu yüzden uygulama içinde bir “hesabı sil” adımı
+yoktur. Erişim izninizin kaldırılmasını ya da tüm verinin kalıcı olarak
+silinmesini istiyorsanız
+<a href="mailto:ILETISIM@ORNEK.COM">ILETISIM@ORNEK.COM</a> adresine yazmanız
+yeterlidir.
 </div>
-<p>Silme işlemi şunları kapsar:</p>
+<p>Talep şunları kapsayacak şekilde yerine getirilir:</p>
 <ul>
   <li>Tüm cari kayıtları ve bunlara bağlı işlemler</li>
   <li>Fidan katalogu</li>
   <li>İşletme profili</li>
-  <li>Firebase Authentication hesabınız</li>
+  <li>Verinin bağlı olduğu Firebase hesabı</li>
 </ul>
-<p>Bu işlem <strong>geri alınamaz</strong> ve yedeği tutulmaz.</p>
+<p>Bu işlem <strong>geri alınamaz</strong> ve yedeği tutulmaz. Uygulamayı
+cihazınızdan silmek yalnızca yerel kopyayı ortadan kaldırır; sunucu kopyası
+yukarıdaki talep olmadan silinmez.</p>
 
 <h2>6. Haklarınız</h2>
 <p>KVKK ve GDPR kapsamında; verilerinize erişme, düzeltme, silme ve taşıma
 haklarınız vardır. Veriye erişim ve düzeltme uygulama içinden doğrudan
-yapılabilir; silme için yukarıdaki hesap silme yolu kullanılır. Diğer
-talepleriniz için
+yapılabilir; silme ve taşıma talepleriniz ile diğer sorularınız için
 <a href="mailto:ILETISIM@ORNEK.COM">ILETISIM@ORNEK.COM</a> adresine
 yazabilirsiniz.</p>
 

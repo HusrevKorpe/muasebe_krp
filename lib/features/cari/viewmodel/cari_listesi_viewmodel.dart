@@ -6,10 +6,9 @@ import '../../../core/hata/hatalar.dart';
 import '../../../core/log/log.dart';
 import '../../../data/cari/cari_kaydi.dart';
 import '../../../data/cari/cari_repository.dart';
-import '../../../domain/cari/cari_siralamasi.dart';
 import 'cari_listesi_durumu.dart';
 
-/// Cari listesinin arama, sıralama ve sayfalama mantığı.
+/// Cari listesinin arama ve sayfalama mantığı.
 class CariListesiViewModel extends AsyncNotifier<CariListesiDurumu> {
   /// Her tuşa basışta sorgu atmamak için beklenen süre. Firestore okuma başına
   /// ücretlendirir; "Ahmet" yazmak 5 sorgu değil 1 sorgu olmalı.
@@ -17,7 +16,6 @@ class CariListesiViewModel extends AsyncNotifier<CariListesiDurumu> {
 
   Timer? _aramaZamanlayici;
   String _arama = '';
-  CariSiralamasi _siralama = CariSiralamasi.ad;
 
   @override
   Future<CariListesiDurumu> build() async {
@@ -33,13 +31,7 @@ class CariListesiViewModel extends AsyncNotifier<CariListesiDurumu> {
     _aramaZamanlayici = Timer(_aramaGecikmesi, () => unawaited(yenile()));
   }
 
-  Future<void> siralamayiDegistir(CariSiralamasi siralama) async {
-    if (siralama == _siralama) return;
-    _siralama = siralama;
-    await yenile();
-  }
-
-  /// Listeyi baştan yükler. Arama ve sıralama değişikliklerinde, aşağı çekerek
+  /// Listeyi baştan yükler. Arama değişikliklerinde, aşağı çekerek
   /// yenilemede ve kayıt eklendikten sonra çağrılır.
   Future<void> yenile() async {
     state = const AsyncValue<CariListesiDurumu>.loading();
@@ -66,11 +58,7 @@ class CariListesiViewModel extends AsyncNotifier<CariListesiDurumu> {
     try {
       final sayfa = await ref
           .read(cariRepositorySaglayici)
-          .listele(
-            siralama: _siralama,
-            arama: _arama,
-            sonrasindan: mevcut.kayitlar.last,
-          );
+          .listele(arama: _arama, sonrasindan: mevcut.kayitlar.last);
 
       state = AsyncValue<CariListesiDurumu>.data(
         mevcut.kopyala(
@@ -92,14 +80,11 @@ class CariListesiViewModel extends AsyncNotifier<CariListesiDurumu> {
   }
 
   Future<CariListesiDurumu> _ilkSayfa() async {
-    final sayfa = await ref
-        .read(cariRepositorySaglayici)
-        .listele(siralama: _siralama, arama: _arama);
+    final sayfa = await ref.read(cariRepositorySaglayici).listele(arama: _arama);
 
     return CariListesiDurumu(
       kayitlar: sayfa.kayitlar,
       arama: _arama,
-      siralama: _siralama,
       dahaVar: sayfa.dahaVar,
     );
   }

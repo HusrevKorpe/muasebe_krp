@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -38,21 +41,92 @@ Future<void> emulatoreBaglan() async {
   );
 }
 
-/// Test kullanıcılarının şifresi. Hesap silme akışı yeniden doğrulama istediği
-/// için testin şifreyi bilmesi gerekiyor.
+/// Test kullanıcılarının şifresi.
 const String testSifresi = 'sifre123';
 
 /// Her test için yeni bir kullanıcı açar ve `uid` değerini döner.
 ///
-/// Testler birbirinin verisini görmesin diye her çağrı ayrı bir hesap üretir;
-/// `uid` aynı zamanda işletme kimliği olduğu için veri de izole olur.
-Future<String> yeniKullaniciAc(FirebaseAuth kimlik) async {
+/// Testler birbirinin verisini görmesin diye her çağrı ayrı bir hesap üretir ve
+/// dönen `uid` işletme kimliği olarak kullanılır. Kurallar artık sahiplik
+/// aramıyor (defter ortak), ama ayrı kimlikler testleri birbirinden ayırmaya
+/// yarıyor.
+///
+/// Kullanıcı öntanımlı olarak izin listesine de eklenir; [izinli] `false`
+/// verilirse eklenmez ve kuralların onu geri çevirmesi sınanabilir.
+///
+/// Uygulamanın kendisi hesap açmaz — Google ile giriş yapar. Bu yardımcı
+/// yalnızca testin veri izolasyonu için var; emulator'de sağlayıcı kısıtlaması
+/// olmadığından burada e-posta/şifre ile hesap açılabiliyor.
+Future<String> yeniKullaniciAc(
+  FirebaseAuth kimlik, {
+  bool izinli = true,
+}) async {
   final benzersiz = DateTime.now().microsecondsSinceEpoch;
+  final ePosta = 'test$benzersiz@fidancari.test';
+
   final sonuc = await kimlik.createUserWithEmailAndPassword(
-    email: 'test$benzersiz@fidancari.test',
+    email: ePosta,
     password: testSifresi,
   );
+  if (izinli) await izinListesineEkle(ePosta);
+
   return sonuc.user!.uid;
+}
+
+/// İzin listesine (`izinliler/{ePosta}`) bir e-posta ekler.
+///
+/// Bu koleksiyon istemciye kapalı — kural motoru dışında kimse okuyamaz, kimse
+/// yazamaz (bkz. `firestore.rules`). Test onu [_yonetici] yoluyla doldurur.
+/// Gerçek projede aynı işi Firebase Console yapıyor.
+Future<void> izinListesineEkle(String ePosta) => _yonetici(
+  'PATCH',
+  '/v1/projects/$_projeKimligi/databases/(default)/documents/izinliler/$ePosta',
+  govde: <String, Object?>{'fields': <String, Object?>{}},
+);
+
+/// Emulator'deki tüm Firestore verisini siler.
+///
+/// Ortak defter modelinde her test aynı yola (`isletmeler/ortak`) yazıyor;
+/// önceki koşudan kalan kayıtlar "liste boş" beklentisini bozar. Bunu çağıran
+/// test, silmeden **sonra** kullanıcısını açmalı — izin listesi de siliniyor.
+Future<void> firestoreVerisiniSil() => _yonetici(
+  'DELETE',
+  '/emulator/v1/projects/$_projeKimligi/databases/(default)/documents',
+);
+
+String get _projeKimligi => DefaultFirebaseOptions.currentPlatform.projectId;
+
+/// Emulator'e kuralları atlayarak istek gönderir.
+///
+/// `Authorization: Bearer owner` başlığıyla gelen istekleri emulator yönetici
+/// sayar ve güvenlik kurallarını hiç değerlendirmez.
+Future<void> _yonetici(
+  String yontem,
+  String yol, {
+  Map<String, Object?>? govde,
+}) async {
+  final adres = Uri.parse(
+    'http://$emulatorSunucusu:$firestoreEmulatorKapisi$yol',
+  );
+
+  final istemci = HttpClient();
+  try {
+    final istek = await istemci.openUrl(yontem, adres);
+    istek.headers.set(HttpHeaders.authorizationHeader, 'Bearer owner');
+    if (govde != null) {
+      istek.headers.contentType = ContentType.json;
+      istek.write(jsonEncode(govde));
+    }
+
+    final yanit = await istek.close();
+    final cevap = await yanit.transform(utf8.decoder).join();
+    if (yanit.statusCode != HttpStatus.ok) {
+      fail('Emulator isteği başarısız ($yontem $yol → ${yanit.statusCode}): '
+          '$cevap');
+    }
+  } finally {
+    istemci.close();
+  }
 }
 
 /// Belge sunucuya yazılana kadar bekler.

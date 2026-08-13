@@ -29,26 +29,6 @@ void main() {
     });
   });
 
-  group('yuzdesi — KDV hesabı', () {
-    test('referans ekstredeki %1 KDV birebir tutar', () {
-      // Kalemler toplamı 140.625,00 ₺ -> KDV 1.406,25 ₺ -> toplam 142.031,25 ₺
-      const araToplam = Kurus(14062500);
-      final kdv = yuzdesi(araToplam, 1);
-
-      expect(kdv.deger, 140625);
-      expect((araToplam + kdv).deger, 14203125);
-    });
-
-    test('sıfır oran sıfır KDV üretir', () {
-      expect(yuzdesi(const Kurus(9400000), 0), Kurus.sifir);
-    });
-
-    test('yuvarlama gerektiren oran en yakın kuruşa iner', () {
-      // 33,33 ₺ -> %1 = 0,3333 ₺ -> 0,33 ₺
-      expect(yuzdesi(const Kurus(3333), 1).deger, 33);
-    });
-  });
-
   group('birimFiyatHesapla — toplamdan geriye hesap', () {
     test('referans ekstredeki Hurma kalemini üretir', () {
       // 1.650 adet, toplam 31.000,00 ₺ -> birim fiyat 18,79 ₺

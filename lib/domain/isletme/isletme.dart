@@ -3,8 +3,12 @@ import 'banka_hesabi.dart';
 
 /// Kullanıcının kendi işletmesi. Ekstre başlığını bu belge üretir.
 ///
-/// Belge kimliği Firebase Auth `uid` değeridir: tüm veri `isletmeler/{uid}`
-/// altında yaşar ve güvenlik kuralı tek satırla kurulur (bkz. `firestore.rules`).
+/// Belge kimliği sabittir: [ortakId]. Uygulamayı birden fazla kişi kullanıyor
+/// ve hepsi **aynı defteri** görüyor, yani veri kişiye değil ortak deftere
+/// bağlı. Kimin gireceğini `firestore.rules` içindeki izin listesi belirler.
+///
+/// Profil boş bırakılabilir: doldurulmazsa ekstre başlığı yalnızca sade kalır,
+/// uygulamanın hiçbir yeri kilitlenmez.
 class Isletme {
   const Isletme({
     required this.id,
@@ -12,9 +16,6 @@ class Isletme {
     this.unvan = '',
     this.adres = '',
     this.telefon = '',
-    this.faks,
-    this.vergiDairesi = '',
-    this.vergiNo = '',
     this.logoUrl,
     this.bankaHesaplari = const <BankaHesabi>[],
     this.olusturmaTarihi,
@@ -27,9 +28,6 @@ class Isletme {
     unvan: haritaMetin(veri, alanUnvan),
     adres: haritaMetin(veri, alanAdres),
     telefon: haritaMetin(veri, alanTelefon),
-    faks: haritaMetinOpsiyonel(veri, alanFaks),
-    vergiDairesi: haritaMetin(veri, alanVergiDairesi),
-    vergiNo: haritaMetin(veri, alanVergiNo),
     logoUrl: haritaMetinOpsiyonel(veri, alanLogoUrl),
     bankaHesaplari: haritaListesi(veri, alanBankaHesaplari)
         .map(BankaHesabi.fromMap)
@@ -38,15 +36,25 @@ class Isletme {
     guncellemeTarihi: haritaTarih(veri, alanGuncellemeTarihi),
   );
 
+  /// Henüz doldurulmamış profilin yerine geçen boş kayıt.
+  ///
+  /// Ekstre profil olmadan da üretilebilmeli; başlık sade çıkar.
+  static const Isletme bos = Isletme(id: ortakId, ad: '');
+
   static const String koleksiyon = 'isletmeler';
+
+  /// Ortak defterin belge kimliği.
+  ///
+  /// Eskiden burada oturum açan hesabın `uid` değeri vardı; uygulamayı iki kişi
+  /// kullanmaya başlayınca sabitlendi, çünkü iki ayrı hesabın **aynı** veriyi
+  /// görmesi gerekiyor. Değiştirilirse uygulama başka bir deftere bakar ve
+  /// mevcut kayıtlar görünmez olur.
+  static const String ortakId = 'ortak';
 
   static const String alanAd = 'ad';
   static const String alanUnvan = 'unvan';
   static const String alanAdres = 'adres';
   static const String alanTelefon = 'telefon';
-  static const String alanFaks = 'faks';
-  static const String alanVergiDairesi = 'vergiDairesi';
-  static const String alanVergiNo = 'vergiNo';
   static const String alanLogoUrl = 'logoUrl';
   static const String alanBankaHesaplari = 'bankaHesaplari';
   static const String alanOlusturmaTarihi = 'olusturmaTarihi';
@@ -64,9 +72,6 @@ class Isletme {
   final String adres;
 
   final String telefon;
-  final String? faks;
-  final String vergiDairesi;
-  final String vergiNo;
 
   /// Faz 4'te ekstre başlığına basılacak logo. Faz 1'de yalnızca alan durur.
   final String? logoUrl;
@@ -87,9 +92,6 @@ class Isletme {
     alanUnvan: unvan,
     alanAdres: adres,
     alanTelefon: telefon,
-    alanFaks: faks,
-    alanVergiDairesi: vergiDairesi,
-    alanVergiNo: vergiNo,
     alanLogoUrl: logoUrl,
     alanBankaHesaplari: bankaHesaplari
         .map((hesap) => hesap.toMap())
@@ -107,9 +109,6 @@ class Isletme {
     String? unvan,
     String? adres,
     String? telefon,
-    String? faks,
-    String? vergiDairesi,
-    String? vergiNo,
     List<BankaHesabi>? bankaHesaplari,
   }) => Isletme(
     id: id,
@@ -117,9 +116,6 @@ class Isletme {
     unvan: unvan ?? this.unvan,
     adres: adres ?? this.adres,
     telefon: telefon ?? this.telefon,
-    faks: faks ?? this.faks,
-    vergiDairesi: vergiDairesi ?? this.vergiDairesi,
-    vergiNo: vergiNo ?? this.vergiNo,
     logoUrl: logoUrl,
     bankaHesaplari: bankaHesaplari ?? this.bankaHesaplari,
     olusturmaTarihi: olusturmaTarihi,
@@ -134,9 +130,6 @@ class Isletme {
       other.unvan == unvan &&
       other.adres == adres &&
       other.telefon == telefon &&
-      other.faks == faks &&
-      other.vergiDairesi == vergiDairesi &&
-      other.vergiNo == vergiNo &&
       other.logoUrl == logoUrl &&
       other.olusturmaTarihi == olusturmaTarihi &&
       other.guncellemeTarihi == guncellemeTarihi &&
@@ -149,9 +142,6 @@ class Isletme {
     unvan,
     adres,
     telefon,
-    faks,
-    vergiDairesi,
-    vergiNo,
     logoUrl,
     Object.hashAll(bankaHesaplari),
     olusturmaTarihi,

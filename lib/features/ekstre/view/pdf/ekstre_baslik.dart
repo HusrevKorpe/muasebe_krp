@@ -72,23 +72,6 @@ pw.Widget _isletmeKunyesi(Isletme isletme, EkstreStili stil) {
         pw.Text(satir, style: stil.isletmeSatiri),
       if (isletme.telefon.isNotEmpty)
         _etiketliSatir(Metinler.ekstreTelefon, isletme.telefon, stil),
-      if (isletme.faks != null && isletme.faks!.isNotEmpty)
-        _etiketliSatir(Metinler.ekstreFaks, isletme.faks!, stil),
-      if (isletme.vergiDairesi.isNotEmpty || isletme.vergiNo.isNotEmpty)
-        pw.Row(
-          children: <pw.Widget>[
-            if (isletme.vergiDairesi.isNotEmpty)
-              _etiketliSatir(
-                Metinler.ekstreVergiDairesi,
-                isletme.vergiDairesi,
-                stil,
-              ),
-            if (isletme.vergiDairesi.isNotEmpty && isletme.vergiNo.isNotEmpty)
-              pw.SizedBox(width: 8),
-            if (isletme.vergiNo.isNotEmpty)
-              _etiketliSatir(Metinler.ekstreVergiNo, isletme.vergiNo, stil),
-          ],
-        ),
     ],
   );
 }

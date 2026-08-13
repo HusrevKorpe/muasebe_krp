@@ -9,9 +9,11 @@ import 'emulator_yardimcilari.dart';
 
 /// `firestore.rules` doğrulaması.
 ///
-/// Tek kullanıcılı model: her kurulum yalnızca kendi verisini görür. Bu dosya
-/// kuralın gerçekten tuttuğunu sınar — kural dosyasını okumak yetmez, çünkü
-/// yanlış yazılmış bir `match` sessizce her şeyi açar (KURALLAR.md §4.1).
+/// Ortak defter modeli: veri kişiye değil işletmeye ait, izni `izinliler`
+/// koleksiyonu veriyor. Bu dosya kuralın gerçekten tuttuğunu sınar — kural
+/// dosyasını okumak yetmez, çünkü yanlış yazılmış bir `match` sessizce her şeyi
+/// açar, yanlış yazılmış bir `exists()` de sessizce herkesi kilitler
+/// (KURALLAR.md §4.1).
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -37,76 +39,105 @@ void main() {
   /// kuralları uygulamaz, `Source.server` olmadan test yanlış geçerdi.
   const sunucudan = GetOptions(source: Source.server);
 
-  test('kullanıcı başka bir uid altındaki cariyi okuyamaz', () async {
-    final baskasininId = await yeniKullaniciAc(kimlik);
-    await carilerYolu(baskasininId).doc('gizli').set(<String, Object?>{
-      Cari.alanAd: 'Gizli Cari',
+  Matcher yetkiReddi() => throwsA(
+    isA<FirebaseException>().having(
+      (hata) => hata.code,
+      'code',
+      'permission-denied',
+    ),
+  );
+
+  test('izin listesindeki hesap ortak defteri okuyup yazabilir', () async {
+    await yeniKullaniciAc(kimlik);
+
+    await carilerYolu(Isletme.ortakId).doc('benim').set(<String, Object?>{
+      Cari.alanAd: 'Ortak Cari',
+      Cari.alanAktif: true,
+    });
+
+    final anlik = await carilerYolu(
+      Isletme.ortakId,
+    ).doc('benim').get(sunucudan);
+    expect(anlik.data()![Cari.alanAd], 'Ortak Cari');
+  });
+
+  test('izinli iki hesap aynı veriyi görür', () async {
+    // Modelin can alıcı noktası: uygulamayı iki kişi kullanıyor ve ikisi de
+    // aynı defteri açmalı. Eski kural (uid == isletmeId) burada düşerdi.
+    await yeniKullaniciAc(kimlik);
+    await carilerYolu(Isletme.ortakId).doc('paylasilan').set(<String, Object?>{
+      Cari.alanAd: 'Paylaşılan Cari',
       Cari.alanAktif: true,
     });
     await kimlik.signOut();
 
     await yeniKullaniciAc(kimlik);
 
+    final anlik = await carilerYolu(
+      Isletme.ortakId,
+    ).doc('paylasilan').get(sunucudan);
+    expect(anlik.data()![Cari.alanAd], 'Paylaşılan Cari');
+  });
+
+  test('izin listesinde olmayan hesap okuyamaz', () async {
+    await yeniKullaniciAc(kimlik);
+    await carilerYolu(Isletme.ortakId).doc('gizli').set(<String, Object?>{
+      Cari.alanAd: 'Gizli Cari',
+      Cari.alanAktif: true,
+    });
+    await kimlik.signOut();
+
+    await yeniKullaniciAc(kimlik, izinli: false);
+
     expect(
-      () => carilerYolu(baskasininId).doc('gizli').get(sunucudan),
-      throwsA(
-        isA<FirebaseException>().having(
-          (hata) => hata.code,
-          'code',
-          'permission-denied',
-        ),
-      ),
+      () => carilerYolu(Isletme.ortakId).doc('gizli').get(sunucudan),
+      yetkiReddi(),
     );
   });
 
-  test('kullanıcı başka bir uid altına yazamaz', () async {
-    final baskasininId = await yeniKullaniciAc(kimlik);
-    await kimlik.signOut();
-    await yeniKullaniciAc(kimlik);
+  test('izin listesinde olmayan hesap yazamaz', () async {
+    await yeniKullaniciAc(kimlik, izinli: false);
 
     expect(
-      () => carilerYolu(baskasininId).doc('sizinti').set(<String, Object?>{
+      () => carilerYolu(Isletme.ortakId).doc('sizinti').set(<String, Object?>{
         Cari.alanAd: 'Sızıntı',
       }),
       throwsA(isA<FirebaseException>()),
     );
   });
 
-  test('kullanıcı başka bir uid altındaki listeyi sorgulayamaz', () async {
-    final baskasininId = await yeniKullaniciAc(kimlik);
-    await kimlik.signOut();
-    await yeniKullaniciAc(kimlik);
+  test('izin listesinde olmayan hesap liste sorgulayamaz', () async {
+    await yeniKullaniciAc(kimlik, izinli: false);
 
     expect(
-      () => carilerYolu(baskasininId)
+      () => carilerYolu(Isletme.ortakId)
           .where(Cari.alanAktif, isEqualTo: true)
           .get(sunucudan),
-      throwsA(isA<FirebaseException>()),
+      yetkiReddi(),
     );
-  });
-
-  test('kullanıcı kendi verisini okuyup yazabilir', () async {
-    final isletmeId = await yeniKullaniciAc(kimlik);
-
-    await carilerYolu(isletmeId).doc('benim').set(<String, Object?>{
-      Cari.alanAd: 'Kendi Carim',
-      Cari.alanAktif: true,
-    });
-
-    final anlik = await carilerYolu(isletmeId).doc('benim').get(sunucudan);
-    expect(anlik.data()![Cari.alanAd], 'Kendi Carim');
   });
 
   test('oturum açmamış kullanıcı hiçbir veriye erişemez', () async {
-    final isletmeId = await yeniKullaniciAc(kimlik);
-    await carilerYolu(isletmeId).doc('benim').set(<String, Object?>{
-      Cari.alanAd: 'Kendi Carim',
+    await yeniKullaniciAc(kimlik);
+    await carilerYolu(Isletme.ortakId).doc('benim').set(<String, Object?>{
+      Cari.alanAd: 'Ortak Cari',
     });
     await kimlik.signOut();
 
     expect(
-      () => carilerYolu(isletmeId).doc('benim').get(sunucudan),
-      throwsA(isA<FirebaseException>()),
+      () => carilerYolu(Isletme.ortakId).doc('benim').get(sunucudan),
+      yetkiReddi(),
     );
+  });
+
+  test('izin listesi istemciye kapalı', () async {
+    // Uygulamayı ele geçiren biri kendini listeye ekleyememeli; listeyi
+    // okuyup kimlerin izinli olduğunu da öğrenememeli.
+    await yeniKullaniciAc(kimlik);
+    final liste = firestore.collection('izinliler');
+
+    expect(() => liste.doc('sahte@ornek.com').set(<String, Object?>{}),
+        throwsA(isA<FirebaseException>()));
+    expect(() => liste.get(sunucudan), yetkiReddi());
   });
 }

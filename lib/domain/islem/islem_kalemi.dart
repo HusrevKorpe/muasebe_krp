@@ -15,7 +15,7 @@ class IslemKalemi {
     required this.miktar,
     required this.birimFiyat,
     required this.tutar,
-    this.fidanId,
+    this.urunId,
     this.birim = varsayilanBirim,
   });
 
@@ -26,14 +26,14 @@ class IslemKalemi {
     required String ad,
     required int miktar,
     required Kurus birimFiyat,
-    String? fidanId,
+    String? urunId,
     String birim = varsayilanBirim,
   }) => IslemKalemi(
     ad: ad,
     miktar: miktar,
     birimFiyat: birimFiyat,
     tutar: kalemTutari(miktar: miktar, birimFiyat: birimFiyat),
-    fidanId: fidanId,
+    urunId: urunId,
     birim: birim,
   );
 
@@ -46,14 +46,14 @@ class IslemKalemi {
     required String ad,
     required int miktar,
     required Kurus toplam,
-    String? fidanId,
+    String? urunId,
     String birim = varsayilanBirim,
   }) => IslemKalemi(
     ad: ad,
     miktar: miktar,
     birimFiyat: birimFiyatHesapla(toplam: toplam, miktar: miktar),
     tutar: toplam,
-    fidanId: fidanId,
+    urunId: urunId,
     birim: birim,
   );
 
@@ -62,14 +62,17 @@ class IslemKalemi {
     miktar: haritaTamSayi(veri, alanMiktar),
     birimFiyat: Kurus(haritaTamSayi(veri, alanBirimFiyatKurus)),
     tutar: Kurus(haritaTamSayi(veri, alanTutarKurus)),
-    fidanId: haritaMetinOpsiyonel(veri, alanFidanId),
+    urunId: haritaMetinOpsiyonel(veri, alanUrunId),
     birim: haritaMetin(veri, alanBirim, varsayilan: varsayilanBirim),
   );
 
   static const String varsayilanBirim = 'adet';
 
   static const String alanAd = 'ad';
-  static const String alanFidanId = 'fidanId';
+  /// Firestore alan adı `fidanId` olarak **kaldı**: katalog `Fidan`'dan
+  /// `Urun`'e geçerken alan yeniden adlandırılsaydı geçmiş fatura kalemlerinin
+  /// ürün bağı sessizce kopardı (bkz. `Urun.koleksiyon`).
+  static const String alanUrunId = 'fidanId';
   static const String alanMiktar = 'miktar';
   static const String alanBirim = 'birim';
   static const String alanBirimFiyatKurus = 'birimFiyatKurus';
@@ -81,11 +84,11 @@ class IslemKalemi {
   /// Gösterim değeri: en yakın kuruşa yuvarlanmış olabilir.
   final Kurus birimFiyat;
 
-  /// Faturanın esası. Ara toplam bu alanlardan toplanır.
+  /// Faturanın esası. Fatura toplamı bu alanlardan toplanır.
   final Kurus tutar;
 
-  /// Faz 3'te katalogdan seçilen fidanın kimliği. Serbest metin kalemlerde boş.
-  final String? fidanId;
+  /// Katalogdan seçilen ürünün kimliği. Serbest metin kalemlerde boş.
+  final String? urunId;
 
   final String birim;
 
@@ -99,7 +102,7 @@ class IslemKalemi {
 
   Map<String, Object?> toMap() => <String, Object?>{
     alanAd: ad,
-    alanFidanId: fidanId,
+    alanUrunId: urunId,
     alanMiktar: miktar,
     alanBirim: birim,
     alanBirimFiyatKurus: birimFiyat.deger,
@@ -111,14 +114,14 @@ class IslemKalemi {
     int? miktar,
     Kurus? birimFiyat,
     Kurus? tutar,
-    String? fidanId,
+    String? urunId,
     String? birim,
   }) => IslemKalemi(
     ad: ad ?? this.ad,
     miktar: miktar ?? this.miktar,
     birimFiyat: birimFiyat ?? this.birimFiyat,
     tutar: tutar ?? this.tutar,
-    fidanId: fidanId ?? this.fidanId,
+    urunId: urunId ?? this.urunId,
     birim: birim ?? this.birim,
   );
 
@@ -129,12 +132,12 @@ class IslemKalemi {
       other.miktar == miktar &&
       other.birimFiyat == birimFiyat &&
       other.tutar == tutar &&
-      other.fidanId == fidanId &&
+      other.urunId == urunId &&
       other.birim == birim;
 
   @override
   int get hashCode =>
-      Object.hash(ad, miktar, birimFiyat, tutar, fidanId, birim);
+      Object.hash(ad, miktar, birimFiyat, tutar, urunId, birim);
 
   @override
   String toString() =>

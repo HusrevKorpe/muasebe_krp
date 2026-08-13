@@ -9,9 +9,6 @@ void main() {
     unvan: 'Tar.Taş.Hay.Ltd.Şti',
     adres: 'Sarıçam / ADANA',
     telefon: '0322 000 00 00',
-    faks: '0322 000 00 01',
-    vergiDairesi: 'Yüreğir',
-    vergiNo: '1234567899',
     bankaHesaplari: const <BankaHesabi>[
       BankaHesabi(
         banka: 'Ziraat Bankası',
@@ -90,7 +87,7 @@ void main() {
 
       expect(guncel.ad, 'Yeni Ad');
       expect(guncel.id, ornek.id);
-      expect(guncel.vergiNo, ornek.vergiNo);
+      expect(guncel.adres, ornek.adres);
       expect(guncel.bankaHesaplari, ornek.bankaHesaplari);
       expect(guncel.olusturmaTarihi, ornek.olusturmaTarihi);
     });

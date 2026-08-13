@@ -7,7 +7,6 @@ import 'package:fidancari/data/islem/islem_repository.dart';
 import 'package:fidancari/data/isletme/isletme_repository.dart';
 import 'package:fidancari/domain/cari/cari.dart';
 import 'package:fidancari/domain/islem/islem.dart';
-import 'package:fidancari/domain/islem/islem_durumu.dart';
 import 'package:fidancari/domain/islem/islem_kalemi.dart';
 import 'package:fidancari/domain/islem/islem_tipi.dart';
 import 'package:fidancari/domain/isletme/banka_hesabi.dart';
@@ -27,10 +26,18 @@ import 'emulator_yardimcilari.dart';
 /// PDF üretimi saf Dart olduğu için birim testiyle doğrulanabiliyor; ama
 /// önizlemenin sayfayı **rasterlemesi** platform kanalından geçiyor ve ancak
 /// burada görülebiliyor. Ekstre paylaşılamıyorsa fazın hiçbir anlamı yok.
+///
+/// Veri, uygulamanın baktığı yere — ortak deftere — serpiliyor; oturumun `uid`
+/// değeri artık bir yol parçası değil. Defter ortak olduğu için önceki koşuların
+/// kayıtları burada karşımıza çıkar ve "İğde Tarım" ikinci kez bulunurdu; o
+/// yüzden emulator verisi baştan siliniyor.
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  setUpAll(emulatoreBaglan);
+  setUpAll(() async {
+    await emulatoreBaglan();
+    await firestoreVerisiniSil();
+  });
 
   testWidgets('cari detayından ekstre önizlemesine', (tester) async {
     tester.view
@@ -40,7 +47,9 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
 
     await FirebaseAuth.instance.signOut();
-    final isletmeId = await yeniKullaniciAc(FirebaseAuth.instance);
+    await yeniKullaniciAc(FirebaseAuth.instance);
+
+    const isletmeId = Isletme.ortakId;
     final firestore = FirebaseFirestore.instance;
 
     // ── Ekstrenin beslendiği veri: işletme, cari ve iki işlem ─────────────
@@ -49,13 +58,11 @@ void main() {
       isletmeId: isletmeId,
     ).kaydet(
       const Isletme(
-        id: '',
+        id: isletmeId,
         ad: 'Favori Fidancılık',
         unvan: 'Tar.Taş.Hay.Ltd.Şti',
         adres: 'Sarıçam / ADANA',
         telefon: '0322 000 00 00',
-        vergiDairesi: 'Yüreğir',
-        vergiNo: '1234567899',
         bankaHesaplari: <BankaHesabi>[
           BankaHesabi(
             banka: 'Ziraat Bankası',
@@ -83,8 +90,6 @@ void main() {
         tip: IslemTipi.satisFaturasi,
         baslik: 'Şeftali-Ayçiçeği',
         islemTarihi: DateTime(2025, 3, 8),
-        vadeTarihi: DateTime(2025, 4, 8),
-        durum: IslemDurumu.teslimEdildi,
         kalemler: <IslemKalemi>[
           IslemKalemi.birimFiyattan(
             ad: 'şeftali',

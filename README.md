@@ -16,11 +16,11 @@ hem alım hem satım yapıldığı için bir cari aynı anda müşteri ve tedari
 ## Özellikler
 
 - **Cari yönetimi** — müşteri/tedarikçi kaydı, Türkçe arama, bakiye takibi
-- **İşlemler** — satış/alış faturası, tahsilat, ödeme; kalem bazlı giriş, opsiyonel KDV, vade
+- **İşlemler** — satış/alış faturası, tahsilat, ödeme; kalem bazlı giriş, vade
 - **Fidan katalogu** — Tür/Çeşit/Anaç/Yaş/Kök tipi ve fiyat listesi
 - **PDF ekstre** — tarih aralığına göre işlem dökümü, banka bilgileri ve toplamlarla
 - **Çevrimdışı çalışma** — internet olmadan veri girilir, bağlantı gelince eşitlenir
-- **Hesap silme** — uygulama içinden hesap ve tüm veri kalıcı olarak silinir
+- **Ortak defter** — Google ile giriş yapan izinli hesaplar aynı kayıtları görür
 
 ## Teknik
 
@@ -45,8 +45,13 @@ ilk derlemede kendisi indirir. `pod install` hâlâ gerekli çünkü `printing`
 eklentisi yalnızca CocoaPods yayınlıyor.
 
 Firebase yapılandırması repoda mevcuttur (`lib/firebase_options.dart`,
-`ios/Runner/GoogleService-Info.plist`). Bunlar istemci anahtarıdır; erişim güvenliği
-Firestore kurallarıyla sağlanır.
+`ios/Runner/GoogleService-Info.plist`, `Info.plist` içindeki `GIDClientID` ve
+Google URL şeması). Bunlar istemci anahtarıdır; erişim güvenliği Firestore
+kurallarıyla sağlanır.
+
+Uygulamaya girebilmek için hesabın izin listesinde olması gerekir:
+Firebase Console → Firestore → `izinliler` koleksiyonu → belge kimliği =
+e-posta adresi (küçük harf, alan gerekmez). Liste boşken kimse giremez.
 
 ## Geliştirme
 

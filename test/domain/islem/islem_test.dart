@@ -1,6 +1,5 @@
 import 'package:fidancari/core/para/kurus.dart';
 import 'package:fidancari/domain/islem/islem.dart';
-import 'package:fidancari/domain/islem/islem_durumu.dart';
 import 'package:fidancari/domain/islem/islem_kalemi.dart';
 import 'package:fidancari/domain/islem/islem_tipi.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -23,7 +22,6 @@ void main() {
         ],
       );
 
-      expect(fatura.araToplam.deger, 70000);
       expect(fatura.toplam.deger, 70000);
       expect(fatura.yeniMi, isTrue);
     });
@@ -57,7 +55,7 @@ void main() {
   });
 
   group('Islem.odeme', () {
-    test('kalemsiz, KDV\'siz ve vadesiz kurulur', () {
+    test('kalemsiz kurulur', () {
       final tahsilat = Islem.odeme(
         tip: IslemTipi.tahsilat,
         baslik: 'Müşteriden Tahsilat',
@@ -66,11 +64,7 @@ void main() {
       );
 
       expect(tahsilat.kalemler, isEmpty);
-      expect(tahsilat.kdvOrani, 0);
-      expect(tahsilat.kdv, Kurus.sifir);
-      expect(tahsilat.vadeTarihi, isNull);
       expect(tahsilat.toplam.deger, 1000000);
-      expect(tahsilat.araToplam.deger, 1000000);
     });
   });
 
@@ -83,21 +77,17 @@ void main() {
       expect(donen.tip, IslemTipi.satisFaturasi);
       expect(donen.baslik, 'Zeytin-Hurma');
       expect(donen.islemTarihi, DateTime(2021, 9, 17));
-      expect(donen.vadeTarihi, DateTime(2021, 10, 26));
-      expect(donen.durum, IslemDurumu.teslimEdildi);
       expect(donen.kalemler, hasLength(3));
       expect(donen.kalemler[1].tutar.deger, 3100000);
       expect(donen.kalemler[1].birimFiyat.deger, 1879);
-      expect(donen.araToplam.deger, 9400000);
       expect(donen.toplam.deger, 9400000);
       expect(donen.iptalMi, isFalse);
     });
 
-    test('KDV\'li faturada oran ve tutar birlikte saklanır', () {
+    test('kalemleriyle birlikte tam tur atar', () {
       final donen = Islem.fromMap('09', sertCekirdekliFaturasi.toMap());
 
-      expect(donen.kdvOrani, 1);
-      expect(donen.kdv.deger, 140625);
+      expect(donen.kalemler, hasLength(6));
       expect(donen.toplam.deger, 14203125);
     });
 
@@ -117,9 +107,10 @@ void main() {
     test('para alanları Firestore\'a int yazılır', () {
       final veri = sertCekirdekliFaturasi.toMap();
 
-      expect(veri[Islem.alanAraToplamKurus], isA<int>());
-      expect(veri[Islem.alanKdvKurus], isA<int>());
       expect(veri[Islem.alanToplamKurus], isA<int>());
+      final kalem = (veri[Islem.alanKalemler]! as List).first as Map;
+      expect(kalem[IslemKalemi.alanTutarKurus], isA<int>());
+      expect(kalem[IslemKalemi.alanBirimFiyatKurus], isA<int>());
     });
 
     test('yazılabilir alanlar iptal ve oluşturma tarihini içermez', () {
@@ -129,7 +120,13 @@ void main() {
       expect(veri.containsKey(Islem.alanIptalNedeni), isFalse);
       expect(veri.containsKey(Islem.alanOlusturmaTarihi), isFalse);
       expect(veri[Islem.alanTip], 'satisFaturasi');
-      expect(veri[Islem.alanDurum], 'teslimEdildi');
+    });
+
+    test('vade ve durum alanları artık yazılmaz', () {
+      final veri = zeytinHurmaFaturasi.toMap();
+
+      expect(veri.containsKey('vadeTarihi'), isFalse);
+      expect(veri.containsKey(Islem.alanEskiDurum), isFalse);
     });
 
     test('eksik belge alanları varsayılana düşer, patlamaz', () {
@@ -138,7 +135,7 @@ void main() {
       expect(donen.baslik, '');
       expect(donen.toplam, Kurus.sifir);
       expect(donen.kalemler, isEmpty);
-      expect(donen.durum, IslemDurumu.beklemede);
+      expect(donen.iptalMi, isFalse);
     });
 
     test('tanınmayan tip kaydı düşürmez', () {
@@ -166,7 +163,7 @@ void main() {
       expect(IslemTipi.anahtardan(null), isNull);
     });
 
-    test('yalnızca faturalar kalem ve vade taşır', () {
+    test('yalnızca faturalar kalem taşır', () {
       expect(IslemTipi.satisFaturasi.faturaMi, isTrue);
       expect(IslemTipi.alisFaturasi.faturaMi, isTrue);
       expect(IslemTipi.tahsilat.faturaMi, isFalse);
@@ -181,14 +178,50 @@ void main() {
     });
   });
 
-  group('IslemDurumu', () {
-    test('bilinmeyen değer beklemede sayılır', () {
-      expect(IslemDurumu.anahtardan('yok'), IslemDurumu.beklemede);
-      expect(IslemDurumu.anahtardan(null), IslemDurumu.beklemede);
-      expect(
-        IslemDurumu.anahtardan('teslimEdildi'),
-        IslemDurumu.teslimEdildi,
-      );
+  group('Eski kayıt uyumu', () {
+    // Vade ve durum alanları modelden kalktı, ama Firestore'daki geçmiş
+    // kayıtlarda duruyorlar. İptal bilgisi eskiden yalnızca `durum` alanına
+    // yazılıyordu; okuması düşerse iptalli kayıt bakiyeye geri sızar.
+    test('durum alanına yazılmış iptal okunmaya devam eder', () {
+      final donen = Islem.fromMap('1', const <String, Object?>{
+        Islem.alanTip: 'satisFaturasi',
+        Islem.alanToplamKurus: 5000,
+        Islem.alanEskiDurum: 'iptal',
+      });
+
+      expect(donen.iptalMi, isTrue);
+      expect(donen.bakiyeEtkisi, Kurus.sifir);
+    });
+
+    test('iptal bayrağı tek başına da yeter', () {
+      final donen = Islem.fromMap('1', const <String, Object?>{
+        Islem.alanTip: 'satisFaturasi',
+        Islem.alanToplamKurus: 5000,
+        Islem.alanIptal: true,
+      });
+
+      expect(donen.iptalMi, isTrue);
+    });
+
+    test('teslimEdildi durumu kaydı iptal saymaz', () {
+      final donen = Islem.fromMap('1', const <String, Object?>{
+        Islem.alanTip: 'satisFaturasi',
+        Islem.alanToplamKurus: 5000,
+        Islem.alanEskiDurum: 'teslimEdildi',
+      });
+
+      expect(donen.iptalMi, isFalse);
+      expect(donen.bakiyeEtkisi.deger, 5000);
+    });
+
+    test('artık kullanılmayan vade alanı okumayı bozmaz', () {
+      final donen = Islem.fromMap('1', <String, Object?>{
+        Islem.alanTip: 'satisFaturasi',
+        Islem.alanToplamKurus: 5000,
+        'vadeTarihi': DateTime(2024, 5, 1),
+      });
+
+      expect(donen.toplam.deger, 5000);
     });
   });
 }

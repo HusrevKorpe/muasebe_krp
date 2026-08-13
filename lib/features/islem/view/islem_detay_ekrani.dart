@@ -136,7 +136,7 @@ class _Govde extends StatelessWidget {
           KalemListesi(kalemler: islem.kalemler),
         ],
         const SizedBox(height: 24),
-        FaturaOzeti(toplam: islem.faturaToplami),
+        FaturaOzeti(toplam: islem.toplam),
       ],
     );
   }
@@ -179,18 +179,6 @@ class _OzetKarti extends StatelessWidget {
               etiket: Metinler.islemTarihi,
               deger: uzunTarih(islem.islemTarihi),
             ),
-            if (islem.vadeTarihi != null)
-              _BilgiSatiri(
-                etiket: Metinler.vadeTarihi,
-                deger: uzunTarih(islem.vadeTarihi!),
-              ),
-            if (islem.tip.faturaMi)
-              _BilgiSatiri(
-                etiket: Metinler.teslimEdildi,
-                deger: islem.teslimEdildiMi
-                    ? Metinler.teslimEdildi
-                    : Metinler.beklemede,
-              ),
             if (islem.iptalNedeni != null)
               _BilgiSatiri(
                 etiket: Metinler.iptalNedeni,

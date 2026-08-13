@@ -25,9 +25,11 @@ buydu: *"kişi sayfası olsun, o kişiye bastığında buradaki bilgileri girebi
 
 ## Firestore veri modeli
 
-### `isletmeler/{isletmeId}`
+### `isletmeler/ortak`
 
-Ekstre başlığını üreten veri. Onboarding'de bir kez sorulur.
+Ekstre başlığını üreten veri. **Zorunlu değil** — hiç doldurulmazsa başlık sade
+çıkar (13 Ağustos 2026 revizesi: onboarding kurulum ekranı kaldırıldı). Belge
+kimliği sabit; herkes aynı defteri açıyor (bkz. `faz-0` → "Revize 2").
 
 | Alan | Tip | Not |
 |---|---|---|
@@ -35,9 +37,6 @@ Ekstre başlığını üreten veri. Onboarding'de bir kez sorulur.
 | `unvan` | string | "Tar.Taş.Hay.Ltd.Şti" |
 | `adres` | string | Çok satırlı |
 | `telefon` | string | |
-| `faks` | string? | Referans ekstrede var |
-| `vergiDairesi` | string | "Yüreğir" |
-| `vergiNo` | string | |
 | `logoUrl` | string? | Faz 4'te ekstreye basılır |
 | `bankaHesaplari` | array | `{banka, hesapNo?, iban, paraBirimi}` — referans ekstrede 5 tane |
 | `olusturmaTarihi` | timestamp | `serverTimestamp()` |
@@ -51,8 +50,6 @@ Ekstre başlığını üreten veri. Onboarding'de bir kez sorulur.
 | `sehir` | string? | "Isparta" |
 | `telefon` | string? | |
 | `adres` | string? | |
-| `vergiDairesi` | string? | |
-| `vergiNo` | string? | |
 | `notlar` | string? | |
 | `bakiyeKurus` | **int** | Önbellek. Faz 1'de hep `0`. Faz 2'de transaction ile güncellenir |
 | `sonIslemTarihi` | timestamp? | Sıralama için |
@@ -73,7 +70,7 @@ Ekstre başlığını üreten veri. Onboarding'de bir kez sorulur.
 - [x] `Isletme` modeli + `fromMap` / `toMap`
 - [x] `Cari` modeli + `fromMap` / `toMap`
 - [x] `BankaHesabi` modeli, IBAN biçim doğrulaması (ISO 13616 mod-97)
-- [x] Cari doğrulama kuralları (ad zorunlu, VKN/TCKN kontrol hanesi)
+- [x] Cari doğrulama kuralları (ad zorunlu, telefon hane kontrolü)
 
 ### Data (`lib/data/`)
 - [x] `IsletmeRepository`: profil oku/yaz
@@ -91,7 +88,8 @@ Ekstre başlığını üreten veri. Onboarding'de bir kez sorulur.
 ### Liste ekranı davranışı
 - [x] Arama kutusu — `aramaAnahtari` üzerinden, 300 ms gecikmeli
 - [x] Sayfalama (sonsuz kaydırma), tek `get()` ile tüm koleksiyon çekilmez
-- [x] Sıralama: ada göre / bakiyeye göre / son işleme göre
+- [x] Sıralama: liste her zaman ada göre. Ekranda seçim menüsü yok; ölçüt
+      repository'de duruyor (`CariSiralamasi`), çağrı yeri açıkça isterse verir.
 - [x] Boş durum ekranı — arama sonucu boşsa ayrı metin
 - [x] Çevrimdışı göstergesi (`hasPendingWrites`) — liste satırı ve detay kartı
 
@@ -150,10 +148,9 @@ flutter run --dart-define=EMULATOR=true
 | Dosya | Kapsam |
 |---|---|
 | `test/domain/cari/cari_test.dart` | `fromMap`/`toMap` gidiş-dönüş, arama anahtarı, alan sızıntısı |
-| `test/domain/cari/cari_dogrulama_test.dart` | Ad, vergi no, telefon doğrulaması |
+| `test/domain/cari/cari_dogrulama_test.dart` | Ad ve telefon doğrulaması |
 | `test/domain/isletme/isletme_test.dart` | İşletme + banka hesabı gidiş-dönüş |
 | `test/domain/isletme/iban_test.dart` | IBAN mod-97 |
-| `test/domain/ortak/vergi_kimlik_test.dart` | VKN ve TCKN kontrol hanesi |
 | `test/data/firebase/firestore_donusum_test.dart` | `Timestamp` → `DateTime` sınırı |
 | `integration_test/cari_repository_test.dart` | Emulator: sayfalama, arama, sıralama, pasife alma |
 | `integration_test/guvenlik_kurallari_test.dart` | Emulator: `firestore.rules` izolasyonu |

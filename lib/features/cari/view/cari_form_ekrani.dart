@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/hata/hatalar.dart';
@@ -54,8 +53,6 @@ class _CariFormEkraniDurumu extends ConsumerState<CariFormEkrani> {
       sehir: _metin(_Alan.sehir),
       telefon: _metin(_Alan.telefon),
       adres: _metin(_Alan.adres),
-      vergiDairesi: _metin(_Alan.vergiDairesi),
-      vergiNo: _metin(_Alan.vergiNo),
       notlar: _metin(_Alan.notlar),
       // Bakiye ve tarihler formdan gelmez; repository bu alanlara dokunmuyor.
       bakiye: mevcut?.bakiye ?? Kurus.sifir,
@@ -203,16 +200,6 @@ enum _Alan {
     klavye: TextInputType.phone,
   ),
   adres(etiket: Metinler.adres, simge: Icons.home_outlined, satirSayisi: 2),
-  vergiDairesi(
-    etiket: Metinler.vergiDairesi,
-    simge: Icons.account_balance_outlined,
-  ),
-  vergiNo(
-    etiket: Metinler.vergiNo,
-    simge: Icons.numbers,
-    klavye: TextInputType.number,
-    yalnizcaRakam: true,
-  ),
   notlar(etiket: Metinler.notlar, simge: Icons.notes_outlined, satirSayisi: 3);
 
   const _Alan({
@@ -222,7 +209,6 @@ enum _Alan {
     this.zorunlu = false,
     this.klavye,
     this.satirSayisi = 1,
-    this.yalnizcaRakam = false,
   });
 
   final String etiket;
@@ -231,7 +217,6 @@ enum _Alan {
   final bool zorunlu;
   final TextInputType? klavye;
   final int satirSayisi;
-  final bool yalnizcaRakam;
 
   /// Zorunlu olmayan alanlarda etikete "(isteğe bağlı)" eklenir; kullanıcı
   /// hangi alanı boş bırakabileceğini formu göndermeden görsün.
@@ -241,7 +226,6 @@ enum _Alan {
   String? Function(String?)? get dogrulayici => switch (this) {
     _Alan.ad => CariDogrulama.ad,
     _Alan.telefon => CariDogrulama.telefon,
-    _Alan.vergiNo => CariDogrulama.vergiNo,
     _ => null,
   };
 
@@ -253,8 +237,6 @@ enum _Alan {
       _Alan.sehir => cari.sehir ?? '',
       _Alan.telefon => cari.telefon ?? '',
       _Alan.adres => cari.adres ?? '',
-      _Alan.vergiDairesi => cari.vergiDairesi ?? '',
-      _Alan.vergiNo => cari.vergiNo ?? '',
       _Alan.notlar => cari.notlar ?? '',
     };
   }
@@ -282,9 +264,6 @@ class _AlanKutusu extends StatelessWidget {
       textCapitalization: alan.klavye == null
           ? TextCapitalization.words
           : TextCapitalization.none,
-      inputFormatters: alan.yalnizcaRakam
-          ? <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly]
-          : null,
       decoration: InputDecoration(
         labelText: alan.tamEtiket,
         hintText: alan.ipucu,

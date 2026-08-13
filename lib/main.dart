@@ -11,8 +11,12 @@ import 'firebase_options.dart';
 /// Uygulamayı yerel Firebase emulator'üne bağlar.
 ///
 /// `flutter run --dart-define=EMULATOR=true` ile açılır. Canlı veriye
-/// dokunmadan kurulum, kayıt ve arama akışını denemek içindir; sürüm
-/// derlemesinde tanımlanmadığı için etkisizdir.
+/// dokunmadan kayıt ve arama akışını denemek içindir; sürüm derlemesinde
+/// tanımlanmadığı için etkisizdir.
+///
+/// Not: emulator kipinde Google girişi çalışmaz — Auth emulator'ü gerçek bir
+/// Google jetonu doğrulayamaz. Bu kiple denemek için emulator'e elle bir hesap
+/// açmak gerekir.
 const bool _emulatorKullan = bool.fromEnvironment('EMULATOR');
 
 const String _emulatorSunucusu = 'localhost';

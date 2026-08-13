@@ -1,7 +1,6 @@
 import 'package:fidancari/core/para/kurus.dart';
 import 'package:fidancari/domain/islem/bakiye_hesaplayici.dart';
 import 'package:fidancari/domain/islem/islem.dart';
-import 'package:fidancari/domain/islem/islem_durumu.dart';
 import 'package:fidancari/domain/islem/islem_tipi.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -17,10 +16,8 @@ void main() {
     tip: tip,
     baslik: tip.anahtar,
     islemTarihi: tarih ?? DateTime(2024, 1, int.parse(id)),
-    araToplam: Kurus.liradan(lira),
     toplam: Kurus.liradan(lira),
     iptal: iptal,
-    durum: iptal ? IslemDurumu.iptal : IslemDurumu.beklemede,
   );
 
   group('İşaret yönü', () {
@@ -138,19 +135,15 @@ void main() {
       expect(dokum.toplamAlacak, Kurus.sifir);
     });
 
-    test('durum alanı iptal ise bayrak yazılmamış olsa da sayılmaz', () {
-      final tutarsiz = Islem(
-        id: '1',
-        tip: IslemTipi.satisFaturasi,
-        baslik: 'tutarsız kayıt',
-        islemTarihi: DateTime(2024, 1, 1),
-        araToplam: Kurus.liradan(100),
-        toplam: Kurus.liradan(100),
-        durum: IslemDurumu.iptal,
-      );
+    test('eski kayıttaki durum:iptal de bakiyeye girmez', () {
+      final eski = Islem.fromMap('1', const <String, Object?>{
+        Islem.alanTip: 'satisFaturasi',
+        Islem.alanToplamKurus: 10000,
+        Islem.alanEskiDurum: 'iptal',
+      });
 
-      expect(tutarsiz.iptalMi, isTrue);
-      expect(tutarsiz.bakiyeEtkisi, Kurus.sifir);
+      expect(eski.iptalMi, isTrue);
+      expect(eski.bakiyeEtkisi, Kurus.sifir);
     });
   });
 

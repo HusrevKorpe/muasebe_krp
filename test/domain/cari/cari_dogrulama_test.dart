@@ -19,30 +19,6 @@ void main() {
     });
   });
 
-  group('vergiNo', () {
-    test('boş bırakılabilir', () {
-      expect(CariDogrulama.vergiNo(null), isNull);
-      expect(CariDogrulama.vergiNo(''), isNull);
-    });
-
-    test('geçerli VKN ve TCKN kabul edilir', () {
-      expect(CariDogrulama.vergiNo('1234567899'), isNull);
-      expect(CariDogrulama.vergiNo('12345678950'), isNull);
-    });
-
-    test('hane sayısı tutmuyorsa uzunluk mesajı verilir', () {
-      expect(
-        CariDogrulama.vergiNo('12345'),
-        contains('10, T.C. kimlik no 11'),
-      );
-    });
-
-    test('hane sayısı doğru ama kontrol hanesi bozuksa reddedilir', () {
-      expect(CariDogrulama.vergiNo('1234567890'), isNotNull);
-      expect(CariDogrulama.vergiNo('12345678951'), isNotNull);
-    });
-  });
-
   group('telefon', () {
     test('boş bırakılabilir', () {
       expect(CariDogrulama.telefon(null), isNull);

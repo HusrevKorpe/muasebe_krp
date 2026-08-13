@@ -33,7 +33,7 @@ mağaza gönderimi gecikir.
 - [x] Flutter'ın SPM desteğini etkinleştir (`flutter config --enable-swift-package-manager`)
 - [x] Firebase bağımlılıklarını SPM üzerinden çöz
 - [x] `flutter build ios --release` başarılı
-- [ ] Cihazda duman testi: giriş → cari → fatura → ekstre
+- [ ] Cihazda duman testi: açılış → cari → fatura → ekstre
 
 **Firebase riski kapandı.** `firebase-ios-sdk 12.17.0` artık SPM üzerinden
 geliyor (bkz. `ios/Runner.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`).
@@ -74,7 +74,7 @@ bırakıldı. Bu, kalan işi ikiye ayırıyor:
 | Bundle ID kaydı, dağıtım sertifikası | Ekran görüntüleri (6.9" iPhone + 13" iPad) |
 | App Store Connect'te uygulama kaydı | Açıklama, anahtar kelimeler, kategori |
 | Benzersiz build numarası (`1.0.0+4`) | Yaş sınırı ve fiyat beyanı |
-| İhracat uygunluğu — `Info.plist` ile kapatıldı | Demo hesap (inceleme için) |
+| İhracat uygunluğu — `Info.plist` ile kapatıldı | Örnek veriyle dolu inceleme derlemesi |
 | Gizlilik politikası URL'si — **dış test** yaparsak | |
 
 > **İç test** (kendi ekibinizdeki 100 kişiye kadar) Beta App Review istemez;
@@ -90,6 +90,12 @@ flutter build ipa
 # Xcode → Organizer ya da Transporter uygulamasıyla yüklenir.
 ```
 
+> Derleme artık `--dart-define-from-file=gizli.json` istemiyor: sabit hesap
+> Google girişine taşındı ve derlemeye gömülecek bir sır kalmadı
+> (bkz. `fazlar/faz-0-iskelet.md` → "Revize 2"). Google giriş yapılandırması
+> `ios/Runner/Info.plist` içinde duruyor, yani Xcode'dan doğrudan alınan arşiv
+> de çalışır.
+
 Her yüklemede build numarası artmalı: `pubspec.yaml` → `version: 1.0.0+N`.
 
 **Arşiv denendi ve çalışıyor** (12 Ağustos 2026): 29,8 MB IPA üretildi, imza
@@ -97,16 +103,17 @@ otomatik çözüldü.
 
 | | |
 |---|---|
-| Takım | `XZU8N95T32` — **Hayrat Nesriyat** |
+| Takım | `VJ96R83FLT` — **Muhammed Körpe** (kişisel) |
 | Profil | `iOS Team Store Provisioning Profile: com.husrevkorpe.fidancari` |
-| App ID | `XZU8N95T32.com.husrevkorpe.fidancari` (joker değil, açık kayıt) |
+| App ID | `VJ96R83FLT.com.husrevkorpe.fidancari` (joker değil, açık kayıt) |
 | Yöntem | `app-store-connect`, `get-task-allow: false` |
 | Doğrulama | Sürüm 1.0.0 · Build 4 · Ad FidanCari · Hedef iOS 15.0 |
 
-> **Karar gerekiyor:** uygulama şu an kurumsal **Hayrat Nesriyat** hesabı altında
-> imzalanıyor. Mağazada satıcı adı olarak o görünür. Kişisel hesaptan
-> yayınlanacaksa `DEVELOPMENT_TEAM` değiştirilip App ID yeniden kaydedilmeli —
-> bu, TestFlight'a yüklemeden önce yapılırsa ucuz, sonra yapılırsa değil.
+> **Karar verildi (13 Ağustos 2026):** yayın kişisel hesaptan yapılacak.
+> `DEVELOPMENT_TEAM` kurumsal **Hayrat Nesriyat** (`XZU8N95T32`) takımından
+> kişisel takıma (`VJ96R83FLT`) alındı. İlk arşiv kurumsal takımla üretilmişti;
+> App ID kişisel takım altında yeniden kaydedildi ve sertifika/profil sıfırdan
+> üretilecek.
 
 ---
 
@@ -114,39 +121,60 @@ otomatik çözüldü.
 
 Bu bölüm tamamen hesap sahibinin elinde; kodla kapatılamaz.
 
-- [x] Apple Developer Program üyeliği — takım `XZU8N95T32` (Hayrat Nesriyat)
-- [x] Bundle ID kaydı: `com.husrevkorpe.fidancari` (arşiv sırasında otomatik
-      oluştu, joker değil açık App ID)
+- [x] Apple Developer Program üyeliği — takım `VJ96R83FLT` (Muhammed Körpe)
+- [x] Bundle ID kaydı: `com.husrevkorpe.fidancari` (kişisel takım altında elle
+      kaydedildi, joker değil açık App ID)
 - [x] Dağıtım sertifikası ve provisioning profili
 - [ ] **App Store Connect'te uygulama kaydı** — App ID kaydı bunu kapsamıyor;
       panelde uygulama oluşturulmadan yükleme reddedilir
 
 ### Gizlilik — reddedilme sebebi olur
 
-Uygulama Firestore'a kullanıcı verisi yazıyor ve hesap açtırıyor. Apple bunun için
-beyan ve politika istiyor:
+Uygulama Firestore'a kullanıcı verisi yazıyor. Apple bunun için beyan ve
+politika istiyor:
 
 - [x] **Gizlilik politikası metni yazıldı** — `magaza/gizlilik-politikasi.md`
       (yayınlanabilir HTML: `docs/gizlilik.html`)
 - [ ] Politika yayında bir URL'de (GitHub Pages: `Settings → Pages → main /docs`)
 - [x] **App Privacy beyanı hazırlandı** — `magaza/app-store-metinleri.md`
       içindeki tablo panele birebir girilir
-- [x] **Hesap silme yolu uygulama içinde** — Menü → Hesap → Hesabı sil
+- [x] ~~**Hesap silme yolu uygulama içinde**~~ — **artık gerekmiyor**, aşağıya bak
 
-Hesap silme akışı (`lib/features/kimlik/`):
+#### Hesap silme neden kaldırıldı (13 Ağustos 2026)
 
-1. Şifreyle yeniden doğrulama — Firebase hassas işlemde yakın giriş ister,
-   ayrıca bu adım çevrimdışıyken akışı hiçbir şey silinmeden durdurur.
-2. `isletmeler/{uid}` ağacının tamamı silinir: işlemler → cariler → fidanlar →
-   işletme profili (`IsletmeVerisiRepository`).
-3. Firebase Auth kullanıcısı silinir.
+Apple'ın hesap silme şartı (App Store Review Guideline 5.1.1(v)) **hesap
+açtıran** uygulamalar içindir. Uygulama tek kişiye TestFlight'tan verilecek
+şekilde sadeleştirildi: giriş ve kayıt ekranları kaldırıldı, oturum açılışta
+derlemeye gömülü sabit hesapla sessizce açılıyor (bkz.
+`fazlar/faz-0-iskelet.md` → "Revize"). Kullanıcı uygulama içinde hesap
+oluşturmadığı için silme yükümlülüğü de doğmuyor.
 
-Sıra bilinçli: hesap önce silinseydi Firestore kuralları yazma yetkisini geri
-çeker ve arkada erişilemez veri kalırdı.
+Bununla birlikte kaldırılan kod: `lib/features/kimlik/` (giriş, kayıt, hesap,
+hesap silme ekranları) ve `IsletmeVerisiRepository`. Kullanıcının verisini
+silmesi gerekirse yol, gizlilik politikasındaki iletişim adresi üzerinden
+talep etmek — konsoldan silinir.
 
-> Not: Hesap silme, muhasebe kaydının silinmemesi kuralıyla çelişmez. Kullanıcı
-> kendi hesabını ve tüm verisini silebilir; kural, tek bir işlemin sessizce
-> silinmemesiyle ilgilidir.
+> Not: Bu, mağazaya açık dağıtıma geçilirse **yeniden gerekli olur.** O gün
+> giriş/kayıt akışı da geri gelmek zorunda olduğu için karar birlikte gözden
+> geçirilir.
+
+#### Güncelleme (13 Ağustos 2026): giriş geri geldi — açık uçlar
+
+Uygulama Google girişine taşındı (bkz. `fazlar/faz-0-iskelet.md` → "Revize 2").
+Bu, mağaza tarafında iki maddeyi yeniden açar:
+
+- **Hesap silme (5.1.1(v)).** Şart hâlâ tartışmalı: uygulama hesap
+  *açtırmıyor* — Google hesabını kullanıcı zaten kendisi açmış, uygulamadaki
+  erişimi ise geliştirici izin listesine elle ekliyor. Yine de artık görünür
+  bir "giriş yap" düğmesi var ve inceleyen kişi bunu hesap açma sanabilir.
+  Reddedilirse en ucuz yanıt: ayarlara "verimi sil" akışı eklemek yerine
+  gizlilik politikasındaki talep yolunu göstermek; ısrar ederse akış yazılır.
+- **Demo hesabı.** Artık giriş ekranı görünüyor, yani App Review "Sign-in
+  required" sorusuna **evet** işaretlenip inceleme hesabı verilmeli. Bunun için
+  bir Google hesabı açılıp `izinliler` listesine eklenmesi gerekir.
+
+İkisi de App Store gönderimini ilgilendiriyor; iç TestFlight testinde inceleme
+yapılmadığı için o aşamada engel değil.
 
 ---
 
@@ -185,13 +213,16 @@ Hepsi `magaza/app-store-metinleri.md` içinde hazır.
       aygıt ailesi iPhone'a çekilir). İç testte istenmiyor.
 
 ### İnceleme notu
-Apple gözden geçirmeci hesap açıp uygulamayı denemek zorunda. Boş bir uygulama
+Apple gözden geçirmeci uygulamayı açıp denemek zorunda. Boş bir uygulama
 görürlerse reddedebilirler.
 
 - [x] İnceleme notu yazıldı (TR + EN)
-- [ ] **Demo hesap — App Store gönderimine ertelendi.** İç TestFlight testinde
+- [ ] ~~**Demo giriş bilgisi gerekmiyor**~~ → **Gerekiyor.** Google girişine
+      geçildiği için panelde "Sign-in required" **evet** işaretlenir ve
+      inceleme için izin listesine eklenmiş bir Google hesabı verilir.
+- [ ] **Örnek veri — App Store gönderimine ertelendi.** İç TestFlight testinde
       inceleme yapılmadığı için gerekmiyor; dış test ya da mağaza gönderimi
-      açılmadan önce örnek cari ve işlemle doldurulmalı.
+      açılmadan önce uygulama örnek cari ve işlemle dolu olmalı.
 
 ---
 
@@ -201,11 +232,19 @@ görürlerse reddedebilirler.
 - [x] `flutter test` tüm testler geçer (284 test)
 - [x] `flutter build ios --release` başarılı
 - [x] `flutter build ipa` başarılı — imzalı, App Store dağıtımına uygun
-- [ ] Gerçek cihazda tam akış: kayıt → işletme bilgisi → cari → fatura → tahsilat → ekstre paylaş
+- [ ] Gerçek cihazda tam akış: giriş → cari → fatura → tahsilat → ekstre paylaş
 - [ ] Uçak modunda veri girişi ve sonradan senkron
 - [ ] Firestore güvenlik kuralları **canlıda** yayında ve test modu kapalı
 - [x] Repoda gerçek müşteri verisi, IBAN veya kişisel bilgi yok
-- [ ] Uygulama içinden hesap silme **cihazda** doğrulandı (kod yazıldı)
+- [ ] Google girişi **cihazda** doğrulandı: ilk giriş (internetli), ikinci açılış
+      (uçak modunda — saklı oturumla açılmalı), çıkış yapıp yeniden giriş
+- [ ] **İki hesapla** doğrulandı: ikinci telefonda diğer hesapla girilince aynı
+      kayıtlar görünüyor
+- [ ] İzin listesinde **olmayan** bir hesapla girilince "erişim izni yok" ekranı
+      çıkıyor ve çıkış düğmesi çalışıyor
+- [ ] Firebase Console → Authentication → Sign-in method: Google **açık**,
+      Email/Password ve Anonymous **kapalı**
+- [ ] Firestore → `izinliler` altında kullanacak herkesin e-postası var
 - [ ] TestFlight'ta en az bir dış test turu yapıldı
 
 ---
@@ -225,9 +264,15 @@ görürlerse reddedebilirler.
 ## Riskler
 
 - **Apple Developer hesabı onayı** birkaç gün sürebilir. Faz başında başvurulmalı.
-- **Hesap silme özelliği** en sık atlanan reddedilme sebebi. ~~Kod gerektirir~~ →
-  kod yazıldı, cihazda doğrulanması kaldı.
+- ~~**Hesap silme özelliği** en sık atlanan reddedilme sebebi.~~ → Uygulama hesap
+  açtırmıyor, ama Google girişi görünür olduğu için inceleme yine takılabilir;
+  bkz. yukarıdaki "Güncelleme (13 Ağustos 2026)".
+- **`izinliler` listesi boş kalırsa** giriş yapan herkes "erişim izni yok"
+  ekranında kalır. Kural doğru çalışıyor demektir; eksik olan konsoldaki belge.
+- **Google girişi yapılandırması iOS'ta iki parçalı:** `Info.plist` içindeki
+  `GIDClientID` **ve** `REVERSED_CLIENT_ID` URL şeması. İkincisi unutulursa
+  hesap seçme penceresi açılır ama yanıt uygulamaya dönmez.
 - ~~**SPM geçişi** derlemeyi kırabilir.~~ → Geçiş yapıldı, derleme çalışıyor.
-- **Boş uygulama görüntüsü.** Demo hesap örnek veriyle dolu olmalı.
+- **Boş uygulama görüntüsü.** İnceleme öncesi uygulama örnek veriyle dolu olmalı.
 - **iPad ekran görüntüsü.** Uygulama iPad yönelimlerini de destekliyor; bu,
   ayrı bir ekran görüntüsü seti demek.

@@ -1,8 +1,6 @@
 import '../../core/para/kurus.dart';
 import '../ortak/harita.dart';
 import 'fatura_hesaplayici.dart';
-import 'fatura_toplami.dart';
-import 'islem_durumu.dart';
 import 'islem_kalemi.dart';
 import 'islem_tipi.dart';
 
@@ -19,13 +17,8 @@ class Islem {
     required this.tip,
     required this.baslik,
     required this.islemTarihi,
-    required this.araToplam,
     required this.toplam,
-    this.vadeTarihi,
-    this.durum = IslemDurumu.beklemede,
     this.kalemler = const <IslemKalemi>[],
-    this.kdvOrani = FaturaHesaplayici.kdvsiz,
-    this.kdv = Kurus.sifir,
     this.iptal = false,
     this.iptalNedeni,
     this.olusturmaTarihi,
@@ -37,31 +30,17 @@ class Islem {
     required String baslik,
     required DateTime islemTarihi,
     required List<IslemKalemi> kalemler,
-    DateTime? vadeTarihi,
-    IslemDurumu durum = IslemDurumu.beklemede,
-    int kdvOrani = FaturaHesaplayici.kdvsiz,
     String id = '',
-  }) {
-    final hesap = FaturaHesaplayici.hesapla(
-      kalemler: kalemler,
-      kdvOrani: kdvOrani,
-    );
-    return Islem(
-      id: id,
-      tip: tip,
-      baslik: baslik,
-      islemTarihi: islemTarihi,
-      vadeTarihi: vadeTarihi,
-      durum: durum,
-      kalemler: List<IslemKalemi>.unmodifiable(kalemler),
-      araToplam: hesap.araToplam,
-      kdvOrani: hesap.kdvOrani,
-      kdv: hesap.kdv,
-      toplam: hesap.toplam,
-    );
-  }
+  }) => Islem(
+    id: id,
+    tip: tip,
+    baslik: baslik,
+    islemTarihi: islemTarihi,
+    kalemler: List<IslemKalemi>.unmodifiable(kalemler),
+    toplam: FaturaHesaplayici.hesapla(kalemler: kalemler),
+  );
 
-  /// Tahsilat veya ödeme. Kalemi, KDV'si ve vadesi yoktur.
+  /// Tahsilat veya ödeme. Kalemi yoktur.
   factory Islem.odeme({
     required IslemTipi tip,
     required String baslik,
@@ -73,7 +52,6 @@ class Islem {
     tip: tip,
     baslik: baslik,
     islemTarihi: islemTarihi,
-    araToplam: tutar,
     toplam: tutar,
   );
 
@@ -82,47 +60,42 @@ class Islem {
   /// Tanınmayan bir tip gelirse (eski sürümün yazdığı kayıt) belge atlanmaz;
   /// [tip] `satisFaturasi` varsayılır ve tutar zaten saklanan değerdir. Kayıt
   /// kaybetmek, tipini yanlış göstermekten kötüdür.
-  factory Islem.fromMap(String id, Map<String, Object?> veri) {
-    final durum = IslemDurumu.anahtardan(
-      haritaMetinOpsiyonel(veri, alanDurum),
-    );
-    return Islem(
-      id: id,
-      tip:
-          IslemTipi.anahtardan(haritaMetinOpsiyonel(veri, alanTip)) ??
-          IslemTipi.satisFaturasi,
-      baslik: haritaMetin(veri, alanBaslik),
-      islemTarihi: haritaTarih(veri, alanIslemTarihi) ?? DateTime(0),
-      vadeTarihi: haritaTarih(veri, alanVadeTarihi),
-      durum: durum,
-      kalemler: haritaListesi(veri, alanKalemler)
-          .map(IslemKalemi.fromMap)
-          .toList(growable: false),
-      araToplam: Kurus(haritaTamSayi(veri, alanAraToplamKurus)),
-      kdvOrani: haritaTamSayi(veri, alanKdvOrani),
-      kdv: Kurus(haritaTamSayi(veri, alanKdvKurus)),
-      toplam: Kurus(haritaTamSayi(veri, alanToplamKurus)),
-      iptal: haritaMantiksal(veri, alanIptal) || durum == IslemDurumu.iptal,
-      iptalNedeni: haritaMetinOpsiyonel(veri, alanIptalNedeni),
-      olusturmaTarihi: haritaTarih(veri, alanOlusturmaTarihi),
-    );
-  }
+  factory Islem.fromMap(String id, Map<String, Object?> veri) => Islem(
+    id: id,
+    tip:
+        IslemTipi.anahtardan(haritaMetinOpsiyonel(veri, alanTip)) ??
+        IslemTipi.satisFaturasi,
+    baslik: haritaMetin(veri, alanBaslik),
+    islemTarihi: haritaTarih(veri, alanIslemTarihi) ?? DateTime(0),
+    kalemler: haritaListesi(veri, alanKalemler)
+        .map(IslemKalemi.fromMap)
+        .toList(growable: false),
+    toplam: Kurus(haritaTamSayi(veri, alanToplamKurus)),
+    iptal: haritaMantiksal(veri, alanIptal) || _eskisiIptalMi(veri),
+    iptalNedeni: haritaMetinOpsiyonel(veri, alanIptalNedeni),
+    olusturmaTarihi: haritaTarih(veri, alanOlusturmaTarihi),
+  );
+
+  /// Eski sürüm iptali `durum: 'iptal'` olarak yazıyordu, ayrı bir [alanIptal]
+  /// bayrağı her zaman yoktu. Alan modelden kalktı ama okuması kalmalı: aksi
+  /// hâlde geçmişte iptal edilmiş kayıtlar bakiyeye geri sızardı.
+  static bool _eskisiIptalMi(Map<String, Object?> veri) =>
+      haritaMetinOpsiyonel(veri, alanEskiDurum) == eskiDurumIptal;
 
   static const String koleksiyon = 'islemler';
 
   static const String alanTip = 'tip';
   static const String alanBaslik = 'baslik';
   static const String alanIslemTarihi = 'islemTarihi';
-  static const String alanVadeTarihi = 'vadeTarihi';
-  static const String alanDurum = 'durum';
   static const String alanKalemler = 'kalemler';
-  static const String alanAraToplamKurus = 'araToplamKurus';
-  static const String alanKdvOrani = 'kdvOrani';
-  static const String alanKdvKurus = 'kdvKurus';
   static const String alanToplamKurus = 'toplamKurus';
   static const String alanIptal = 'iptal';
   static const String alanIptalNedeni = 'iptalNedeni';
   static const String alanOlusturmaTarihi = 'olusturmaTarihi';
+
+  /// Artık yazılmayan, yalnızca okunan alan — bkz. [_eskisiIptalMi].
+  static const String alanEskiDurum = 'durum';
+  static const String eskiDurumIptal = 'iptal';
 
   /// Firestore belge kimliği. Kaydedilmemiş işlem için boştur.
   final String id;
@@ -135,18 +108,11 @@ class Islem {
   /// Kullanıcının seçtiği işlem tarihi. Sıralamanın birincil ölçütüdür.
   final DateTime islemTarihi;
 
-  /// Yalnızca faturalarda dolu.
-  final DateTime? vadeTarihi;
-
-  final IslemDurumu durum;
   final List<IslemKalemi> kalemler;
-  final Kurus araToplam;
 
-  /// Yüzde olarak saklanır; oran yarın değişse bile geçmiş fatura etkilenmez
-  /// (bkz. KURALLAR.md §3.3).
-  final int kdvOrani;
-
-  final Kurus kdv;
+  /// Faturada kalem tutarlarının toplamı, tahsilat ve ödemede girilen tutar.
+  /// Kaydedildikten sonra **saklanan tutar esastır**, geçmişe dönük yeniden
+  /// hesaplanmaz (bkz. KURALLAR.md §3.2).
   final Kurus toplam;
 
   final bool iptal;
@@ -159,13 +125,7 @@ class Islem {
   bool get yeniMi => id.isEmpty;
 
   /// İptal edilmiş kayıt bakiyeye katılmaz ve listede üstü çizili görünür.
-  ///
-  /// Hem [iptal] bayrağına hem [durum] alanına bakar: ikisi ayrı alan olduğu
-  /// için biri yazılıp diğeri yazılmamış bir kaydın bakiyeye sızması mümkün
-  /// olmamalı.
-  bool get iptalMi => iptal || durum == IslemDurumu.iptal;
-
-  bool get teslimEdildiMi => durum == IslemDurumu.teslimEdildi;
+  bool get iptalMi => iptal;
 
   /// Bakiyeye katkısı. Borç işlemleri artırır, alacak işlemleri azaltır.
   /// İptal edilmiş işlem sıfır katkı verir.
@@ -178,13 +138,6 @@ class Islem {
   /// Ekstrenin alacak kolonu.
   Kurus get alacak => !iptalMi && tip.alacakMi ? toplam : Kurus.sifir;
 
-  FaturaToplami get faturaToplami => FaturaToplami(
-    araToplam: araToplam,
-    kdvOrani: kdvOrani,
-    kdv: kdv,
-    toplam: toplam,
-  );
-
   /// Firestore'a yazılan alanlar.
   ///
   /// `olusturmaTarihi` bilerek dışarıda: onu repository `serverTimestamp()` ile
@@ -194,14 +147,9 @@ class Islem {
     alanTip: tip.anahtar,
     alanBaslik: baslik,
     alanIslemTarihi: islemTarihi,
-    alanVadeTarihi: vadeTarihi,
-    alanDurum: durum.anahtar,
     alanKalemler: kalemler
         .map((kalem) => kalem.toMap())
         .toList(growable: false),
-    alanAraToplamKurus: araToplam.deger,
-    alanKdvOrani: kdvOrani,
-    alanKdvKurus: kdv.deger,
     alanToplamKurus: toplam.deger,
   };
 
@@ -217,12 +165,7 @@ class Islem {
     IslemTipi? tip,
     String? baslik,
     DateTime? islemTarihi,
-    DateTime? vadeTarihi,
-    IslemDurumu? durum,
     List<IslemKalemi>? kalemler,
-    Kurus? araToplam,
-    int? kdvOrani,
-    Kurus? kdv,
     Kurus? toplam,
     bool? iptal,
     String? iptalNedeni,
@@ -232,12 +175,7 @@ class Islem {
     tip: tip ?? this.tip,
     baslik: baslik ?? this.baslik,
     islemTarihi: islemTarihi ?? this.islemTarihi,
-    vadeTarihi: vadeTarihi ?? this.vadeTarihi,
-    durum: durum ?? this.durum,
     kalemler: kalemler ?? this.kalemler,
-    araToplam: araToplam ?? this.araToplam,
-    kdvOrani: kdvOrani ?? this.kdvOrani,
-    kdv: kdv ?? this.kdv,
     toplam: toplam ?? this.toplam,
     iptal: iptal ?? this.iptal,
     iptalNedeni: iptalNedeni ?? this.iptalNedeni,

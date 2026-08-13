@@ -29,10 +29,8 @@ class IsletmeEkrani extends ConsumerWidget {
           hata,
           yenidenDene: () => ref.invalidate(isletmeProfiliSaglayici),
         ),
-        // Profil `null` olamaz: kurulum tamamlanmadan bu ekrana gelinemiyor.
-        // Yine de savunmacı davranıp boş kayıtla açılıyoruz.
-        data: (isletme) =>
-            _ProfilFormu(mevcut: isletme ?? const Isletme(id: '', ad: '')),
+        // Profil hiç doldurulmamış olabilir; o zaman form boş kayıtla açılır.
+        data: (isletme) => _ProfilFormu(mevcut: isletme ?? Isletme.bos),
       ),
     );
   }
@@ -136,6 +134,15 @@ class _ProfilFormuDurumu extends ConsumerState<_ProfilFormu> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
           children: [
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Text(
+                Metinler.isletmeFormAciklama,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
             IsletmeFormAlanlari(
               kontrolcular: _kontrolcular,
               etkin: !islemSuruyor,

@@ -8,6 +8,7 @@ import '../../../data/islem/islem_repository.dart';
 import '../../../data/isletme/isletme_repository.dart';
 import '../../../domain/ekstre/ekstre.dart';
 import '../../../domain/ekstre/ekstre_olusturucu.dart';
+import '../../../domain/isletme/isletme.dart';
 import '../../cari/viewmodel/cari_saglayici.dart';
 import '../view/pdf/ekstre_belgesi.dart';
 import '../view/pdf/ekstre_fontlari.dart';
@@ -27,6 +28,10 @@ final ekstreFontlariSaglayici = FutureProvider<EkstreFontlari>(
 /// carinin işlemleri. İşlemler sayfalanmadan çekilir — açılış bakiyesi
 /// aralıktan önceki tüm işlemlerin toplamıdır
 /// (bkz. [IslemRepository.ekstreIcinGetir]).
+///
+/// İşletme profili doldurulmamışsa döküm yine üretilir, yalnızca başlığı sade
+/// olur: kullanıcıyı, müşterisine hesap dökümü göndermek için önce kendi
+/// künyesini yazmaya zorlamıyoruz.
 final ekstreSaglayici = FutureProvider.family<Ekstre, String>((
   ref,
   cariId,
@@ -34,7 +39,6 @@ final ekstreSaglayici = FutureProvider.family<Ekstre, String>((
   final aralik = ref.watch(ekstreAraligiSaglayici(cariId));
 
   final isletme = await ref.watch(isletmeProfiliSaglayici.future);
-  if (isletme == null) throw const VeriHatasi.okunamadi();
 
   final kayit = await ref.watch(cariSaglayici(cariId).future);
   if (kayit == null) throw const VeriHatasi(Metinler.cariBulunamadi);
@@ -44,7 +48,7 @@ final ekstreSaglayici = FutureProvider.family<Ekstre, String>((
       .ekstreIcinGetir(cariId: cariId, bitis: aralik.bitis);
 
   return EkstreOlusturucu.olustur(
-    isletme: isletme,
+    isletme: isletme ?? Isletme.bos,
     cari: kayit.cari,
     aralik: aralik,
     islemler: islemler,

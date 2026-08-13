@@ -109,18 +109,25 @@ void main() {
       expect(nakliye.birimFiyatYuvarlanmisMi, isFalse);
     });
 
-    test('KDV uygulanmadı — toplam ara toplama eşit', () {
-      expect(zeytinHurmaFaturasi.kdvOrani, 0);
-      expect(zeytinHurmaFaturasi.kdv, Kurus.sifir);
-      expect(zeytinHurmaFaturasi.toplam, zeytinHurmaFaturasi.araToplam);
+    test('toplam, kalem tutarlarının toplamıdır — üzerine hiçbir şey binmez', () {
+      final kalemToplami = zeytinHurmaFaturasi.kalemler.fold(
+        Kurus.sifir,
+        (Kurus birikim, kalem) => birikim + kalem.tutar,
+      );
+
+      expect(zeytinHurmaFaturasi.toplam, kalemToplami);
     });
   });
 
   group('Sert Çekirdekli faturası — kabul kriteri 3', () {
-    test('%1 KDV: 140.625,00 ₺ → 142.031,25 ₺', () {
-      expect(sertCekirdekliFaturasi.araToplam.deger, 14062500);
-      expect(sertCekirdekliFaturasi.kdvOrani, 1);
-      expect(sertCekirdekliFaturasi.kdv.deger, 140625);
+    test('toplam 142.031,25 ₺ — fidanlar 140.625,00 ₺ + vergi kalemi', () {
+      final fidanlar = sertCekirdekliFaturasi.kalemler
+          .take(5)
+          .fold(Kurus.sifir, (Kurus birikim, kalem) => birikim + kalem.tutar);
+
+      expect(fidanlar.deger, 14062500);
+      expect(sertCekirdekliFaturasi.kalemler.last.ad, 'vergi');
+      expect(sertCekirdekliFaturasi.kalemler.last.tutar.deger, 140625);
       expect(sertCekirdekliFaturasi.toplam.deger, 14203125);
       expect(sertCekirdekliFaturasi.toplam.bicimli, '142.031,25 ₺');
     });

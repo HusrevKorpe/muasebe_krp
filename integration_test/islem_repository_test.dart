@@ -4,7 +4,6 @@ import 'package:fidancari/data/cari/cari_repository.dart';
 import 'package:fidancari/data/islem/islem_repository.dart';
 import 'package:fidancari/domain/cari/cari.dart';
 import 'package:fidancari/domain/islem/islem.dart';
-import 'package:fidancari/domain/islem/islem_durumu.dart';
 import 'package:fidancari/domain/islem/islem_kalemi.dart';
 import 'package:fidancari/domain/islem/islem_tipi.dart';
 import 'package:fidancari/domain/isletme/isletme.dart';
@@ -70,7 +69,6 @@ void main() {
   Future<String> faturaEkle({
     IslemTipi tip = IslemTipi.satisFaturasi,
     int lira = 1000,
-    int kdvOrani = 0,
     DateTime? tarih,
   }) async {
     final islemId = await repository.ekle(
@@ -79,7 +77,6 @@ void main() {
         tip: tip,
         baslik: 'Test faturası',
         islemTarihi: tarih ?? DateTime(2024, 3, 1),
-        kdvOrani: kdvOrani,
         kalemler: <IslemKalemi>[
           IslemKalemi.birimFiyattan(
             ad: 'fidan',
@@ -115,13 +112,11 @@ void main() {
 
   group('ekle', () {
     test('işlem sunucuya yazılır ve tutarlar int olarak durur', () async {
-      final islemId = await faturaEkle(lira: 140625, kdvOrani: 1);
+      final islemId = await faturaEkle(lira: 140625);
       final veri = (await sunucudaBekle(islemler().doc(islemId))).data()!;
 
       expect(veri[Islem.alanTip], 'satisFaturasi');
-      expect(veri[Islem.alanAraToplamKurus], 14062500);
-      expect(veri[Islem.alanKdvKurus], 140625);
-      expect(veri[Islem.alanToplamKurus], 14203125);
+      expect(veri[Islem.alanToplamKurus], 14062500);
       expect(veri[Islem.alanToplamKurus], isA<int>());
       expect(veri[Islem.alanIptal], isFalse);
       expect(veri[Islem.alanKalemler], hasLength(1));
@@ -315,7 +310,6 @@ void main() {
       final veri = (await sunucudaBekle(islemler().doc(islemId))).data()!;
       expect(veri[Islem.alanIptal], isTrue);
       expect(veri[Islem.alanIptalNedeni], 'yanlış giriş');
-      expect(veri[Islem.alanDurum], IslemDurumu.iptal.anahtar);
       expect(veri[Islem.alanToplamKurus], 100000, reason: 'tutar korunur');
     });
 

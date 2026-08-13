@@ -10,8 +10,6 @@ void main() {
     sehir: 'Isparta',
     telefon: '0246 000 00 00',
     adres: 'Merkez Mah. No:1',
-    vergiDairesi: 'Yüreğir',
-    vergiNo: '1234567899',
     notlar: 'Toptan alıyor',
     bakiye: const Kurus(9400000),
     sonIslemTarihi: DateTime.utc(2021, 9, 17),

@@ -157,14 +157,14 @@ void main() {
   });
 
   group('Açıklama biçimi', () {
-    test('fatura: tip adı, başlık ve durum', () {
+    test('fatura: tip adı ve başlık', () {
       expect(
         ekstreAciklamasi(zeytinHurmaFaturasi),
-        'Satış Faturası — Zeytin-Hurma (TESLİM EDİLDİ)',
+        'Satış Faturası — Zeytin-Hurma',
       );
     });
 
-    test('alış faturası durumsuz basılır', () {
+    test('alış faturası da aynı biçimde basılır', () {
       expect(
         ekstreAciklamasi(sertCekirdekliFaturasi),
         'Alış Faturası — Sert Çekirdekli Meyve Fidanı',

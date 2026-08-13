@@ -39,10 +39,9 @@ pw.Widget ekstreTablosu(Ekstre ekstre, EkstreStili stil) {
       0: const pw.FixedColumnWidth(EkstreStili.simgeKolonu),
       1: const pw.FixedColumnWidth(EkstreStili.tarihKolonu),
       2: pw.FixedColumnWidth(EkstreStili.aciklamaKolonu),
-      3: const pw.FixedColumnWidth(EkstreStili.vadeKolonu),
+      3: const pw.FixedColumnWidth(EkstreStili.tutarKolonu),
       4: const pw.FixedColumnWidth(EkstreStili.tutarKolonu),
-      5: const pw.FixedColumnWidth(EkstreStili.tutarKolonu),
-      6: const pw.FixedColumnWidth(EkstreStili.bakiyeKolonu),
+      5: const pw.FixedColumnWidth(EkstreStili.bakiyeKolonu),
     },
     children: satirlar,
   );
@@ -68,10 +67,6 @@ pw.TableRow _baslikSatiri(EkstreStili stil) => pw.TableRow(
     ),
     _hucre(
       pw.Text(Metinler.ekstreKolonAciklama, style: stil.kolonBasligi),
-      baslikMi: true,
-    ),
-    _hucre(
-      pw.Text(Metinler.ekstreKolonVadeTarihi, style: stil.kolonBasligi),
       baslikMi: true,
     ),
     _hucre(
@@ -103,7 +98,6 @@ pw.TableRow _devirSatiri(Ekstre ekstre, EkstreStili stil) => pw.TableRow(
     _hucre(pw.Text(Metinler.ekstreDevreden, style: stil.satirKalin)),
     _hucre(pw.SizedBox()),
     _hucre(pw.SizedBox()),
-    _hucre(pw.SizedBox()),
     _hucre(
       ekstreParasi(ekstre.acilisBakiyesi, stil, kalin: true),
       solCizgi: true,
@@ -123,12 +117,6 @@ pw.TableRow _islemSatiri({
       _hucre(_tipSimgesi(islem.tip), yatayBosluk: EkstreStili.simgeBoslugu),
       _hucre(pw.Text(tabloTarihi(islem.islemTarihi), style: stil.satir)),
       _hucre(_aciklamaHucresi(islem, stil)),
-      _hucre(
-        pw.Text(
-          islem.vadeTarihi == null ? '' : tabloTarihi(islem.vadeTarihi!),
-          style: stil.satir,
-        ),
-      ),
       _hucre(
         islem.borc.sifirMi ? pw.SizedBox() : ekstreParasi(islem.borc, stil),
         hiza: pw.Alignment.topRight,
@@ -159,24 +147,21 @@ pw.Widget _aciklamaHucresi(Islem islem, EkstreStili stil) {
   );
 }
 
-/// `Satış Faturası — Zeytin-Hurma (TESLİM EDİLDİ)`
+/// `Satış Faturası — Zeytin-Hurma`
 ///
 /// Faturalarda tip adı başlığın önüne eklenir; tahsilat ve ödemede başlık
 /// zaten "Müşteriden Tahsilat" gibi kendi kendini anlatır ve tekrarlanmaz —
-/// referans ekstredeki yazım budur.
+/// referans ekstredeki yazım budur. İptalli kayıt `(İPTAL EDİLDİ)` ekiyle
+/// basılır: satır ekstreden düşmez, tutarları boş görünür.
 String ekstreAciklamasi(Islem islem) {
   final govde = islem.baslik.isEmpty
-      ? islem.tip.ad
-      : (islem.tip.faturaMi ? '${islem.tip.ad} — ${islem.baslik}' : islem.baslik);
+      ? islem.tip.belgeAdi
+      : (islem.tip.faturaMi
+            ? '${islem.tip.belgeAdi} — ${islem.baslik}'
+            : islem.baslik);
 
-  final durum = _durumEki(islem);
-  return durum == null ? govde : '$govde ($durum)';
-}
-
-String? _durumEki(Islem islem) {
-  if (islem.iptalMi) return turkce.turkceBuyuk(Metinler.iptalEdildi);
-  if (islem.teslimEdildiMi) return turkce.turkceBuyuk(Metinler.teslimEdildi);
-  return null;
+  if (!islem.iptalMi) return govde;
+  return '$govde (${turkce.turkceBuyuk(Metinler.iptalEdildi)})';
 }
 
 /// `zeytin   7.000 Adet  ×  7,00 ₺`

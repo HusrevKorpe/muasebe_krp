@@ -9,10 +9,10 @@ import '../../core/para/kurus.dart';
 import '../../domain/cari/cari.dart';
 import '../../domain/islem/bakiye_hesaplayici.dart';
 import '../../domain/islem/islem.dart';
-import '../../domain/islem/islem_durumu.dart';
 import '../../domain/isletme/isletme.dart';
 import '../firebase/firebase_saglayicilar.dart';
 import '../firebase/firestore_donusum.dart';
+import '../kimlik/kimlik_repository.dart';
 import 'islem_kaydi.dart';
 import 'islem_kimligi.dart';
 import 'islem_sayfasi.dart';
@@ -197,7 +197,6 @@ class IslemRepository {
     toplu.update(_koleksiyon(cariId).doc(islem.id), <String, Object?>{
       Islem.alanIptal: true,
       Islem.alanIptalNedeni: neden,
-      Islem.alanDurum: IslemDurumu.iptal.anahtar,
     });
     toplu.update(_cariBelgesi(cariId), <String, Object?>{
       Cari.alanBakiyeKurus: FieldValue.increment(-islem.bakiyeEtkisi.deger),
@@ -325,7 +324,7 @@ class IslemRepository {
 
   VeriHatasi _veriHatasi(Object hata) {
     if (hata is FirebaseException && hata.code == 'permission-denied') {
-      return const VeriHatasi.yetkisiz();
+      return const VeriHatasi.oturumYok();
     }
     return const VeriHatasi.okunamadi();
   }
@@ -334,7 +333,7 @@ class IslemRepository {
 /// Giriş yapmış kullanıcının işlem deposu.
 final islemRepositorySaglayici = Provider<IslemRepository>((ref) {
   final isletmeId = ref.watch(isletmeKimligiSaglayici);
-  if (isletmeId == null) throw const VeriHatasi.yetkisiz();
+  if (isletmeId == null) throw const VeriHatasi.oturumYok();
 
   return IslemRepository(
     firestore: ref.watch(firestoreSaglayici),

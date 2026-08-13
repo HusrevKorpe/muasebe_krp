@@ -10,23 +10,31 @@ import '../../../../domain/islem/islem_tipi.dart';
 /// renkle gösterildiği görünüm bilgisidir ve bu yüzden burada durur
 /// (bkz. KURALLAR.md §1.3).
 extension IslemTipiGorunumu on IslemTipi {
-  /// Kullanıcıya gösterilen ad.
+  /// Uygulamada gösterilen ad — günlük dil.
+  ///
+  /// Uygulama tek kişinin kendi defteri; düğmede "Satış Faturası" değil
+  /// "Sattım" yazıyor. Müşteriye giden belgede kullanılan ad ayrı: [belgeAdi].
   String get ad => switch (this) {
+    IslemTipi.satisFaturasi => Metinler.sattim,
+    IslemTipi.alisFaturasi => Metinler.aldim,
+    IslemTipi.tahsilat => Metinler.paraAldim,
+    IslemTipi.odeme => Metinler.paraVerdim,
+  };
+
+  /// PDF hesap dökümünde basılan ad — belge dili.
+  ///
+  /// Döküm müşteriye gidiyor; orada "Sattım — Zeytin-Hurma" yazamayız.
+  /// Referans ekstredeki yazım korunuyor (bkz. `ekstreAciklamasi`).
+  String get belgeAdi => switch (this) {
     IslemTipi.satisFaturasi => Metinler.satisFaturasi,
     IslemTipi.alisFaturasi => Metinler.alisFaturasi,
     IslemTipi.tahsilat => Metinler.tahsilat,
     IslemTipi.odeme => Metinler.odeme,
   };
 
-  /// Yeni kayıt ekranının başlığı.
-  String get formBasligi => switch (this) {
-    IslemTipi.satisFaturasi => Metinler.yeniSatisFaturasi,
-    IslemTipi.alisFaturasi => Metinler.yeniAlisFaturasi,
-    IslemTipi.tahsilat => Metinler.yeniTahsilat,
-    IslemTipi.odeme => Metinler.yeniOdeme,
-  };
-
   /// Yeni kayıtta açıklama alanına gelen varsayılan metin.
+  ///
+  /// Belge diliyle yazılır: bu metin doğrudan hesap dökümüne basılıyor.
   String get varsayilanBaslik => switch (this) {
     IslemTipi.tahsilat => Metinler.musteridenTahsilat,
     IslemTipi.odeme => Metinler.cariyeOdeme,
@@ -34,10 +42,10 @@ extension IslemTipiGorunumu on IslemTipi {
   };
 
   IconData get simge => switch (this) {
-    IslemTipi.satisFaturasi || IslemTipi.alisFaturasi =>
-      Icons.receipt_long_outlined,
-    IslemTipi.tahsilat => Icons.payments_outlined,
-    IslemTipi.odeme => Icons.account_balance_wallet_outlined,
+    IslemTipi.satisFaturasi => Icons.local_shipping_outlined,
+    IslemTipi.alisFaturasi => Icons.inventory_2_outlined,
+    IslemTipi.tahsilat => Icons.south_west,
+    IslemTipi.odeme => Icons.north_east,
   };
 
   /// Borç işlemleri bakiyeyi artırır ve borç rengiyle, alacak işlemleri

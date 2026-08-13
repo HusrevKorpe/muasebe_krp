@@ -1,6 +1,6 @@
 /// Ekstre testlerinin işletme ve cari verisi.
 ///
-/// Tamamı **uydurmadır** — gerçek müşteri verisi, IBAN veya vergi numarası
+/// Tamamı **uydurmadır** — gerçek müşteri verisi veya IBAN
 /// repoya girmez (KURALLAR.md §7). Alanlar bilerek Türkçe karakter yüklü
 /// seçildi: font gömme doğrulaması bu metinler üzerinden yapılıyor
 /// (`fazlar/faz-4-ekstre.md`, kabul kriteri 4).
@@ -16,9 +16,6 @@ const Isletme ornekIsletme = Isletme(
   unvan: 'Tar.Taş.Hay.Ltd.Şti',
   adres: 'Çiğdem Mah. Söğütlü Cad.\nNo: 42 Şuhut / Afyonkarahisar',
   telefon: '02725550101',
-  faks: '02725550102',
-  vergiDairesi: 'Şuhut',
-  vergiNo: '1234567890',
   bankaHesaplari: <BankaHesabi>[
     BankaHesabi(
       banka: 'Ziraat Bankası - 1398',

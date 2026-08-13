@@ -3,37 +3,45 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../data/firebase/firebase_saglayicilar.dart';
+import '../core/hata/hatalar.dart';
 import '../data/isletme/isletme_repository.dart';
+import '../data/kimlik/kimlik_repository.dart';
 import '../domain/islem/islem_tipi.dart';
 import '../domain/isletme/isletme.dart';
+import '../features/ayarlar/view/ayarlar_ekrani.dart';
 import '../features/cari/view/cari_detay_ekrani.dart';
 import '../features/cari/view/cari_duzenle_ekrani.dart';
 import '../features/cari/view/cari_form_ekrani.dart';
 import '../features/cari/view/cari_listesi_ekrani.dart';
 import '../features/ekstre/view/ekstre_ekrani.dart';
-import '../features/fidan/view/fidan_duzenle_ekrani.dart';
-import '../features/fidan/view/fidan_form_ekrani.dart';
-import '../features/fidan/view/fidan_listesi_ekrani.dart';
+import '../features/giris/view/giris_ekrani.dart';
 import '../features/islem/view/fatura_form_ekrani.dart';
 import '../features/islem/view/islem_detay_ekrani.dart';
 import '../features/islem/view/tahsilat_form_ekrani.dart';
 import '../features/isletme/view/isletme_ekrani.dart';
-import '../features/kimlik/view/giris_ekrani.dart';
-import '../features/kimlik/view/hesap_ekrani.dart';
-import '../features/kimlik/view/kayit_ekrani.dart';
-import '../features/kurulum/view/kurulum_ekrani.dart';
 import '../features/ortak/view/acilis_ekrani.dart';
+import '../features/urun/view/urun_duzenle_ekrani.dart';
+import '../features/urun/view/urun_form_ekrani.dart';
+import '../features/urun/view/urun_listesi_ekrani.dart';
+import 'kabuk.dart';
 import 'yollar.dart';
 
 /// Uygulama yönlendiricisi.
 ///
-/// İki kapı var: oturum ve kurulum. Kullanıcı giriş yapmadan hiçbir veri
-/// ekranını, işletme profilini doldurmadan da cari ekranlarını göremez.
+/// Tek kapı var: giriş. Uygulamayı birkaç kişi kullanıyor ve hepsi aynı
+/// defteri görüyor; kimlik Google hesabıyla doğrulanıyor, erişim iznini ise
+/// sunucudaki izin listesi veriyor. Buradaki üç durum:
+///
+/// * Saklanan oturum henüz yüklenmedi → açılış ekranı.
+/// * Oturum yok → giriş ekranı.
+/// * Oturum var ama hesap izin listesinde değil → yine giriş ekranı; orası
+///   durumu anlatıp çıkış düğmesini gösteriyor.
+///
+/// İşletme profili artık bir kapı değil: doldurulmadan da uygulama açılır.
 ///
 /// Durum değiştiğinde yönlendirici yeniden kurulmaz; yalnızca
-/// [GoRouter.refreshListenable] tetiklenir. Böylece giriş/çıkışta gezinme yığını
-/// sıfırlanmaz ve ekran titremez.
+/// [GoRouter.refreshListenable] tetiklenir. Böylece gezinme yığını sıfırlanmaz
+/// ve ekran titremez.
 final yonlendiriciSaglayici = Provider<GoRouter>((ref) {
   final oturumBildirici = ValueNotifier<AsyncValue<User?>>(
     const AsyncValue<User?>.loading(),
@@ -45,7 +53,7 @@ final yonlendiriciSaglayici = Provider<GoRouter>((ref) {
   ref.onDispose(profilBildirici.dispose);
 
   ref.listen<AsyncValue<User?>>(
-    oturumDurumuSaglayici,
+    oturumSaglayici,
     (onceki, yeni) => oturumBildirici.value = yeni,
     fireImmediately: true,
   );
@@ -64,31 +72,30 @@ final yonlendiriciSaglayici = Provider<GoRouter>((ref) {
       final oturum = oturumBildirici.value;
       final konum = durum.matchedLocation;
 
-      // Oturum durumu henüz bilinmiyor: açılış ekranında bekle.
-      if (oturum.isLoading) {
+      // Akıştan henüz ilk yayın gelmedi: saklanan oturum yükleniyor, açılış
+      // ekranında bekle. `isLoading` yerine "değer de hata da yok" diye
+      // soruluyor; tazelemede `isLoading` elinde değer varken de doğru olur ve
+      // kullanıcı açılış ekranına geri sıçrardı.
+      if (!oturum.hasValue && !oturum.hasError) {
         return konum == Yollar.acilis ? null : Yollar.acilis;
       }
 
-      final kimliksizYolda = Yollar.kimliksizYollar.contains(konum);
-
+      // Oturum yok — ya da okunamadı; ikisinde de yapılacak şey aynı.
       if (oturum.value == null) {
-        return kimliksizYolda && konum != Yollar.acilis ? null : Yollar.giris;
+        return konum == Yollar.giris ? null : Yollar.giris;
       }
 
-      // Giriş yapıldı; sıra kurulumda.
-      final profil = profilBildirici.value;
-      if (profil.isLoading) {
-        return konum == Yollar.acilis ? null : Yollar.acilis;
+      // Oturum var; sıra erişim izninde. İzin listesi sunucuda olduğu için
+      // yoklama profil belgesi üzerinden yapılıyor.
+      if (profilBildirici.value.error is YetkiHatasi) {
+        return konum == Yollar.giris ? null : Yollar.giris;
       }
 
-      // Profil okunamadıysa (yetki, ağ) kullanıcıyı kurulumda tutmak yerine
-      // uygulamaya alıyoruz: çevrimdışı önbellek boşsa da uygulama açılmalı.
-      final kurulumTamam = profil.hasError || profil.value != null;
-      if (!kurulumTamam) {
-        return konum == Yollar.kurulum ? null : Yollar.kurulum;
-      }
-
-      return kimliksizYolda || konum == Yollar.kurulum ? Yollar.ana : null;
+      // Profilin yüklenmesi beklenmiyor: yokluğu da geçerli bir durum ve
+      // çevrimdışı önbellek boşsa da uygulama açılmalı.
+      return konum == Yollar.acilis || konum == Yollar.giris
+          ? Yollar.ana
+          : null;
     },
     routes: <RouteBase>[
       GoRoute(
@@ -99,25 +106,40 @@ final yonlendiriciSaglayici = Provider<GoRouter>((ref) {
         path: Yollar.giris,
         builder: (context, durum) => const GirisEkrani(),
       ),
-      GoRoute(
-        path: Yollar.kayit,
-        builder: (context, durum) => const KayitEkrani(),
-      ),
-      GoRoute(
-        path: Yollar.kurulum,
-        builder: (context, durum) => const KurulumEkrani(),
-      ),
-      GoRoute(
-        path: Yollar.ana,
-        builder: (context, durum) => const CariListesiEkrani(),
+      // Alt sekmeler. Her dal kendi yığınını korur; kişi sayfası ve giriş
+      // formları bilerek kabuğun dışında, kök gezinmede duruyor.
+      StatefulShellRoute.indexedStack(
+        builder: (context, durum, gezinme) => Kabuk(gezinme: gezinme),
+        branches: <StatefulShellBranch>[
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: Yollar.ana,
+                builder: (context, durum) => const CariListesiEkrani(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: Yollar.urunler,
+                builder: (context, durum) => const UrunListesiEkrani(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: <RouteBase>[
+              GoRoute(
+                path: Yollar.ayarlar,
+                builder: (context, durum) => const AyarlarEkrani(),
+              ),
+            ],
+          ),
+        ],
       ),
       GoRoute(
         path: Yollar.isletme,
         builder: (context, durum) => const IsletmeEkrani(),
-      ),
-      GoRoute(
-        path: Yollar.hesap,
-        builder: (context, durum) => const HesapEkrani(),
       ),
       // `/cari/yeni`, `/cari/:cariId` kalıbından **önce** tanımlanmalı;
       // go_router yolları sırayla eşleştirir ve aksi hâlde "yeni" bir cari
@@ -172,20 +194,16 @@ final yonlendiriciSaglayici = Provider<GoRouter>((ref) {
           cariId: durum.pathParameters[Yollar.cariIdParametresi]!,
         ),
       ),
+      // `/urunler/yeni`, `/urunler/:urunId` kalıbından **önce** tanımlanmalı;
+      // aksi hâlde "yeni" bir ürün kimliği sanılır.
       GoRoute(
-        path: Yollar.fidanlar,
-        builder: (context, durum) => const FidanListesiEkrani(),
-      ),
-      // `/fidanlar/yeni`, `/fidanlar/:fidanId` kalıbından **önce** tanımlanmalı;
-      // aksi hâlde "yeni" bir fidan kimliği sanılır.
-      GoRoute(
-        path: Yollar.fidanYeni,
-        builder: (context, durum) => const FidanFormEkrani(),
+        path: Yollar.urunYeni,
+        builder: (context, durum) => const UrunFormEkrani(),
       ),
       GoRoute(
-        path: Yollar.fidanDuzenle,
-        builder: (context, durum) => FidanDuzenleEkrani(
-          fidanId: durum.pathParameters[Yollar.fidanIdParametresi]!,
+        path: Yollar.urunDuzenle,
+        builder: (context, durum) => UrunDuzenleEkrani(
+          urunId: durum.pathParameters[Yollar.urunIdParametresi]!,
         ),
       ),
     ],

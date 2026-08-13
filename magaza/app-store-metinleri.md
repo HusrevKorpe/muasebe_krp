@@ -8,7 +8,7 @@ ve sonraki sürümde sıfırdan yazılmaz.
 
 > **Şu anki durum: TestFlight.** Aşağıdaki alanların çoğu App Store gönderiminde
 > isteniyor. **İç** TestFlight testi için yalnızca uygulama kaydı, bundle ID ve
-> build yeterli — ekran görüntüsü, açıklama ve demo hesap gerekmiyor.
+> build yeterli — ekran görüntüsü, açıklama ve örnek veri gerekmiyor.
 > **Dış** teste geçilirse Beta App Review devreye girer; o zaman gizlilik
 > politikası URL'si, beta açıklaması ve geri bildirim e-postası zorunlu olur.
 
@@ -18,7 +18,7 @@ ve sonraki sürümde sıfırdan yazılmaz.
 |---|---|
 | Beta App Description | `FidanCari, fidancılar için cari hesap ve ön muhasebe defteridir. Müşterilerinizi kaydedin, fatura ve tahsilat girin, yürüyen bakiyeyi izleyin, PDF ekstre üretip paylaşın.` |
 | Feedback Email | `[İLETİŞİM E-POSTASI]` |
-| Beta App Review — giriş bilgisi | `[DEMO E-POSTA]` / `[DEMO ŞİFRE]` |
+| Beta App Review — giriş bilgisi | **Gerekiyor** — Google ile giriş var. "Sign-in required" evet işaretlenir; izin listesine eklenmiş bir Google hesabı verilir |
 | Gizlilik politikası URL'si | `[YAYIN ADRESİ]/gizlilik.html` |
 
 ---
@@ -81,7 +81,6 @@ CARİ HESAP TAKİBİ
 
 FATURA VE TAHSİLAT
 • Kalem kalem satış ve alış faturası girin.
-• Fatura başına isteğe bağlı %1 KDV.
 • Tahsilat ve ödemelerinizi kaydedin.
 • Toplam tutarı yazın, birim fiyat kendiliğinden hesaplansın — ya da tersi.
 • Her işlemden sonra yürüyen bakiye güncellenir.
@@ -128,15 +127,27 @@ takibi ve reklam SDK'sı **yoktur** — derlenen ikilide `GoogleAppMeasurement`
 sembolü bulunmuyor, yalnızca `FirebaseCore`, `FirebaseAuth` ve
 `FirebaseFirestore` bağlanıyor.
 
+> Giriş Google hesabıyla yapılıyor (bkz.
+> `lib/data/kimlik/kimlik_repository.dart`), yani **e-posta adresi toplanıyor**
+> ve kimliğe bağlı. Şifre uygulamaya hiç girilmiyor; kimlik doğrulamasını
+> Google yapıp Firebase'e jeton veriyor. E-posta yalnızca kimin girdiğini
+> bilmek ve erişim iznini denetlemek için kullanılıyor; pazarlama, analiz ya da
+> izleme amacıyla kullanılmıyor.
+
 **"Does this app collect data?" → Yes**
 
 | Veri türü | Toplanıyor mu | Kimliğe bağlı mı | Amaç | İzleme (tracking) |
 |---|---|---|---|---|
 | Contact Info → Email Address | Evet | Evet | App Functionality | Hayır |
-| User Content → Other User Content | Evet | Evet | App Functionality | Hayır |
 | Identifiers → User ID | Evet | Evet | App Functionality | Hayır |
+| User Content → Other User Content | Evet | Evet | App Functionality | Hayır |
 
 Diğer tüm kategoriler: **Data Not Collected**.
+
+> E-posta ve kullanıcı kimliği Google girişiyle geliyor; ikisi de yalnızca
+> oturumu ve erişim iznini yürütmek için kullanılıyor. Kullanıcı içeriği de
+> artık kimliğe bağlı sayılmalı: giriş yapan hesap belli olduğu için kayıtlar
+> anonim değil.
 
 **"Do you use data for tracking?" → No.** Uygulama reklam kimliği okumaz,
 üçüncü taraflarla veri paylaşmaz; bu yüzden App Tracking Transparency izni de
@@ -154,22 +165,19 @@ TR:
 FidanCari, fidan üreticileri ve satıcıları için bir cari hesap / ön muhasebe
 uygulamasıdır. Kullanıcı kendi müşterilerini kaydeder, satış-alış faturası ve
 tahsilat girer, yürüyen bakiyeyi izler ve tarih aralığına göre PDF ekstre
-üretip paylaşır. Uygulama tek kullanıcılıdır: her hesap yalnızca kendi verisini
-görür.
+üretip paylaşır. Uygulama tek işletme içindir ve kendi verisinden başkasını
+görmez.
 
-Aşağıdaki demo hesabı örnek carileri ve işlemleriyle hazırdır:
-E-posta: [DEMO E-POSTA]
-Şifre:   [DEMO ŞİFRE]
+Giriş ekranı yoktur: uygulama açıldığında doğrudan kullanılabilir. Kullanıcıdan
+e-posta, şifre ya da başka bir kimlik bilgisi istenmez; bu yüzden uygulama içinde
+silinecek bir hesap da bulunmuyor. Veri silme talepleri gizlilik politikasındaki
+iletişim adresi üzerinden karşılanıyor.
 
 Denemek için önerilen akış:
-1. Demo hesapla giriş yapın.
+1. Uygulamayı açın; örnek cariler hazır gelir.
 2. Listeden bir cari seçin; işlem geçmişini ve bakiyesini görün.
 3. "Ekstre" düğmesiyle tarih aralığı seçip PDF önizlemesini açın.
 4. Yeni fatura / tahsilat ekleyerek bakiyenin güncellendiğini görün.
-
-Hesap silme: sağ üstteki menü → Hesap → Hesabı sil. Şifre doğrulaması
-istendikten sonra hesap ve ona bağlı tüm veriler kalıcı olarak silinir.
-(Demo hesabını silmemenizi rica ederiz; başka bir hesapla deneyebilirsiniz.)
 
 EN:
 FidanCari is a bookkeeping / accounts-receivable app for plant nursery
@@ -179,13 +187,13 @@ statement for a chosen date range. It is a single-user app: each account only
 sees its own data. The interface is Turkish only, as the target users are
 nursery owners in Turkey.
 
-Demo account (pre-filled with sample customers and transactions):
-Email: [DEMO E-POSTA]
-Password: [DEMO ŞİFRE]
+There is no sign-in screen and no account creation: the app is ready to use as
+soon as it launches, and it never asks for an email address, password or any
+other credential. Because no account is created, there is no in-app account to
+delete; data deletion requests are handled through the contact address in the
+privacy policy.
 
-Account deletion is available in-app: top-right menu → Hesap ("Account") →
-Hesabı sil ("Delete account"). Please use a separate account if you wish to
-test deletion, so the demo data stays intact.
+The app opens with sample customers and transactions already in place.
 ```
 
 ---
@@ -201,11 +209,11 @@ zorunlu tutuyor; diğer boyutlar bundan ölçeklenir. iPad'i destekliyorsak
 > görüntüsü hazırlamak istemiyorsak hedef aygıt ailesini yalnızca iPhone'a
 > çekmek gerekir.
 
-Önerilen 5 kare (demo veriyle, hepsi Türkçe):
+Önerilen 5 kare (örnek veriyle, hepsi Türkçe):
 
 1. Cari listesi — bakiyeler görünür durumda
 2. Cari detayı — işlem geçmişi ve yürüyen bakiye
-3. Fatura girişi — kalemler ve KDV
+3. Fatura girişi — kalemler ve genel toplam
 4. PDF ekstre önizlemesi
 5. Fidan katalogu
 

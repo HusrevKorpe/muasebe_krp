@@ -17,6 +17,8 @@ tarih aralığına göre PDF ekstre üretip paylaşır.
 - **Muhasebe kaydı silinmez** — iptal işaretlenir veya ters kayıt atılır.
 - Kod ASCII (`anac`, `cesit`), kullanıcıya görünen metin tam Türkçe (`Anaç`, `Çeşit`).
 - Domain terimleri Türkçe kalır: `Cari`, `Bakiye`, `Tahsilat` — `Contact`, `Balance` değil.
+- **Testler ana session'da koşturulmaz** — iş bitince `test-runner` subagent'ı çağrılır,
+  sadece özet raporu beklenir. Bkz. [KURALLAR.md §5.0](KURALLAR.md#50-testleri-kim-çalıştırır).
 
 ## Fazlar
 
@@ -26,7 +28,7 @@ Sırayla ilerlenir. Bir faz, kendi dosyasındaki kabul kriterleri sağlanmadan k
 |---|---|---|
 | [0](fazlar/faz-0-iskelet.md) | İskelet: klasör yapısı, tema, Riverpod, Auth, çekirdek yardımcılar | **Sürüyor** |
 | [1](fazlar/faz-1-cari.md) | Cari: işletme profili, liste, arama, detay sayfası | **Sürüyor** |
-| [2](fazlar/faz-2-islemler.md) | İşlemler: fatura, tahsilat, kalemler, KDV, yürüyen bakiye | **Sürüyor** |
+| [2](fazlar/faz-2-islemler.md) | İşlemler: fatura, tahsilat, kalemler, yürüyen bakiye | **Sürüyor** |
 | [3](fazlar/faz-3-katalog.md) | Fidan katalogu: Tür/Çeşit/Anaç/Yaş/Kök tipi, fiyat listesi | **Sürüyor** |
 | [4](fazlar/faz-4-ekstre.md) | PDF ekstre: şablon, tarih aralığı, paylaşma | **Sürüyor** |
 | [5](fazlar/faz-5-magaza.md) | Mağaza: ikon, gizlilik, SPM geçişi, TestFlight, App Store | **Sürüyor** |
@@ -35,11 +37,17 @@ Faz kapandığında bu tablodaki durumu ve ilgili faz dosyasının başlığınd
 
 ## Komutlar
 
+Not: `flutter analyze` ve `flutter test` **ana session'da çalıştırılmaz** —
+`test-runner` subagent'ı çağrılır (KURALLAR.md §5.0). Aşağıdaki liste o ajanın
+ve elle koşturmanın referansıdır.
+
 ```bash
-flutter analyze                        # sıfır uyarı vermeli
-flutter test                           # tüm testler geçmeli
+flutter analyze                        # sıfır uyarı vermeli (test-runner koşturur)
+flutter test                           # tüm testler geçmeli (test-runner koşturur)
 flutter build ios --release            # faz kapanışında başarılı olmalı
 flutter run                            # cihazda çalıştır
+
+flutter build ipa                      # TestFlight'a giden derleme
 
 firebase emulators:start --only firestore,auth   # repository testleri burada koşar
 firebase deploy --only firestore:rules,firestore:indexes   # kural ve index yayını
@@ -75,7 +83,7 @@ deposu eskiyse `pod install --repo-update` gerekir.
 | Firebase projesi | `muasebe-takip` (662432068913) |
 | Platform | iOS, minimum **15.0** (Firebase SDK şartı) |
 | Stack | Flutter 3.41 · Dart 3.11 · Firestore · Riverpod · MVVM |
-| Kullanım | Tek kullanıcı — her kurulum kendi verisiyle çalışır |
+| Kullanım | **Ortak defter.** Google ile giriş yapan izinli hesaplar (2 kişi) aynı veriyi görür |
 
 ## Klasör yapısı
 
@@ -99,8 +107,9 @@ tool/              # Varlık üreticileri (uygulama ikonu)
 
 - **Referans ekstre:** `~/Desktop/Favori_Fidancılık_Ekstresi.pdf` — üreteceğimiz PDF'in
   hedefi bu. Kolonlar: İşlem Tarihi · Açıklama · Vade Tarihi · Borç · Alacak · Bakiye.
-- **KDV %1**, fatura bazında opsiyonel. Referans ekstredeki üç faturadan yalnızca
-  birinde uygulanmış.
+- **Vergi hesabı yok.** Fatura toplamı kalem tutarlarının toplamıdır. Referans
+  ekstredeki bir faturada %1 vergi görünüyor; öyle bir satır gerekirse "nakliye"
+  gibi serbest metin kalemi olarak girilir.
 - **Bir cari hem müşteri hem tedarikçi olabilir.** Fidancılıkta alım-satım aynı kişiyle yapılır.
 - **Fidan kimliği:** Tür → Çeşit → Anaç (+ Yaş, Kök tipi). Örnek: Elma / Scarlet / M9.
   Görünen ad bu alanlardan üretilir (`Fidan.goruntuAdi`) ve faturaya o metin yazılır.
@@ -111,9 +120,21 @@ tool/              # Varlık üreticileri (uygulama ikonu)
   Manager üzerinden geliyor; CocoaPods'un Ekim 2026 riski kapandı. Geriye tek
   eklenti kaldı: `printing` henüz `Package.swift` yayınlamıyor, o yüzden
   `Podfile` duruyor. `pod install` hâlâ gerekli.
-- **Hesap silme sırası bozulmaz:** yeniden doğrula → Firestore verisini sil →
-  Auth kullanıcısını sil. Hesap önce silinirse güvenlik kuralları yazma
-  yetkisini geri çeker ve arkada erişilemez veri kalır.
+- **Google ile giriş, ortak defter.** Uygulamayı iki kişi kullanıyor ve ikisi de
+  **aynı** veriyi görüyor. Bu yüzden veri artık `isletmeler/{uid}` altında
+  değil, sabit `isletmeler/ortak` altında (`Isletme.ortakId`).
+  Kimliği Google girişi doğrular (`KimlikRepository.girisYap`), erişim iznini
+  Firestore'daki `izinliler` koleksiyonu verir: belge kimliği hesabın
+  e-postasıdır, içeriği boş olabilir. Kişi eklemek/çıkarmak Firebase Console →
+  Firestore → `izinliler` işidir; kod değişikliği ya da yeni derleme gerekmez.
+  Listede olmayan hesap giriş yapabilir ama tek bir kayıt bile göremez; giriş
+  ekranı ona durumu söyleyip çıkış düğmesi gösterir.
+  **Manuel adımlar:** Authentication → Sign-in method → Google açık, diğerleri
+  kapalı; Firestore'da `izinliler` altına en az bir e-posta.
+- **İşletme profili zorunlu değil.** Eskiden ilk açılışta doldurulması gereken
+  bir kurulum ekranı vardı; kaldırıldı. Profil yalnızca PDF ekstre başlığını
+  besliyor, boşsa başlık sade çıkar. Ayarlar → İşletme bilgileri'nden istendiği
+  zaman doldurulur.
 - **Çevrimdışı yazma:** Repository'ler `set`/`update` future'ını **beklemez**.
   Firestore çevrimdışıyken bu future yalnızca sunucu onayında tamamlanır;
   beklenirse uçak modunda ekran kilitlenir. Yerel yazma anında görünür, kayıt

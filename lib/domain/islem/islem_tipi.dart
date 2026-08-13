@@ -30,7 +30,7 @@ enum IslemTipi {
   /// `true` ise işlem bakiyeyi artırır (borç), `false` ise azaltır (alacak).
   final bool borcMu;
 
-  /// Fatura tipleri kalem, KDV ve vade tarihi taşır; tahsilat ve ödeme taşımaz.
+  /// Fatura tipleri kalem ve vade tarihi taşır; tahsilat ve ödeme taşımaz.
   final bool faturaMi;
 
   bool get alacakMi => !borcMu;

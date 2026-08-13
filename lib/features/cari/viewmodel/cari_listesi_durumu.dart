@@ -1,12 +1,10 @@
 import '../../../data/cari/cari_kaydi.dart';
-import '../../../domain/cari/cari_siralamasi.dart';
 
 /// Cari listesi ekranının durumu.
 class CariListesiDurumu {
   const CariListesiDurumu({
     this.kayitlar = const <CariKaydi>[],
     this.arama = '',
-    this.siralama = CariSiralamasi.ad,
     this.dahaVar = false,
     this.dahaYukleniyor = false,
     this.sayfaHatasi,
@@ -14,7 +12,6 @@ class CariListesiDurumu {
 
   final List<CariKaydi> kayitlar;
   final String arama;
-  final CariSiralamasi siralama;
 
   /// Sunucuda okunacak kayıt kaldı mı.
   final bool dahaVar;
@@ -34,7 +31,6 @@ class CariListesiDurumu {
   CariListesiDurumu kopyala({
     List<CariKaydi>? kayitlar,
     String? arama,
-    CariSiralamasi? siralama,
     bool? dahaVar,
     bool? dahaYukleniyor,
     String? sayfaHatasi,
@@ -42,7 +38,6 @@ class CariListesiDurumu {
   }) => CariListesiDurumu(
     kayitlar: kayitlar ?? this.kayitlar,
     arama: arama ?? this.arama,
-    siralama: siralama ?? this.siralama,
     dahaVar: dahaVar ?? this.dahaVar,
     dahaYukleniyor: dahaYukleniyor ?? this.dahaYukleniyor,
     sayfaHatasi: hatayiTemizle ? null : (sayfaHatasi ?? this.sayfaHatasi),

@@ -35,11 +35,10 @@ class EkstreStili {
   static const double simgeKolonu = 18;
   static const double simgeBoslugu = 3;
 
-  /// Tarih kolonları `28 Ağustos 2024` gibi en uzun tarihi tek satıra
-  /// sığdıracak genişlikte: sarkan tarih satır yüksekliğini büyütüyor ve
-  /// tablo tırtıklı görünüyor.
+  /// Tarih kolonu `28 Ağustos 2024` gibi en uzun tarihi tek satıra sığdıracak
+  /// genişlikte: sarkan tarih satır yüksekliğini büyütüyor ve tablo tırtıklı
+  /// görünüyor.
   static const double tarihKolonu = 72;
-  static const double vadeKolonu = 72;
 
   /// BORÇ ve ALACAK kolonlarının ortak genişliği.
   ///
@@ -53,7 +52,6 @@ class EkstreStili {
       kullanilabilirGenislik -
       simgeKolonu -
       tarihKolonu -
-      vadeKolonu -
       tutarKolonu * 2 -
       bakiyeKolonu;
 

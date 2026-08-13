@@ -22,68 +22,36 @@ abstract final class Metinler {
   static const String beklenmeyenHata = 'Beklenmeyen bir hata oluştu.';
   static const String kaydedildi = 'Kaydedildi.';
 
-  // ─── Kimlik ──────────────────────────────────────────────────────────────
-  static const String ePosta = 'E-posta';
-  static const String sifre = 'Şifre';
-  static const String sifreTekrari = 'Şifre (tekrar)';
-  static const String sifreyiGoster = 'Şifreyi göster';
-  static const String sifreyiGizle = 'Şifreyi gizle';
-  static const String girisYap = 'Giriş Yap';
-  static const String kayitOl = 'Kayıt Ol';
-  static const String hesapOlustur = 'Hesap Oluştur';
-  static const String sifremiUnuttum = 'Şifremi unuttum';
-  static const String hesabinizYokMu = 'Hesabınız yok mu?';
-  static const String kayitOlun = 'Kayıt olun';
-  static const String zatenHesabinizVarMi = 'Zaten hesabınız var mı?';
-  static const String girisYapin = 'Giriş yapın';
+  // ─── Giriş ───────────────────────────────────────────────────────────────
+  static const String girisAciklama =
+      'Devam etmek için Google hesabınızla giriş yapın.';
+  static const String googleIleGir = 'Google ile giriş yap';
   static const String cikisYap = 'Çıkış yap';
-  static const String kayitAciklama =
-      'Verileriniz bu hesaba bağlanır. Telefonunuzu değiştirseniz bile aynı '
-      'e-posta ile giriş yaparak cari kayıtlarınıza ulaşırsınız.';
-  static const String sifreOncePosta =
-      'Şifre sıfırlamak için önce e-posta adresinizi girin.';
-  static const String sifreBaglantisiGonderildi =
-      'Şifre sıfırlama bağlantısı e-postanıza gönderildi.';
+  static const String cikisOnay =
+      'Çıkış yapılsın mı? Kayıtlar silinmez; yeniden giriş yapınca hepsi '
+      'yerinde durur.';
 
-  // ─── Hesap ───────────────────────────────────────────────────────────────
-  static const String hesapBaslik = 'Hesap';
-  static const String hesapMenu = 'Hesap';
-  static const String hesapGirisYapan = 'Giriş yapan';
-  static const String hesapSil = 'Hesabı sil';
-  static const String hesapSilBaslik = 'Hesabı sil';
-  static const String hesapSilAciklama =
-      'Hesabınız ve bu hesaba bağlı tüm veriler kalıcı olarak silinir: '
-      'cariler, faturalar, tahsilatlar ve fidan katalogu. Bu işlem geri '
-      'alınamaz.';
-  static const String hesapSilOnayIpucu =
-      'Devam etmek için şifrenizi girin.';
-  static const String hesapSilOnayla = 'Hesabımı kalıcı olarak sil';
-  static const String hesapSilindi = 'Hesabınız ve tüm verileriniz silindi.';
-  static const String hesapSilmeSuruyor =
-      'Veriler siliniyor. Uygulamayı kapatmayın.';
-  static const String hesapSilInternet =
-      'Hesap silme işlemi internet bağlantısı gerektirir.';
-
-  // ─── Kurulum ─────────────────────────────────────────────────────────────
-  static const String kurulumBaslik = 'İşletme Bilgileri';
-  static const String kurulumHosGeldiniz = 'Hoş geldiniz';
-  static const String kurulumAciklama =
-      'Bu bilgiler müşterilerinize göndereceğiniz ekstrenin başlığında '
-      'görünecek. Sonradan değiştirebilirsiniz.';
-  static const String kurulumTamamla = 'Kurulumu Tamamla';
+  // ─── Ayarlar ─────────────────────────────────────────────────────────────
+  static const String ayarlar = 'Ayarlar';
+  static const String isletmeAyarAciklama =
+      'Hesap dökümünün başlığında görünen ad, adres ve banka hesapları.';
+  static const String hesap = 'Hesap';
 
   // ─── İşletme ─────────────────────────────────────────────────────────────
   static const String isletmeBaslik = 'İşletme Bilgileri';
   static const String isletmeMenu = 'İşletme bilgileri';
+
+  /// Alanların hiçbiri zorunlu değil; formun başında bunu söylüyoruz ki
+  /// kullanıcı doldurmak zorunda sanmasın.
+  static const String isletmeFormAciklama =
+      'Tamamı isteğe bağlı. Doldurursanız müşterilerinize göndereceğiniz '
+      'hesap dökümünün başlığında görünür.';
   static const String isletmeAdi = 'İşletme adı';
   static const String isletmeAdiIpucu = 'Favori Fidancılık';
   static const String isletmeUnvan = 'Ünvan';
   static const String isletmeUnvanIpucu = 'Tar.Taş.Hay.Ltd.Şti';
   static const String adres = 'Adres';
   static const String telefon = 'Telefon';
-  static const String faks = 'Faks';
-  static const String vergiDairesi = 'Vergi dairesi';
-  static const String vergiNo = 'Vergi no / T.C. kimlik no';
   static const String istegeBagli = 'isteğe bağlı';
 
   static const String bankaHesaplari = 'Banka Hesapları';
@@ -97,97 +65,101 @@ abstract final class Metinler {
   static const String bankaHesabiSilOnay =
       'Bu banka hesabı silinsin mi? Ekstrede artık görünmeyecek.';
 
-  // ─── Cari listesi ────────────────────────────────────────────────────────
-  static const String cariler = 'Cariler';
-  static const String cariAra = 'Cari ara';
-  static const String cariEkle = 'Cari Ekle';
-  static const String cariDuzenle = 'Cariyi Düzenle';
-  static const String siralama = 'Sıralama';
-  static const String cariYokBaslik = 'Henüz cari yok';
+  // ─── Kişi listesi ────────────────────────────────────────────────────────
+  //
+  // Kod tarafında model adı `Cari` kalıyor (bkz. KURALLAR.md, domain terimleri);
+  // ekranda görünen sözcük "kişi". Uygulama tek kişinin kendi defteri, muhasebe
+  // yazılımı değil.
+  static const String cariler = 'Kişiler';
+  static const String cariAra = 'Kişi ara';
+  static const String cariEkle = 'Kişi Ekle';
+  static const String cariDuzenle = 'Kişiyi Düzenle';
+  static const String cariYokBaslik = 'Henüz kimse yok';
   static const String cariYokAciklama =
-      'Müşteri veya tedarikçilerinizi ekleyerek başlayın.';
+      'Alışveriş yaptığın kişileri ekleyerek başla.';
   static const String aramaSonucuYokBaslik = 'Sonuç bulunamadı';
   static const String aramaSonucuYokAciklama =
       'Farklı bir ad ile aramayı deneyin.';
-  static const String listeYuklenemedi = 'Cari listesi yüklenemedi.';
+  static const String listeYuklenemedi = 'Kişi listesi yüklenemedi.';
   static const String dahaFazlaYuklenemedi =
       'Sonraki kayıtlar yüklenemedi. Dokunup tekrar deneyin.';
   static const String kaydedilmedi = 'Kaydedilmedi';
   static const String kaydedilmediAciklama =
       'İnternet bağlantısı gelince gönderilecek.';
 
-  // ─── Cari formu ──────────────────────────────────────────────────────────
-  static const String cariAdi = 'Cari adı';
+  // ─── Kişi formu ──────────────────────────────────────────────────────────
+  static const String cariAdi = 'Adı';
   static const String cariAdiIpucu = 'Ahmet Koyuncu';
-  static const String cariUnvan = 'Firma ünvanı';
+  static const String cariUnvan = 'Firma adı';
   static const String sehir = 'Şehir';
   static const String sehirIpucu = 'Isparta';
   static const String notlar = 'Notlar';
-  static const String cariPasifeAl = 'Pasife al';
+  static const String cariPasifeAl = 'Listeden kaldır';
   static const String cariPasifeAlOnay =
-      'Cari listeden kaldırılsın mı? Kayıt silinmez, geçmiş işlemleri durur.';
-  static const String cariPasifeAlindi = 'Cari pasife alındı.';
-  static const String cariBulunamadi = 'Cari bulunamadı.';
+      'Kişi listeden kaldırılsın mı? Kayıt silinmez, geçmiş kayıtları durur.';
+  static const String cariPasifeAlindi = 'Kişi listeden kaldırıldı.';
+  static const String cariBulunamadi = 'Kişi bulunamadı.';
 
   // ─── Cari detayı ─────────────────────────────────────────────────────────
   static const String bakiye = 'Bakiye';
 
-  /// Pozitif bakiye: cari işletmeye borçlu.
-  static const String bakiyeCariBorclu = 'Bu cari size borçlu';
+  /// Pozitif bakiye: kişi işletmeye borçlu.
+  static const String bakiyeCariBorclu = 'Sana borcu var';
 
-  /// Negatif bakiye: işletme cariye borçlu.
-  static const String bakiyeIsletmeBorclu = 'Siz bu cariye borçlusunuz';
+  /// Negatif bakiye: işletme kişiye borçlu.
+  static const String bakiyeIsletmeBorclu = 'Ona borcun var';
 
   static const String bakiyeKapali = 'Hesap kapalı';
   static const String iletisim = 'İletişim';
-  static const String vergiBilgileri = 'Vergi Bilgileri';
-  static const String islemler = 'İşlemler';
-  static const String islemYokBaslik = 'Henüz işlem yok';
+  static const String islemler = 'Hareketler';
+  static const String islemYokBaslik = 'Henüz hareket yok';
   static const String islemYokAciklama =
-      'Bu cariye ilk faturayı veya tahsilatı ekleyin.';
-  static const String sonIslem = 'Son işlem';
+      'Aşağıdaki düğmelerle ilk satışı ya da ödemeyi gir.';
+  static const String sonIslem = 'Son hareket';
 
   // ─── İşlem tipleri ───────────────────────────────────────────────────────
+  //
+  // İki ad var. Ekranda günlük dil kullanılıyor — uygulama kişinin kendi
+  // defteri. PDF hesap dökümü ise müşteriye gidiyor; orada belge dili duruyor.
+  static const String sattim = 'Sattım';
+  static const String aldim = 'Aldım';
+  static const String paraAldim = 'Para aldım';
+  static const String paraVerdim = 'Para verdim';
+
   static const String satisFaturasi = 'Satış Faturası';
   static const String alisFaturasi = 'Alış Faturası';
   static const String tahsilat = 'Tahsilat';
   static const String odeme = 'Ödeme';
 
-  /// Ekstrede tahsilat satırının açıklaması.
+  /// Hesap dökümünde tahsilat satırının açıklaması.
   static const String musteridenTahsilat = 'Müşteriden Tahsilat';
-  static const String cariyeOdeme = 'Cariye Ödeme';
+  static const String cariyeOdeme = 'Ödeme';
 
   // ─── İşlem listesi ───────────────────────────────────────────────────────
-  static const String islemEkle = 'İşlem ekle';
-  static const String islemDetayi = 'İşlem Detayı';
+  static const String islemDetayi = 'Hareket';
   static const String sonrakiIslemlerYuklenemedi =
       'Sonraki işlemler yüklenemedi. Dokunup tekrar deneyin.';
   static const String borc = 'Borç';
   static const String alacak = 'Alacak';
   static const String iptalEdildi = 'İptal edildi';
-  static const String teslimEdildi = 'Teslim edildi';
-  static const String beklemede = 'Beklemede';
 
-  // ─── Fatura formu ────────────────────────────────────────────────────────
-  static const String yeniSatisFaturasi = 'Yeni Satış Faturası';
-  static const String yeniAlisFaturasi = 'Yeni Alış Faturası';
-  static const String yeniTahsilat = 'Yeni Tahsilat';
-  static const String yeniOdeme = 'Yeni Ödeme';
-  static const String islemTipi = 'İşlem tipi';
+  // ─── Giriş formu ─────────────────────────────────────────────────────────
   static const String aciklama = 'Açıklama';
   static const String aciklamaIpucu = 'Zeytin-Hurma';
-  static const String islemTarihi = 'İşlem tarihi';
-  static const String vadeTarihi = 'Vade tarihi';
-  static const String vadeYok = 'Vade tarihi yok';
+
+  /// Açıklama zorunlu değil; boş bırakılırsa kalem adlarından üretilir.
+  static const String aciklamaAciklamasi =
+      'Boş bırakırsan aşağıdaki satırlardan yazılır.';
+  static const String islemTarihi = 'Tarih';
   static const String tutar = 'Tutar';
 
-  static const String kalemler = 'Kalemler';
-  static const String kalemEkle = 'Kalem ekle';
-  static const String kalemDuzenle = 'Kalemi düzenle';
-  static const String kalemYok = 'Henüz kalem eklenmedi.';
+  static const String kalemler = 'Neler';
+  static const String kalemEkle = 'Satır ekle';
+  static const String kalemDuzenle = 'Satırı düzenle';
+  static const String kalemYok = 'Henüz satır yok.';
   static const String kalemYokAciklama =
-      'Faturayı kaydetmek için en az bir kalem ekleyin.';
-  static const String kalemAdi = 'Kalem adı';
+      'Kaydetmek için en az bir satır ekle.';
+  static const String kalemAdi = 'Ne';
   static const String kalemAdiIpucu = 'zeytin';
   static const String miktar = 'Miktar';
   static const String birimFiyat = 'Birim fiyat';
@@ -204,92 +176,73 @@ abstract final class Metinler {
   static const String birimFiyatYaklasik =
       'Birim fiyat yuvarlanmıştır; fatura tutarı girdiğiniz toplamdır.';
 
-  static const String araToplam = 'Ara toplam';
-  static const String kdv = 'KDV';
-  static const String kdvUygula = 'KDV uygula (%1)';
   static const String genelToplam = 'Genel toplam';
 
   // ─── İşlem detayı ────────────────────────────────────────────────────────
-  static const String islemiIptalEt = 'İşlemi iptal et';
+  static const String islemiIptalEt = 'Bu kaydı iptal et';
   static const String islemIptalOnay =
-      'Bu işlem iptal edilsin mi? Kayıt silinmez, listede üstü çizili kalır ve '
+      'Bu kayıt iptal edilsin mi? Kayıt silinmez, listede üstü çizili kalır ve '
       'bakiyeye katkısı geri alınır.';
   static const String iptalNedeni = 'İptal nedeni';
-  static const String islemIptalEdildi = 'İşlem iptal edildi.';
+  static const String islemIptalEdildi = 'Kayıt iptal edildi.';
   static const String iptalliIslemUyarisi =
-      'Bu işlem iptal edilmiştir; bakiyeye katılmaz.';
+      'Bu kayıt iptal edilmiştir; bakiyeye katılmaz.';
   static const String bakiyeYenidenHesapla = 'Bakiyeyi yeniden hesapla';
   static const String bakiyeYenidenHesaplandi = 'Bakiye yeniden hesaplandı.';
 
-  // ─── Fidan katalogu ──────────────────────────────────────────────────────
-  static const String fidanKatalogu = 'Fidan Katalogu';
-  static const String fidanKatalogMenu = 'Fidan katalogu';
-  static const String fidanAra = 'Fidan ara';
-  static const String fidanEkle = 'Fidan Ekle';
-  static const String fidanDuzenle = 'Fidanı Düzenle';
-  static const String fidanSec = 'Fidan Seç';
-  static const String fidanBulunamadi = 'Fidan bulunamadı.';
-  static const String fidanYokBaslik = 'Katalog boş';
-  static const String fidanYokAciklama =
-      'Sattığınız fidanları ekleyin; fatura keserken listeden seçersiniz.';
-  static const String fidanPasifeAl = 'Katalogdan kaldır';
-  static const String fidanPasifeAlOnay =
-      'Fidan katalogdan kaldırılsın mı? Kayıt silinmez, geçmiş faturalar '
-      'olduğu gibi kalır.';
-  static const String fidanPasifeAlindi = 'Fidan katalogdan kaldırıldı.';
+  // ─── Ürünler ─────────────────────────────────────────────────────────────
+  static const String urunler = 'Ürünler';
+  static const String urunAra = 'Ürün ara';
+  static const String urunEkle = 'Ürün Ekle';
+  static const String urunDuzenle = 'Ürünü Düzenle';
+  static const String urunSec = 'Ürün Seç';
+  static const String urunBulunamadi = 'Ürün bulunamadı.';
+  static const String urunYokBaslik = 'Liste boş';
+  static const String urunYokAciklama =
+      'Sattığınız şeyleri ekleyin; satış girerken listeden seçersiniz.';
+  static const String urunPasifeAl = 'Listeden kaldır';
+  static const String urunPasifeAlOnay =
+      'Ürün listeden kaldırılsın mı? Kayıt silinmez, geçmiş kayıtlar olduğu '
+      'gibi kalır.';
+  static const String urunPasifeAlindi = 'Ürün listeden kaldırıldı.';
 
-  // ─── Fidan alanları ──────────────────────────────────────────────────────
-  static const String tur = 'Tür';
-  static const String turIpucu = 'Elma';
-  static const String cesit = 'Çeşit';
-  static const String cesitIpucu = 'Scarlet';
-  static const String anac = 'Anaç';
-  static const String anacIpucu = 'M9';
-  static const String yas = 'Yaş';
-  static const String yasIpucu = '2';
-
-  /// Görünen adın sonundaki yaş eki: `… · 2 Yaş`
-  static const String yasSoneki = 'Yaş';
-
-  static const String kokTipi = 'Kök tipi';
-  static const String kokTipiTuplu = 'Tüplü';
-  static const String kokTipiCiplakKok = 'Çıplak Kök';
-  static const String kokTipiYok = 'Belirtilmedi';
-  static const String fidanOnizlemeBaslik = 'Faturada görünecek ad';
-  static const String fidanOnizlemeBos =
-      'Tür ve çeşit yazınca burada görünür.';
-  static const String varsayilanFiyat = 'Varsayılan fiyat';
-  static const String varsayilanFiyatAciklama =
-      'Faturada ön dolgu olarak gelir; orada değiştirebilirsiniz.';
+  // ─── Ürün alanları ───────────────────────────────────────────────────────
+  static const String urunAdi = 'Ürün adı';
+  static const String urunAdiIpucu = 'Elma Scarlet M9 2 yaş tüplü';
+  static const String urunFiyati = 'Fiyat';
+  static const String urunFiyatiAciklama =
+      'İsteğe bağlı. Satış girerken ön dolgu gelir, orada değiştirebilirsiniz.';
   static const String fiyatYok = 'Fiyat girilmedi';
-  static const String oneriler = 'Öneriler';
 
-  /// Mükerrer kayıt uyarısı — aynı tür/çeşit/anaç/yaş/kök tipi.
-  static const String fidanMukerrer =
-      'Bu fidan katalogda zaten kayıtlı. Aynı kaydı ikinci kez eklemek yerine '
+  static const String urunMukerrer =
+      'Bu ürün listede zaten kayıtlı. Aynı kaydı ikinci kez eklemek yerine '
       'mevcut kaydı düzenleyin.';
 
-  // ─── Katalog ↔ fatura kalemi ─────────────────────────────────────────────
-  static const String katalogdanSec = 'Katalogdan seç';
-  static const String katalogBagi = 'Katalog';
-  static const String katalogBaginiKaldir = 'Katalog bağını kaldır';
-  static const String katalogSerbestMetinAciklama =
-      'Katalog zorunlu değil: "nakliye" gibi kalemleri elle yazabilirsiniz.';
+  // ─── Ürün ↔ fatura kalemi ────────────────────────────────────────────────
+  static const String urundenSec = 'Üründen seç';
+  static const String urunBagi = 'Ürün';
+  static const String urunBaginiKaldir = 'Ürün bağını kaldır';
+  static const String urunSerbestMetinAciklama =
+      'Listeden seçmek zorunlu değil: "nakliye" gibi kalemleri elle '
+      'yazabilirsiniz.';
 
-  // ─── Ekstre ──────────────────────────────────────────────────────────────
-  static const String ekstre = 'Ekstre';
-  static const String ekstreAl = 'Ekstre Al';
+  // ─── Hesap dökümü ────────────────────────────────────────────────────────
+  //
+  // Ekranda "hesap dökümü" deniyor; müşteriye giden PDF'in başlığı ise
+  // "İŞLEM DÖKÜMÜ" olarak kalıyor — belge dili ayrı (bkz. [ekstreBaslik]).
+  static const String ekstre = 'Hesap Dökümü';
+  static const String ekstreAl = 'Hesap dökümü';
   static const String ekstrePaylas = 'Paylaş';
-  static const String ekstreUretiliyor = 'Ekstre hazırlanıyor…';
-  static const String ekstreUretilemedi = 'Ekstre hazırlanamadı.';
-  static const String ekstreBosBaslik = 'Bu aralıkta işlem yok';
+  static const String ekstreUretiliyor = 'Hazırlanıyor…';
+  static const String ekstreUretilemedi = 'Hesap dökümü hazırlanamadı.';
+  static const String ekstreBosBaslik = 'Bu aralıkta hareket yok';
   static const String ekstreBosAciklama =
-      'Ekstre yine de üretilir; tabloda yalnızca devreden bakiye görünür.';
+      'Döküm yine de üretilir; tabloda yalnızca devreden bakiye görünür.';
 
   /// Tablo ile toplamlar tutmuyorsa PDF üretilmez — referans yazılımın
   /// düştüğü hataya düşmemek için (bkz. `fazlar/faz-4-ekstre.md`).
   static const String ekstreTutarsiz =
-      'Ekstre toplamları tutmuyor. Bakiyeyi yeniden hesaplayıp tekrar deneyin.';
+      'Döküm toplamları tutmuyor. Bakiyeyi yeniden hesaplayıp tekrar deneyin.';
 
   // Hazır tarih aralıkları
   static const String aralikBuAy = 'Bu ay';
@@ -304,7 +257,6 @@ abstract final class Metinler {
   static const String ekstreIlgiliFirma = 'İLGİLİ FİRMA';
   static const String ekstreKolonIslemTarihi = 'İŞLEM TARİHİ';
   static const String ekstreKolonAciklama = 'AÇIKLAMA';
-  static const String ekstreKolonVadeTarihi = 'VADE TARİHİ';
   static const String ekstreKolonBorc = 'BORÇ';
   static const String ekstreKolonAlacak = 'ALACAK';
   static const String ekstreKolonBakiye = 'BAKİYE ₺';
@@ -316,18 +268,14 @@ abstract final class Metinler {
   static const String ekstreHesapNo = 'HESAP NO';
   static const String ekstreIban = 'IBAN';
   static const String ekstreTelefon = 'TEL';
-  static const String ekstreFaks = 'FAX';
-  static const String ekstreVergiDairesi = 'VD';
-  static const String ekstreVergiNo = 'VKN';
 
   /// `SAYFA 1 / 2` — ilk parça kalın basılır, ikincisi soluk.
   static String ekstreSayfa(int sayfa) => 'SAYFA $sayfa';
   static String ekstreSayfaToplami(int toplam) => ' / $toplam';
 
   // ─── İşlem doğrulama ─────────────────────────────────────────────────────
-  static const String aciklamaGerekli = 'Açıklama gerekli.';
-  static const String kalemGerekli = 'En az bir kalem ekleyin.';
-  static const String kalemAdiGerekli = 'Kalem adı gerekli.';
+  static const String kalemGerekli = 'En az bir satır ekle.';
+  static const String kalemAdiGerekli = 'Ne olduğunu yaz.';
   static const String miktarGerekli = 'Miktar gerekli.';
   static const String miktarGecersiz = 'Miktar sıfırdan büyük olmalı.';
   static const String tutarGerekli = 'Tutar gerekli.';

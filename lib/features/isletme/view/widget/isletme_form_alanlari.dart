@@ -6,8 +6,10 @@ import 'isletme_form_kontrolculeri.dart';
 
 /// İşletme profilinin metin alanları.
 ///
-/// Alanların çoğu zorunlu: bu bilgiler ekstre başlığına basılıyor ve eksik
-/// bırakılırsa müşteriye yarım başlıklı belge gider.
+/// Alanların **hiçbiri zorunlu değil**: bu bilgiler yalnızca ekstre başlığına
+/// basılıyor, boş bırakılırsa başlık sade çıkar. Etiketlerde "(isteğe bağlı)"
+/// eki yok — tamamı isteğe bağlı olduğu için her satıra aynı eki koymak
+/// gürültüden başka bir şey olmazdı; formun başındaki açıklama bunu söylüyor.
 class IsletmeFormAlanlari extends StatelessWidget {
   const IsletmeFormAlanlari({
     required this.kontrolcular,
@@ -27,11 +29,10 @@ class IsletmeFormAlanlari extends StatelessWidget {
           etiket: Metinler.isletmeAdi,
           ipucu: Metinler.isletmeAdiIpucu,
           simge: Icons.storefront_outlined,
-          dogrulayici: IsletmeDogrulama.ad,
         ),
         _alan(
           kontrolcu: kontrolcular.unvan,
-          etiket: '${Metinler.isletmeUnvan} (${Metinler.istegeBagli})',
+          etiket: Metinler.isletmeUnvan,
           ipucu: Metinler.isletmeUnvanIpucu,
           simge: Icons.badge_outlined,
         ),
@@ -39,7 +40,6 @@ class IsletmeFormAlanlari extends StatelessWidget {
           kontrolcu: kontrolcular.adres,
           etiket: Metinler.adres,
           simge: Icons.location_on_outlined,
-          dogrulayici: IsletmeDogrulama.adres,
           satirSayisi: 3,
         ),
         _alan(
@@ -48,25 +48,6 @@ class IsletmeFormAlanlari extends StatelessWidget {
           simge: Icons.phone_outlined,
           klavye: TextInputType.phone,
           dogrulayici: IsletmeDogrulama.telefon,
-        ),
-        _alan(
-          kontrolcu: kontrolcular.faks,
-          etiket: '${Metinler.faks} (${Metinler.istegeBagli})',
-          simge: Icons.print_outlined,
-          klavye: TextInputType.phone,
-        ),
-        _alan(
-          kontrolcu: kontrolcular.vergiDairesi,
-          etiket: Metinler.vergiDairesi,
-          simge: Icons.account_balance_outlined,
-          dogrulayici: IsletmeDogrulama.vergiDairesi,
-        ),
-        _alan(
-          kontrolcu: kontrolcular.vergiNo,
-          etiket: Metinler.vergiNo,
-          simge: Icons.numbers,
-          klavye: TextInputType.number,
-          dogrulayici: IsletmeDogrulama.vergiNo,
         ),
       ],
     );

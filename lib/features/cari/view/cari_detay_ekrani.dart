@@ -8,8 +8,9 @@ import '../../../core/metin/metinler.dart';
 import '../../../core/tarih/tarih_bicimi.dart';
 import '../../../data/cari/cari_kaydi.dart';
 import '../../../domain/cari/cari.dart';
+import '../../../domain/islem/islem_tipi.dart';
+import '../../islem/view/widget/islem_dugmeleri.dart';
 import '../../islem/view/widget/islem_listesi_bolumu.dart';
-import '../../islem/view/widget/islem_tipi_secici.dart';
 import '../../islem/viewmodel/islem_form_viewmodel.dart';
 import '../../islem/viewmodel/islem_listesi_viewmodel.dart';
 import '../../ortak/view/bos_durum.dart';
@@ -17,7 +18,7 @@ import '../../ortak/view/hata_durumu.dart';
 import '../viewmodel/cari_saglayici.dart';
 import 'widget/bakiye_metni.dart';
 
-/// Cari detay sayfası: üstte özet, altta işlem listesi.
+/// Kişi sayfası: üstte özet, ortada hareket listesi, altta dört giriş düğmesi.
 class CariDetayEkrani extends ConsumerStatefulWidget {
   const CariDetayEkrani({required this.cariId, super.key});
 
@@ -106,13 +107,9 @@ class _CariDetayEkraniDurumu extends ConsumerState<CariDetayEkrani> {
               )
             : _govde(deger),
       ),
-      floatingActionButton: kayit.value == null
+      bottomNavigationBar: kayit.value == null
           ? null
-          : FloatingActionButton.extended(
-              onPressed: _islemEkle,
-              icon: const Icon(Icons.add),
-              label: const Text(Metinler.islemEkle),
-            ),
+          : IslemDugmeleri(onSecildi: _islemEkle),
     );
   }
 
@@ -122,15 +119,12 @@ class _CariDetayEkraniDurumu extends ConsumerState<CariDetayEkrani> {
       slivers: [
         SliverToBoxAdapter(child: _Ust(kayit: kayit)),
         IslemListesiBolumu(cariId: widget.cariId),
-        const SliverToBoxAdapter(child: SizedBox(height: 96)),
+        const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
     );
   }
 
-  Future<void> _islemEkle() async {
-    final tip = await IslemTipiSecici.goster(context);
-    if (tip == null || !mounted) return;
-
+  Future<void> _islemEkle(IslemTipi tip) async {
     await context.push<bool>(Yollar.islemYeniYolu(widget.cariId, tip));
   }
 
@@ -206,26 +200,6 @@ class _Ust extends StatelessWidget {
                     simge: Icons.home_outlined,
                     etiket: Metinler.adres,
                     deger: cari.adres!,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 24),
-          ],
-          if (cari.vergiDairesi != null || cari.vergiNo != null) ...[
-            _Bolum(
-              baslik: Metinler.vergiBilgileri,
-              satirlar: [
-                if (cari.vergiDairesi != null)
-                  _BilgiSatiri(
-                    simge: Icons.account_balance_outlined,
-                    etiket: Metinler.vergiDairesi,
-                    deger: cari.vergiDairesi!,
-                  ),
-                if (cari.vergiNo != null)
-                  _BilgiSatiri(
-                    simge: Icons.numbers,
-                    etiket: Metinler.vergiNo,
-                    deger: cari.vergiNo!,
                   ),
               ],
             ),

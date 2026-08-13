@@ -53,8 +53,8 @@ lib/
 - `lib/domain/` içinde **hiçbir** Flutter importu olmaz (`material.dart` dahil).
   Domain saf Dart'tır; testi cihazsız çalışır.
 - ViewModel içinde `BuildContext` bulunmaz. Navigasyon ve SnackBar View'ın işidir.
-- View içinde iş kuralı hesaplanmaz. Ekranda `a * b + kdv` gibi bir satır görünüyorsa
-  o hesap domain'e taşınır.
+- View içinde iş kuralı hesaplanmaz. Ekranda `miktar * birimFiyat` gibi bir satır
+  görünüyorsa o hesap domain'e taşınır.
 
 ### 1.4 Riverpod
 
@@ -127,10 +127,12 @@ Bu kural Firestore'da saklanan alanları da kapsar — veritabanına da `int` ya
 - Fatura tutarı kalem toplamlarından türetilir, ama kaydedildikten sonra **saklanan
   tutar esastır**; geçmişe dönük yeniden hesaplama yapılmaz.
 
-### 3.3 KDV
+### 3.3 Vergi
 
-- KDV **fatura bazında opsiyoneldir**, varsayılan oran **%1** (fidan KDV oranı).
-- Oran fatura kaydında saklanır. Yarın oran değişirse geçmiş faturalar etkilenmez.
+- Uygulamada **vergi hesabı yoktur.** Fatura toplamı kalem tutarlarının toplamıdır;
+  üzerine oran uygulanan bir tutar binmez.
+- Vergi satırı gerekiyorsa kullanıcı onu "nakliye" gibi **serbest metin kalemi**
+  olarak girer. Bu, uygulamanın hesapladığı bir şey değil, girilen bir tutardır.
 
 ### 3.4 Bakiye
 
@@ -148,6 +150,20 @@ Bu kural Firestore'da saklanan alanları da kapsar — veritabanına da `int` ya
 - **Güvenlik kuralları yazılmadan hiçbir koleksiyon canlıya çıkmaz.**
   Firebase'in test modu 30 gün sonra kapanır; o güne kadar veritabanı herkese açıktır.
 - `firestore.rules` ve `firestore.indexes.json` repoda versiyonlanır.
+- **Giriş Google hesabıyla yapılır; defter ortaktır.** Uygulamayı birkaç kişi
+  kullanıyor ve hepsi aynı veriyi görüyor: tüm kayıtlar `isletmeler/ortak`
+  altında (`Isletme.ortakId`). Bunun iki bağlayıcı sonucu var:
+  - **Kimlik ≠ yetki.** Google girişi yalnızca "kimsin" sorusunu yanıtlar.
+    Veriye erişim iznini `izinliler/{ePosta}` koleksiyonu verir ve bu koleksiyon
+    istemciye tamamen kapalıdır — yalnızca kural motoru okur. Kişi eklemek
+    Firebase Console'dan yapılan bir iştir, kod değişikliği değil.
+  - Kural **hiçbir yerde `uid` karşılaştırmaz.** Defter ortak olduğu için
+    sahiplik diye bir şey yok; yanlışlıkla `uid == isletmeId` yazmak iki
+    kullanıcının birbirinin verisini görememesine yol açar. Bu, emulator
+    testiyle sınanır (`integration_test/guvenlik_kurallari_test.dart`).
+  - Firebase Console → Authentication → Sign-in method: **yalnızca Google**
+    açık olmalı. Email/Password ya da Anonymous açık kalırsa, izin listesindeki
+    bir adresle başka bir yoldan hesap açılıp defterin kapısı zorlanabilir.
 
 ### 4.2 Veri bütünlüğü
 
@@ -187,6 +203,24 @@ Bu kural Firestore'da saklanan alanları da kapsar — veritabanına da `int` ya
 
 ## 5. Test ve Faz Kapanışı
 
+### 5.0 Testleri kim çalıştırır
+
+**Testler ana session'da doğrudan çalıştırılmaz.** Bir implementasyon görevi
+bittiğinde `flutter analyze`, `flutter test` ve integration testler **her zaman**
+`test-runner` subagent'ı ile koşturulur (`.claude/agents/test-runner.md`), ve
+yalnızca onun özet raporu beklenir.
+
+Gerekçe: ham test çıktısı ana session'ın bağlamını doldurur; asıl iş olan kodun
+kendisi bağlamdan düşer. Subagent çıktıyı kendi bağlamında yutar, geriye sadece
+"neyin kaldığı ve neden kaldığı" gelir.
+
+- Yapılacak: `Agent(subagent_type: "test-runner", ...)` → özeti bekle.
+- Yapılmayacak: ana session'da `Bash("flutter test")`.
+- İstisna: kullanıcı açıkça "burada çalıştır" derse.
+
+`test-runner` kod düzeltmez, sadece koşar ve raporlar. Kalan testi ana session
+düzeltir, sonra ajanı tekrar çağırır.
+
 Bir faz, aşağıdakilerin **hepsi** sağlanmadan kapatılmaz:
 
 1. `flutter analyze` → **sıfır uyarı**
@@ -196,8 +230,8 @@ Bir faz, aşağıdakilerin **hepsi** sağlanmadan kapatılmaz:
 
 ### 5.1 Otomatik test zorunlu olan yerler
 
-- `lib/domain/` içindeki **tüm** hesaplamalar: bakiye, KDV, yuvarlama, birim fiyat
-  geri hesabı, ekstre toplamları.
+- `lib/domain/` içindeki **tüm** hesaplamalar: bakiye, fatura toplamı, yuvarlama,
+  birim fiyat geri hesabı, ekstre toplamları.
 - Repository'ler Firestore **emulator**'ünde test edilir. Canlı veritabanıyla test yapılmaz.
 
 ### 5.2 Test edilmesi beklenmeyen yerler

@@ -81,11 +81,11 @@ void main() {
         ad: 'Elma / Scarlet / M9',
         miktar: 600,
         birimFiyat: Kurus.liradan(45),
-        fidanId: 'fidan-1',
+        urunId: 'fidan-1',
       );
 
-      expect(kalem.fidanId, 'fidan-1');
-      expect(kalem.toMap()[IslemKalemi.alanFidanId], 'fidan-1');
+      expect(kalem.urunId, 'fidan-1');
+      expect(kalem.toMap()[IslemKalemi.alanUrunId], 'fidan-1');
     });
 
     test('serbest metin kalemde fidanId boş kalır', () {
@@ -96,8 +96,8 @@ void main() {
         birimFiyat: Kurus.liradan(2500),
       );
 
-      expect(kalem.fidanId, isNull);
-      expect(kalem.toMap()[IslemKalemi.alanFidanId], isNull);
+      expect(kalem.urunId, isNull);
+      expect(kalem.toMap()[IslemKalemi.alanUrunId], isNull);
     });
 
     test('Faz 2\'de fidanId olmadan yazılmış kalem bozulmadan okunur', () {
@@ -108,7 +108,7 @@ void main() {
         IslemKalemi.alanTutarKurus: 4900000,
       });
 
-      expect(kalem.fidanId, isNull);
+      expect(kalem.urunId, isNull);
       expect(kalem.ad, 'zeytin');
       expect(kalem.tutar.deger, 4900000);
     });
@@ -120,7 +120,7 @@ void main() {
         ad: 'Hurma',
         miktar: 1650,
         toplam: Kurus.liradan(31000),
-        fidanId: 'fidan-1',
+        urunId: 'fidan-1',
         birim: 'adet',
       );
 
@@ -129,7 +129,7 @@ void main() {
       expect(donen, kalem);
       expect(donen.tutar.deger, 3100000);
       expect(donen.birimFiyat.deger, 1879);
-      expect(donen.fidanId, 'fidan-1');
+      expect(donen.urunId, 'fidan-1');
     });
 
     test('tutar ve birim fiyat ayrı ayrı saklanır', () {

@@ -15,12 +15,6 @@ int bolVeYuvarla(int pay, int payda) {
   return negatifMi ? -sonuc : sonuc;
 }
 
-/// [tutar]'ın yüzde [oran] kadarını en yakın kuruşa yuvarlayarak döner.
-///
-/// KDV hesabında kullanılır: `%1` için `oran = 1`.
-Kurus yuzdesi(Kurus tutar, int oran) =>
-    Kurus(bolVeYuvarla(tutar.deger * oran, 100));
-
 /// Birim fiyatı toplam tutardan geriye hesaplar.
 ///
 /// Kullanıcı yuvarlak toplam üzerinden çalışır: "Hurma 1.650 adet, toplam 31.000 ₺".

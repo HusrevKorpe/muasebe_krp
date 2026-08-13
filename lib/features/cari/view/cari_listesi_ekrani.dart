@@ -4,14 +4,13 @@ import 'package:go_router/go_router.dart';
 
 import '../../../app/yollar.dart';
 import '../../../core/metin/metinler.dart';
-import '../../../domain/cari/cari_siralamasi.dart';
 import '../../ortak/view/bos_durum.dart';
 import '../../ortak/view/hata_durumu.dart';
 import '../viewmodel/cari_listesi_durumu.dart';
 import '../viewmodel/cari_listesi_viewmodel.dart';
 import 'widget/cari_satiri.dart';
 
-/// Uygulamanın ana ekranı: cari listesi.
+/// Kişiler sekmesi: arama ve bakiyeleriyle kişi listesi.
 class CariListesiEkrani extends ConsumerStatefulWidget {
   const CariListesiEkrani({super.key});
 
@@ -61,15 +60,6 @@ class _CariListesiEkraniDurumu extends ConsumerState<CariListesiEkrani> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(Metinler.cariler),
-        actions: [
-          _SiralamaMenusu(
-            secili: durum.value?.siralama ?? CariSiralamasi.ad,
-            onSecildi: (siralama) => ref
-                .read(cariListesiViewModelSaglayici.notifier)
-                .siralamayiDegistir(siralama),
-          ),
-          const _GenelMenu(),
-        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(64),
           child: _AramaAlani(
@@ -86,6 +76,10 @@ class _CariListesiEkraniDurumu extends ConsumerState<CariListesiEkrani> {
         data: _liste,
       ),
       floatingActionButton: FloatingActionButton.extended(
+        // Alt sekmeler `IndexedStack` ile aynı anda ağaçta duruyor; iki sekmenin
+        // yüzen düğmesi varsayılan hero etiketini paylaşırsa Flutter "multiple
+        // heroes share the same tag" diye patlıyor.
+        heroTag: 'cariEkle',
         onPressed: () => context.push(Yollar.cariYeni),
         icon: const Icon(Icons.person_add_alt),
         label: const Text(Metinler.cariEkle),
@@ -196,69 +190,6 @@ class _AramaAlani extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _SiralamaMenusu extends StatelessWidget {
-  const _SiralamaMenusu({required this.secili, required this.onSecildi});
-
-  final CariSiralamasi secili;
-  final ValueChanged<CariSiralamasi> onSecildi;
-
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<CariSiralamasi>(
-      icon: const Icon(Icons.sort),
-      tooltip: Metinler.siralama,
-      initialValue: secili,
-      onSelected: onSecildi,
-      itemBuilder: (context) => [
-        for (final siralama in CariSiralamasi.values)
-          PopupMenuItem<CariSiralamasi>(
-            value: siralama,
-            child: Text(siralama.baslik),
-          ),
-      ],
-    );
-  }
-}
-
-class _GenelMenu extends StatelessWidget {
-  const _GenelMenu();
-
-  @override
-  Widget build(BuildContext context) {
-    return PopupMenuButton<VoidCallback>(
-      onSelected: (eylem) => eylem(),
-      itemBuilder: (context) => [
-        PopupMenuItem<VoidCallback>(
-          value: () => context.push(Yollar.fidanlar),
-          child: const ListTile(
-            leading: Icon(Icons.park_outlined),
-            title: Text(Metinler.fidanKatalogMenu),
-            contentPadding: EdgeInsets.zero,
-          ),
-        ),
-        PopupMenuItem<VoidCallback>(
-          value: () => context.push(Yollar.isletme),
-          child: const ListTile(
-            leading: Icon(Icons.storefront_outlined),
-            title: Text(Metinler.isletmeMenu),
-            contentPadding: EdgeInsets.zero,
-          ),
-        ),
-        // Çıkış ve hesap silme birlikte hesap ekranında duruyor: Apple, hesap
-        // silmenin uygulama içinden bulunabilir olmasını şart koşuyor.
-        PopupMenuItem<VoidCallback>(
-          value: () => context.push(Yollar.hesap),
-          child: const ListTile(
-            leading: Icon(Icons.account_circle_outlined),
-            title: Text(Metinler.hesapMenu),
-            contentPadding: EdgeInsets.zero,
-          ),
-        ),
-      ],
     );
   }
 }

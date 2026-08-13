@@ -16,8 +16,6 @@ class Cari {
     this.sehir,
     this.telefon,
     this.adres,
-    this.vergiDairesi,
-    this.vergiNo,
     this.notlar,
     this.bakiye = Kurus.sifir,
     this.sonIslemTarihi,
@@ -36,8 +34,6 @@ class Cari {
     sehir: haritaMetinOpsiyonel(veri, alanSehir),
     telefon: haritaMetinOpsiyonel(veri, alanTelefon),
     adres: haritaMetinOpsiyonel(veri, alanAdres),
-    vergiDairesi: haritaMetinOpsiyonel(veri, alanVergiDairesi),
-    vergiNo: haritaMetinOpsiyonel(veri, alanVergiNo),
     notlar: haritaMetinOpsiyonel(veri, alanNotlar),
     bakiye: Kurus(haritaTamSayi(veri, alanBakiyeKurus)),
     sonIslemTarihi: haritaTarih(veri, alanSonIslemTarihi),
@@ -53,8 +49,6 @@ class Cari {
   static const String alanSehir = 'sehir';
   static const String alanTelefon = 'telefon';
   static const String alanAdres = 'adres';
-  static const String alanVergiDairesi = 'vergiDairesi';
-  static const String alanVergiNo = 'vergiNo';
   static const String alanNotlar = 'notlar';
   static const String alanBakiyeKurus = 'bakiyeKurus';
   static const String alanSonIslemTarihi = 'sonIslemTarihi';
@@ -71,8 +65,6 @@ class Cari {
   final String? sehir;
   final String? telefon;
   final String? adres;
-  final String? vergiDairesi;
-  final String? vergiNo;
   final String? notlar;
 
   /// Önbelleklenmiş bakiye. Faz 1'de daima sıfırdır; Faz 2'de işlem kaydıyla
@@ -107,8 +99,6 @@ class Cari {
     alanSehir: sehir,
     alanTelefon: telefon,
     alanAdres: adres,
-    alanVergiDairesi: vergiDairesi,
-    alanVergiNo: vergiNo,
     alanNotlar: notlar,
     alanAramaAnahtari: aramaAnahtari,
   };
@@ -131,8 +121,6 @@ class Cari {
       other.sehir == sehir &&
       other.telefon == telefon &&
       other.adres == adres &&
-      other.vergiDairesi == vergiDairesi &&
-      other.vergiNo == vergiNo &&
       other.notlar == notlar &&
       other.bakiye == bakiye &&
       other.sonIslemTarihi == sonIslemTarihi &&
@@ -148,8 +136,6 @@ class Cari {
     sehir,
     telefon,
     adres,
-    vergiDairesi,
-    vergiNo,
     notlar,
     bakiye,
     sonIslemTarihi,

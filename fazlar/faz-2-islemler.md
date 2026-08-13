@@ -3,8 +3,8 @@
 **Durum:** Sürüyor — kod, birim ve emulator testleri tamam; iki kabul kriteri
 (referans ekstrenin cihazda elle girilmesi, uçak modu) cihazda doğrulanmayı bekliyor
 **Ön koşul:** Faz 1 kapalı
-**Amaç:** Uygulamanın kalbi. Cariye fatura ve tahsilat girmek, kalemleri kaydetmek,
-KDV uygulamak ve **yürüyen bakiyeyi** doğru hesaplamak.
+**Amaç:** Uygulamanın kalbi. Cariye fatura ve tahsilat girmek, kalemleri kaydetmek
+ve **yürüyen bakiyeyi** doğru hesaplamak.
 
 > Bu faz, referans ekstredeki tabloyu veri olarak üretir. Faz 4 sadece onu PDF'e basar.
 
@@ -15,7 +15,6 @@ KDV uygulamak ve **yürüyen bakiyeyi** doğru hesaplamak.
 ### Bu fazda var
 - Dört işlem tipi: satış faturası, alış faturası, tahsilat, ödeme
 - Fatura kalemleri (serbest metin ile — katalog Faz 3'te gelir)
-- KDV (opsiyonel, varsayılan %1)
 - Vade tarihi ve teslim durumu
 - Yürüyen bakiye + cari bakiyesinin transaction ile güncellenmesi
 - İşlem iptali (silme yok)
@@ -25,6 +24,8 @@ KDV uygulamak ve **yürüyen bakiyeyi** doğru hesaplamak.
 - Fidan katalogundan kalem seçimi (Faz 3)
 - PDF çıktısı (Faz 4)
 - Stok düşümü — kapsam dışı, MVP'de yok
+- Vergi hesabı — kapsam dışı. Fatura toplamı kalem tutarlarının toplamıdır;
+  vergi satırı gerekirse serbest metin kalemi olarak girilir (KURALLAR.md §3.3)
 
 ---
 
@@ -40,10 +41,7 @@ KDV uygulamak ve **yürüyen bakiyeyi** doğru hesaplamak.
 | `vadeTarihi` | timestamp? | Sadece faturalarda |
 | `durum` | string | `beklemede` · `teslimEdildi` · `iptal` |
 | `kalemler` | array | Aşağıda |
-| `araToplamKurus` | **int** | Kalemler toplamı |
-| `kdvOrani` | int | Yüzde olarak. `1` = %1. `0` = KDV yok |
-| `kdvKurus` | **int** | |
-| `toplamKurus` | **int** | **Saklanan tutar esastır**, yeniden hesaplanmaz |
+| `toplamKurus` | **int** | Kalemler toplamı. **Saklanan tutar esastır**, yeniden hesaplanmaz |
 | `iptal` | bool | |
 | `iptalNedeni` | string? | |
 | `olusturmaTarihi` | timestamp | `serverTimestamp()` — kayıt izi, **sıralamada kullanılmaz** |
@@ -124,7 +122,7 @@ yürüyen bakiyeleri kaydırır ve geri dönüşü olmaz.
 - [x] `Islem`, `IslemKalemi` modelleri
 - [x] `IslemTipi` enum + borç/alacak yönü eşlemesi
 - [x] Kalem hesabı: miktar × birim fiyat → tutar (`IslemKalemi.birimFiyattan`)
-- [x] `FaturaHesaplayici`: ara toplam → KDV → genel toplam
+- [x] `FaturaHesaplayici`: kalem tutarları → genel toplam
 - [x] `BakiyeHesaplayici`: işlem listesi → yürüyen bakiye dizisi + toplamlar
 - [x] Birim fiyat geri hesabı: toplam ÷ miktar, en yakın kuruşa yuvarlama
       (`IslemKalemi.toplamdan`)
@@ -147,7 +145,7 @@ Yanlış giriş iptal edilip yeniden girilir (KURALLAR.md §4.2).
 
 ### Features
 - [x] `cari_detay_ekrani` işlem listesiyle doldurulur — her satırda yürüyen bakiye
-- [x] `features/islem/view/fatura_form_ekrani.dart` — kalem ekle/çıkar, KDV anahtarı, vade
+- [x] `features/islem/view/fatura_form_ekrani.dart` — kalem ekle/çıkar, vade
 - [x] `features/islem/view/tahsilat_form_ekrani.dart` — tutar, tarih, açıklama
 - [x] `features/islem/view/islem_detay_ekrani.dart` — kalemler, iptal butonu
 - [x] Kalem girişinde **iki mod**: birim fiyat gir · toplam gir (birim fiyat hesaplansın)
@@ -167,7 +165,7 @@ kullanıcıyı kendi çalışma şeklinden koparırız ve faturası tutmaz.
 |---|---|---|
 | 1 | `flutter analyze` sıfır uyarı, `flutter test` geçer, `flutter build ios --release` başarılı | ✅ |
 | 2 | **Referans ekstredeki 9 işlem elle girildiğinde, ekrandaki yürüyen bakiye PDF'teki bakiye kolonuyla kuruşu kuruşuna aynı çıkıyor** | ⏳ birim testi geçiyor, cihazda elle girilmeli |
-| 3 | Üçüncü faturaya %1 KDV uygulandığında toplam `142.031,25 ₺` çıkıyor | ✅ birim testi |
+| 3 | Üçüncü faturanın toplamı `142.031,25 ₺` çıkıyor — ekstredeki %1 vergi satırı serbest metin kalemi olarak girilir | ✅ birim testi |
 | 4 | Hurma kalemi "toplam 31.000 ₺" olarak girildiğinde birim fiyat `18,79 ₺` gösteriliyor ve fatura toplamı `94.000,00 ₺` çıkıyor — `94.003,50` değil | ✅ birim testi |
 | 5 | İşlem iptal edilince bakiye geri alınıyor, kayıt listede üstü çizili duruyor | ✅ bakiye ve kayıt emulator testinde; üstü çizili gösterim cihazda göz kontrolü bekliyor |
 | 6 | `bakiyeYenidenHesapla` çağrıldığında sonuç önbelleklenmiş bakiyeyle aynı | ✅ emulator testi |
@@ -201,8 +199,7 @@ flutter test integration_test -d <simulator-id>
 | Ne test edilir | Nerede | Durum |
 |---|---|---|
 | Referans ekstrenin 9 işlemi → beklenen bakiye dizisi | `test/domain/islem/referans_ekstre_test.dart` | ✅ |
-| KDV %1: `140.625` → `142.031,25` | `test/domain/islem/fatura_hesaplayici_test.dart` | ✅ |
-| KDV %0: toplam = ara toplam | `test/domain/islem/fatura_hesaplayici_test.dart` | ✅ |
+| Fatura toplamı = kalem tutarlarının toplamı, üzerine ek binmez | `test/domain/islem/fatura_hesaplayici_test.dart` | ✅ |
 | Birim fiyat geri hesabı: `31.000 ÷ 1.650` → `18,79` gösterilir, toplam `31.000` kalır | `test/domain/islem/islem_kalemi_test.dart` | ✅ |
 | Alış faturası bakiyeyi negatife düşürür | `test/domain/islem/bakiye_hesaplayici_test.dart` | ✅ |
 | İptal edilen işlem bakiyeye katılmaz | `test/domain/islem/bakiye_hesaplayici_test.dart` | ✅ |
@@ -219,7 +216,7 @@ flutter test integration_test -d <simulator-id>
 
 - **En yüksek riskli faz burası.** Bakiye yanlış hesaplanırsa uygulamanın tek işi
   başarısız olur. Domain testleri yazılmadan UI'a geçilmez.
-- **`double` sızıntısı.** Kalem hesabı, KDV ve yuvarlama `double`'a düşerse hata
+- **`double` sızıntısı.** Kalem hesabı, toplama ve yuvarlama `double`'a düşerse hata
   kuruşlarda başlar, ekstrede lirada görünür. Kod incelemesinde özellikle bakılacak.
   Kullanıcının yazdığı tutar metni de bu yüzden `double.parse` ile değil,
   `core/para/para_girisi.dart` içinde tam sayı aritmetiğiyle ayrıştırılıyor.

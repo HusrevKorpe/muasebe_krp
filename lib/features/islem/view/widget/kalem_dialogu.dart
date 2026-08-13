@@ -6,7 +6,7 @@ import '../../../../core/para/para_bicimi.dart';
 import '../../../../core/para/para_girisi.dart';
 import '../../../../domain/islem/islem_kalemi.dart';
 import '../../../../domain/islem/kalem_giris_modu.dart';
-import '../../../fidan/view/fidan_secim_sayfasi.dart';
+import '../../../urun/view/urun_secim_sayfasi.dart';
 
 /// Fatura kalemi ekleme/düzenleme kutusu.
 ///
@@ -15,9 +15,9 @@ import '../../../fidan/view/fidan_secim_sayfasi.dart';
 /// referans ekstredeki `1.650 Adet × 18,79 ₺ = 31.000 ₺` satırı yalnızca böyle
 /// tutar (bkz. [KalemGirisModu]).
 ///
-/// Kalem adı katalogdan seçilebilir ama **serbest metin girişi korunur**:
-/// "nakliye" gibi kalemler katalogda yer almaz ve katalog zorunlu olsaydı
-/// kullanıcı tezgahta tıkanırdı (bkz. `fazlar/faz-3-katalog.md`).
+/// Kalem adı ürün listesinden seçilebilir ama **serbest metin girişi
+/// korunur**: "nakliye" gibi kalemler listede yer almaz ve seçim zorunlu
+/// olsaydı kullanıcı tezgahta tıkanırdı (bkz. `fazlar/faz-3-katalog.md`).
 class KalemDialogu extends StatefulWidget {
   const KalemDialogu({this.mevcut, super.key});
 
@@ -44,9 +44,9 @@ class _KalemDialoguDurumu extends State<KalemDialogu> {
 
   KalemGirisModu _mod = KalemGirisModu.birimFiyat;
 
-  /// Katalogdan seçilen fidanın kimliği. Serbest metin kalemlerde `null` kalır
-  /// ve Faz 2'de girilmiş eski kalemler bu hâliyle bozulmadan açılır.
-  String? _fidanId;
+  /// Listeden seçilen ürünün kimliği. Serbest metin kalemlerde `null` kalır
+  /// ve daha önce girilmiş eski kalemler bu hâliyle bozulmadan açılır.
+  String? _urunId;
 
   bool get _duzenlemeMi => widget.mevcut != null;
 
@@ -54,7 +54,7 @@ class _KalemDialoguDurumu extends State<KalemDialogu> {
   void initState() {
     super.initState();
     final mevcut = widget.mevcut;
-    _fidanId = mevcut?.fidanId;
+    _urunId = mevcut?.urunId;
     // Düzenlemede toplam gösterilir: kayıtta esas olan tutardır, birim fiyat
     // ondan türetilmiş olabilir.
     _mod = mevcut != null && mevcut.birimFiyatYuvarlanmisMi
@@ -93,13 +93,13 @@ class _KalemDialoguDurumu extends State<KalemDialogu> {
         ad: ad,
         miktar: miktar,
         birimFiyat: deger,
-        fidanId: _fidanId,
+        urunId: _urunId,
       ),
       KalemGirisModu.toplam => IslemKalemi.toplamdan(
         ad: ad,
         miktar: miktar,
         toplam: deger,
-        fidanId: _fidanId,
+        urunId: _urunId,
       ),
     };
   }
@@ -111,21 +111,21 @@ class _KalemDialoguDurumu extends State<KalemDialogu> {
     Navigator.of(context).pop(kalem);
   }
 
-  /// Katalogdan fidan seçer: ad ve birim fiyat ön dolgu gelir.
+  /// Listeden ürün seçer: ad ve birim fiyat ön dolgu gelir.
   ///
   /// Gelen fiyat yalnızca bir başlangıç değeridir; kullanıcı alanı olduğu gibi
-  /// değiştirebilir. Faturaya giren tutar katalogdaki fiyattan bağımsızdır
+  /// değiştirebilir. Faturaya giren tutar listedeki fiyattan bağımsızdır
   /// (bkz. KURALLAR.md §3.2).
-  Future<void> _katalogdanSec() async {
-    final fidan = await FidanSecimSayfasi.goster(context);
-    if (fidan == null || !mounted) return;
+  Future<void> _urunSec() async {
+    final urun = await UrunSecimSayfasi.goster(context);
+    if (urun == null || !mounted) return;
 
     setState(() {
-      _fidanId = fidan.id;
-      _ad.text = fidan.goruntuAdi;
-      if (!fidan.varsayilanFiyat.sifirMi) {
+      _urunId = urun.id;
+      _ad.text = urun.ad;
+      if (!urun.fiyat.sifirMi) {
         _mod = KalemGirisModu.birimFiyat;
-        _deger.text = kurusMetni(fidan.varsayilanFiyat);
+        _deger.text = kurusMetni(urun.fiyat);
       }
     });
   }
@@ -142,11 +142,11 @@ class _KalemDialoguDurumu extends State<KalemDialogu> {
             miktar: _miktar,
             deger: _deger,
             mod: _mod,
-            katalogaBagliMi: _fidanId != null,
+            urunBagliMi: _urunId != null,
             adaOdaklan: !_duzenlemeMi,
             onizleme: _kalemiKur(),
-            onKatalogdanSec: _katalogdanSec,
-            onBagiKaldir: () => setState(() => _fidanId = null),
+            onUrunSec: _urunSec,
+            onBagiKaldir: () => setState(() => _urunId = null),
             onModDegisti: (mod) => setState(() => _mod = mod),
             onDegisti: () => setState(() {}),
           ),
@@ -166,17 +166,17 @@ class _KalemDialoguDurumu extends State<KalemDialogu> {
   }
 }
 
-/// Kutunun içindeki alanlar: katalog satırı, ad, miktar, giriş modu ve tutar.
+/// Kutunun içindeki alanlar: ürün satırı, ad, miktar, giriş modu ve tutar.
 class _KalemAlanlari extends StatelessWidget {
   const _KalemAlanlari({
     required this.ad,
     required this.miktar,
     required this.deger,
     required this.mod,
-    required this.katalogaBagliMi,
+    required this.urunBagliMi,
     required this.adaOdaklan,
     required this.onizleme,
-    required this.onKatalogdanSec,
+    required this.onUrunSec,
     required this.onBagiKaldir,
     required this.onModDegisti,
     required this.onDegisti,
@@ -186,13 +186,13 @@ class _KalemAlanlari extends StatelessWidget {
   final TextEditingController miktar;
   final TextEditingController deger;
   final KalemGirisModu mod;
-  final bool katalogaBagliMi;
+  final bool urunBagliMi;
   final bool adaOdaklan;
 
   /// Girilen değerlerden kurulan kalem; alanlar eksikse `null`.
   final IslemKalemi? onizleme;
 
-  final VoidCallback onKatalogdanSec;
+  final VoidCallback onUrunSec;
   final VoidCallback onBagiKaldir;
   final ValueChanged<KalemGirisModu> onModDegisti;
   final VoidCallback onDegisti;
@@ -205,9 +205,9 @@ class _KalemAlanlari extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _KatalogSatiri(
-          bagliMi: katalogaBagliMi,
-          onSec: onKatalogdanSec,
+        _UrunSatiri(
+          bagliMi: urunBagliMi,
+          onSec: onUrunSec,
           onBagiKaldir: onBagiKaldir,
         ),
         const SizedBox(height: 12),
@@ -218,7 +218,7 @@ class _KalemAlanlari extends StatelessWidget {
           decoration: const InputDecoration(
             labelText: Metinler.kalemAdi,
             hintText: Metinler.kalemAdiIpucu,
-            helperText: Metinler.katalogSerbestMetinAciklama,
+            helperText: Metinler.urunSerbestMetinAciklama,
             helperMaxLines: 2,
           ),
           validator: (deger) =>
@@ -284,12 +284,12 @@ class _KalemAlanlari extends StatelessWidget {
   }
 }
 
-/// Katalogdan seçme düğmesi ve bağlı fidan rozeti.
+/// Listeden seçme düğmesi ve bağlı ürün rozeti.
 ///
 /// Rozet kaldırıldığında kalem serbest metne döner: ad alanındaki yazı durur,
-/// yalnızca katalog bağı (`fidanId`) kopar.
-class _KatalogSatiri extends StatelessWidget {
-  const _KatalogSatiri({
+/// yalnızca ürün bağı kopar.
+class _UrunSatiri extends StatelessWidget {
+  const _UrunSatiri({
     required this.bagliMi,
     required this.onSec,
     required this.onBagiKaldir,
@@ -306,16 +306,16 @@ class _KatalogSatiri extends StatelessWidget {
         Expanded(
           child: OutlinedButton.icon(
             onPressed: onSec,
-            icon: const Icon(Icons.park_outlined),
-            label: const Text(Metinler.katalogdanSec),
+            icon: const Icon(Icons.sell_outlined),
+            label: const Text(Metinler.urundenSec),
           ),
         ),
         if (bagliMi) ...[
           const SizedBox(width: 8),
           InputChip(
-            label: const Text(Metinler.katalogBagi),
+            label: const Text(Metinler.urunBagi),
             onDeleted: onBagiKaldir,
-            deleteButtonTooltipMessage: Metinler.katalogBaginiKaldir,
+            deleteButtonTooltipMessage: Metinler.urunBaginiKaldir,
           ),
         ],
       ],

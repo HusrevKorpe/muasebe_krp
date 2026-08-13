@@ -2,33 +2,59 @@ rules_version = '2';
 
 // FidanCari erişim kuralları.
 //
-// Tek kullanıcılı model: her kurulum yalnızca kendi verisini görür.
-// Tüm veri `isletmeler/{isletmeId}` altında yaşar ve `isletmeId`, kullanıcının
-// Firebase Auth `uid` değeridir. Kullanıcı başka bir isletmeId altına
-// hiçbir koşulda erişemez.
+// Ortak defter modeli: tüm veri tek bir belgenin altında yaşar
+// (`isletmeler/ortak` — bkz. `Isletme.ortakId`) ve uygulamayı kullanan herkes
+// **aynı** defteri görür. İki kişi aynı işletmenin kayıtlarını tutuyor; veri
+// kişiye değil işletmeye ait.
+//
+// Kimliği Google girişi doğrular, erişim iznini bu dosya verir. İzin listesi
+// `izinliler` koleksiyonudur: belge kimliği hesabın e-posta adresidir, belgenin
+// içeriği önemsiz — varlığı yeter. Kişi eklemek ya da çıkarmak için:
+//
+//   Firebase Console → Firestore Database → "izinliler" koleksiyonu →
+//   belge kimliği: ali@gmail.com   (alan eklemeye gerek yok)
+//
+// E-posta küçük harfle yazılmalı: Google jetonu adresi küçük harfle taşır ve
+// belge kimliği harf duyarlıdır. Liste boşken hiç kimse giremez — ilk iş kendi
+// adresinizi eklemek.
+//
+// `izinliler` koleksiyonu istemciye tamamen kapalıdır (aşağıdaki genel ret);
+// yalnızca kural motoru okur. Yani uygulamayı ele geçiren biri listeye kendini
+// ekleyemez.
+//
+// Not: Google girişinin çalışması için Firebase Console → Authentication →
+// Sign-in method → Google **açık**, diğer sağlayıcılar (özellikle
+// Email/Password ve Anonymous) **kapalı** olmalı. Listede olmayan bir hesap
+// oturum açabilir ama tek bir kayıt bile göremez.
 //
 // Bkz. KURALLAR.md §4.1
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Kullanıcının kendi işletme belgesi ve altındaki her şey.
+    // İzin listesindeki bir hesap ortak defterin tamamına erişir.
     match /isletmeler/{isletmeId} {
-      allow read, write: if sahibiMi(isletmeId);
+      allow read, write: if izinliMi();
 
-      // cariler, cariler/*/islemler, fidanlar — hepsi aynı sahiplik kuralına tabi.
+      // cariler, cariler/*/islemler, urunler — hepsi aynı kurala tabi.
       match /{belgeYolu=**} {
-        allow read, write: if sahibiMi(isletmeId);
+        allow read, write: if izinliMi();
       }
     }
 
-    // Yukarıda eşleşmeyen her yol reddedilir.
+    // Yukarıda eşleşmeyen her yol reddedilir — `izinliler` dahil.
     match /{document=**} {
       allow read, write: if false;
     }
-  }
-}
 
-function sahibiMi(isletmeId) {
-  return request.auth != null && request.auth.uid == isletmeId;
+    // Fonksiyon bu match bloğunun içinde tanımlı: `database` değişkeni ancak
+    // burada görünür, dışarıda tanımlanırsa izin listesinin yolunu kuramaz.
+    function izinliMi() {
+      return request.auth != null
+          && request.auth.token.email != null
+          && exists(
+               /databases/$(database)/documents/izinliler/$(request.auth.token.email)
+             );
+    }
+  }
 }

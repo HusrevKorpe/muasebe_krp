@@ -2,20 +2,19 @@ import '../domain/islem/islem_tipi.dart';
 
 /// Uygulama gezinme yolları. Metin sabitleri tek yerde tutulur.
 abstract final class Yollar {
+  /// Saklanan oturum yüklenene kadar beklenen ekran.
   static const String acilis = '/acilis';
+
+  /// Google ile giriş ekranı. Hesabın izin listesinde olmadığı da burada
+  /// söylenir — bkz. `features/giris/view/giris_ekrani.dart`.
   static const String giris = '/giris';
-  static const String kayit = '/kayit';
 
-  /// İlk açılışta işletme bilgilerinin sorulduğu ekran.
-  static const String kurulum = '/kurulum';
-
-  /// Ana ekran: cari listesi.
+  /// Ana ekran: kişi listesi. Alt sekmelerin ilki.
   static const String ana = '/';
 
+  /// Ayarlar sekmesi ve altındaki işletme profili sayfası.
+  static const String ayarlar = '/ayarlar';
   static const String isletme = '/isletme';
-
-  /// Hesap: giriş yapılan e-posta, çıkış ve hesap silme.
-  static const String hesap = '/hesap';
 
   static const String cariYeni = '/cari/yeni';
 
@@ -33,17 +32,17 @@ abstract final class Yollar {
   /// PDF ekstre: `/cari/{cariId}/ekstre`
   static const String ekstre = '/cari/:cariId/ekstre';
 
-  /// Fidan katalogu.
-  static const String fidanlar = '/fidanlar';
-  static const String fidanYeni = '/fidanlar/yeni';
+  /// Ürün listesi — sattığımız şeyler.
+  static const String urunler = '/urunler';
+  static const String urunYeni = '/urunler/yeni';
 
-  /// Fidan düzenleme: `/fidanlar/{fidanId}` — [fidanDuzenleYolu] ile üretilir.
-  static const String fidanDuzenle = '/fidanlar/:fidanId';
+  /// Ürün düzenleme: `/urunler/{urunId}` — [urunDuzenleYolu] ile üretilir.
+  static const String urunDuzenle = '/urunler/:urunId';
 
   /// Yol parametrelerinin adı.
   static const String cariIdParametresi = 'cariId';
   static const String islemIdParametresi = 'islemId';
-  static const String fidanIdParametresi = 'fidanId';
+  static const String urunIdParametresi = 'urunId';
   static const String tipParametresi = 'tip';
 
   static String cariDetayYolu(String cariId) => '/cari/$cariId';
@@ -58,8 +57,5 @@ abstract final class Yollar {
 
   static String ekstreYolu(String cariId) => '/cari/$cariId/ekstre';
 
-  static String fidanDuzenleYolu(String fidanId) => '/fidanlar/$fidanId';
-
-  /// Kimlik doğrulaması gerektirmeyen yollar.
-  static const Set<String> kimliksizYollar = {acilis, giris, kayit};
+  static String urunDuzenleYolu(String urunId) => '/urunler/$urunId';
 }

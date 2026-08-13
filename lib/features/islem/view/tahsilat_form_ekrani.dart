@@ -12,10 +12,12 @@ import '../../ortak/view/tarih_alani.dart';
 import '../viewmodel/islem_form_viewmodel.dart';
 import 'widget/islem_tipi_gorunumu.dart';
 
-/// Tahsilat ve ödeme giriş formu.
+/// "Para aldım" ve "Para verdim" giriş formu.
 ///
-/// Faturadan farkı kalemi, KDV'si ve vadesi olmamasıdır: tek tutar, bir tarih
-/// ve bir açıklama.
+/// Satıştan farkı satırı olmamasıdır: tek tutar, bir tarih ve bir açıklama.
+/// Açıklama zorunlu değil; boş bırakılırsa tipin varsayılan metni yazılır
+/// ("Müşteriden Tahsilat"), çünkü hesap dökümünde satırın bir açıklaması
+/// olmalı.
 class TahsilatFormEkrani extends ConsumerStatefulWidget {
   const TahsilatFormEkrani({
     required this.cariId,
@@ -58,9 +60,10 @@ class _TahsilatFormEkraniDurumu extends ConsumerState<TahsilatFormEkrani> {
     final tutar = kurusAyristir(_tutar.text);
     if (tutar == null) return;
 
+    final yazilan = _baslik.text.trim();
     final islem = Islem.odeme(
       tip: widget.tip,
-      baslik: _baslik.text.trim(),
+      baslik: yazilan.isEmpty ? widget.tip.varsayilanBaslik : yazilan,
       islemTarihi: _islemTarihi,
       tutar: tutar,
     );
@@ -91,7 +94,7 @@ class _TahsilatFormEkraniDurumu extends ConsumerState<TahsilatFormEkrani> {
     final islemSuruyor = ref.watch(islemFormViewModelSaglayici).isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.tip.formBasligi)),
+      appBar: AppBar(title: Text(widget.tip.ad)),
       body: SafeArea(
         child: Form(
           key: _formAnahtari,
@@ -129,12 +132,10 @@ class _TahsilatFormEkraniDurumu extends ConsumerState<TahsilatFormEkrani> {
                 enabled: !islemSuruyor,
                 textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
-                  labelText: Metinler.aciklama,
+                  labelText:
+                      '${Metinler.aciklama} (${Metinler.istegeBagli})',
                   prefixIcon: Icon(Icons.description_outlined),
                 ),
-                validator: (deger) => (deger ?? '').trim().isEmpty
-                    ? Metinler.aciklamaGerekli
-                    : null,
               ),
               const SizedBox(height: 32),
               FilledButton(

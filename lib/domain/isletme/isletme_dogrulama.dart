@@ -3,42 +3,16 @@ import 'iban.dart';
 
 /// İşletme profili ve banka hesabı doğrulamaları.
 ///
-/// Cari formundan farklı olarak burada alanların çoğu **zorunludur**: bu bilgiler
-/// Faz 4'te ekstre başlığına basılıyor ve eksik bırakılırsa müşteriye yarım
-/// başlıklı bir belge gider. Kurulum ekranı bu yüzden atlanabilir değildir
-/// (bkz. `fazlar/faz-1-cari.md` → Riskler).
+/// Profil alanlarının **hiçbiri zorunlu değil**: bilgiler yalnızca ekstre
+/// başlığına basılıyor ve boş bırakılırsa başlık sade çıkar. Kullanıcıyı
+/// uygulamayı kullanmadan önce form doldurmaya zorlamıyoruz — telefon yalnızca
+/// yazıldıysa biçim açısından yoklanır.
+///
+/// Banka hesabı ayrı: bir hesap eklemek isteğe bağlı, ama eklenen hesabın
+/// bankası ve IBAN'ı dolu olmalı — yarım IBAN müşteriye giden belgede
+/// eksik bilgiden kötüdür.
 abstract final class IsletmeDogrulama {
-  static String? ad(String? deger) {
-    final metin = (deger ?? '').trim();
-    if (metin.isEmpty) return 'İşletme adı gerekli.';
-    return null;
-  }
-
-  static String? adres(String? deger) {
-    final metin = (deger ?? '').trim();
-    if (metin.isEmpty) return 'Adres gerekli. Ekstre başlığında görünecek.';
-    return null;
-  }
-
-  static String? telefon(String? deger) {
-    final metin = (deger ?? '').trim();
-    if (metin.isEmpty) return 'Telefon gerekli.';
-    return CariDogrulama.telefon(deger);
-  }
-
-  static String? vergiDairesi(String? deger) {
-    final metin = (deger ?? '').trim();
-    if (metin.isEmpty) return 'Vergi dairesi gerekli.';
-    return null;
-  }
-
-  /// Cari tarafından farklı olarak burada numara zorunludur; biçim kontrolü
-  /// aynı kurallardan geçer.
-  static String? vergiNo(String? deger) {
-    final metin = (deger ?? '').trim();
-    if (metin.isEmpty) return 'Vergi no gerekli.';
-    return CariDogrulama.vergiNo(deger);
-  }
+  static String? telefon(String? deger) => CariDogrulama.telefon(deger);
 
   static String? bankaAdi(String? deger) {
     final metin = (deger ?? '').trim();

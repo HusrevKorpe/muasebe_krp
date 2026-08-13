@@ -38,12 +38,62 @@ kurtarılamaz. E-posta + şifre ile kullanıcı yeni cihazdan girip verisine ula
 **Manuel adım:** Firebase Console → Authentication → Sign-in method →
 Email/Password sağlayıcısı etkinleştirilmeli. Bu CLI ile yapılamıyor.
 
+### Revize (13 Ağustos 2026): giriş ekranı kaldırıldı
+
+Uygulama tek bir kişiye TestFlight üzerinden verilecek; çok kullanıcılı bir
+ürün değil. Bu yüzden **giriş, kayıt, şifre sıfırlama ve hesap ekranları
+kaldırıldı.** Kimlik altyapısı yerinde duruyor, yalnızca kullanıcıya
+görünmüyor:
+
+- Açılışta derlemeye gömülü tek hesapla sessizce oturum açılır
+  (`lib/data/kimlik/sabit_hesap.dart`, `KimlikRepository.oturumAc`).
+- Kimlik bilgisi kaynak koda yazılmaz, `--dart-define-from-file=gizli.json`
+  ile derleme anında verilir. `gizli.json` depoya girmez.
+- Veri hâlâ `isletmeler/{uid}` altında; uid sabit hesabın uid'sidir. Telefon
+  değişse de uygulama silinip kurulsa da aynı veriye dönülür — anonim girişin
+  yukarıda reddedilme gerekçesi böylece hâlâ karşılanıyor.
+- Firebase oturumu cihazda sakladığı için sunucuya yalnızca ilk açılışta
+  gidilir; sonraki açılışlar çevrimdışı da çalışır.
+
+**Yeni manuel adım:** Firebase Console → Authentication → Settings → User
+actions → **"Enable create (sign-up)" kapatılmalı.** Şifre IPA'dan
+okunabildiği için, o bilgiyle yeni hesap açılmasını sunucu reddetmeli. Hesap
+yalnızca konsoldan açılır.
+
+### Revize 2 (13 Ağustos 2026): Google girişi ve ortak defter
+
+Uygulamayı **iki kişi** kullanacak ve ikisi de **aynı** veriyi görecek. Sabit
+hesap modeli bunu taşımıyordu: şifre paylaşmak gerekiyordu ve kimin ne girdiği
+belli olmuyordu. Yerine:
+
+- **Google ile giriş.** `google_sign_in` hesabı seçtirir, alınan `idToken` ile
+  Firebase oturumu açılır (`KimlikRepository.girisYap`). Şifre yok, dolayısıyla
+  `gizli.json` ve `--dart-define-from-file` de yok — kaldırıldı.
+- **Veri ortak.** `isletmeler/{uid}` yerine sabit `isletmeler/ortak`
+  (`Isletme.ortakId`). Kimin girdiğinden bağımsız aynı defter açılır.
+- **Yetki listeden gelir.** Erişimi `izinliler/{ePosta}` koleksiyonu verir;
+  koleksiyon istemciye kapalı, yalnızca güvenlik kuralı okur. Kişi eklemek
+  Firebase Console'dan bir belge açmaktır.
+- İşletme profili kapısı da bu revizeyle kalktı: profil boşken de uygulama
+  açılır (bkz. `fazlar/faz-1-cari.md`).
+
+**Yeni manuel adımlar:**
+
+1. Authentication → Sign-in method → **Google açık**, Email/Password ve
+   Anonymous **kapalı**. ("Enable create (sign-up)" ise **açık** kalmalı;
+   kapalıyken federe giriş de ilk hesabı oluşturamaz.)
+2. Firestore → `izinliler` koleksiyonu → izin verilecek her e-posta için bir
+   belge (belge kimliği = e-posta, küçük harf; alan gerekmez).
+3. iOS: `Info.plist` içine `GIDClientID` ve `REVERSED_CLIENT_ID` URL şeması —
+   ikisi de `GoogleService-Info.plist`'ten geliyor, gizli değil.
+
 ---
 
 ## Firestore veri modeli (kök)
 
 ```
-isletmeler/{isletmeId}          # isletmeId = Firebase Auth uid
+isletmeler/ortak                # sabit kimlik — herkes aynı defteri açar
+izinliler/{ePosta}              # erişim listesi; yalnızca kurallar okur
 ```
 
 Tüm veri bu belgenin altında yaşar. Güvenlik kuralı tek satırla kurulur:
@@ -75,18 +125,21 @@ kullanıcı yalnızca kendi `uid`'si altındaki belgelere erişebilir.
 ### Çekirdek yardımcılar (`lib/core/`) — **hepsinin unit testi zorunlu**
 - [x] `Kurus` değer tipi: `int` sarmalayıcı, aritmetik işleçler, karşılaştırma
 - [x] `kurusBicimle`: `9400000` → `94.000,00 ₺`
-- [x] Yuvarlama: `bolVeYuvarla`, `yuzdesi` (KDV), `birimFiyatHesapla` (geri hesap)
+- [x] Yuvarlama: `bolVeYuvarla`, `birimFiyatHesapla` (toplamdan geri hesap)
 - [x] Türkçe metin: `turkceKucuk`, `turkceBuyuk`, `aramaAnahtari`, `turkceKarsilastir`
 - [x] Tarih biçimleme: `17 Eylül 2021`, `17.09.2021`, ekstre başlık/alt bilgisi
 - [x] `Log` (`print` yerine), sürüm derlemesinde yalnızca hata geçer
 - [x] `UygulamaHatasi` hiyerarşisi — Firebase hata kodları Türkçe mesaja çevriliyor
-- [x] `FormDogrulama` — e-posta, şifre, zorunlu alan
+- [x] `FormDogrulama` — zorunlu alan (e-posta/şifre doğrulaması giriş ekranıyla
+      birlikte kaldırıldı)
 
 ### Uygulama katmanı
 - [x] Material 3 tema, yeşil palet, açık/koyu, TR yerelleştirme
-- [x] `go_router`: açılış → giriş/kayıt → ana ekran, oturuma göre yönlendirme
+- [x] `go_router`: açılış → kurulum → ana ekran (giriş/kayıt adımı revizeyle
+      kaldırıldı)
 - [x] Riverpod `ProviderScope` kurulumu
-- [x] Giriş, kayıt ve şifre sıfırlama ekranları
+- [x] ~~Giriş, kayıt ve şifre sıfırlama ekranları~~ — revizeyle kaldırıldı,
+      yerine açılışta sessiz oturum
 
 ### Firebase
 - [x] Firestore offline persistence açık (`main.dart`)
@@ -94,6 +147,8 @@ kullanıcı yalnızca kendi `uid`'si altındaki belgelere erişebilir.
 - [x] `firestore.indexes.json` oluşturuldu (boş başlıyor)
 - [x] `firebase.json`'a firestore ve emulator yapılandırması eklendi
 - [ ] **Firebase Console'da Email/Password sağlayıcısını etkinleştir** (manuel adım)
+- [ ] **Firebase Console → Authentication → Settings → User actions →
+      "Enable create (sign-up)" kapat** (manuel adım, revizeyle geldi)
 - [ ] Güvenlik kurallarını ve index'leri yayınla:
       `firebase deploy --only firestore:rules,firestore:indexes`
 - [x] Emulator'de güvenlik kuralı testi — `integration_test/guvenlik_kurallari_test.dart`
@@ -105,7 +160,7 @@ kullanıcı yalnızca kendi `uid`'si altındaki belgelere erişebilir.
 1. `flutter analyze` → sıfır uyarı
 2. `flutter test` → çekirdek yardımcı testleri geçer
 3. `flutter build ios --release` → başarılı
-4. Uygulama açılıyor, giriş yapılabiliyor, boş ana ekran görünüyor
+4. Uygulama açılıyor, oturum kendiliğinden açılıyor, boş ana ekran görünüyor
 5. Güvenlik kuralları yayında: başka bir `uid` ile veri okumaya çalışmak reddediliyor
 6. Uçak modunda uygulama açılıyor ve çökmüyor
 

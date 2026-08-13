@@ -28,7 +28,9 @@ aynısı.
 
 ### Sayfa başlığı
 - Sol: işletme logosu
-- Orta: işletme ünvanı, adres, telefon, faks, vergi dairesi, vergi no
+- Orta: işletme ünvanı, adres, telefon
+  (referans ekstrede faks satırı da var; artık faks kullanılmadığı için
+  alınmadı)
 - Sağ: **İLGİLİ FİRMA** — cari adı ve şehri
 
 ### Başlık bloğu

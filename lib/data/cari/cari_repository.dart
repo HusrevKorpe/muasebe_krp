@@ -11,6 +11,7 @@ import '../../domain/cari/cari_siralamasi.dart';
 import '../../domain/isletme/isletme.dart';
 import '../firebase/firebase_saglayicilar.dart';
 import '../firebase/firestore_donusum.dart';
+import '../kimlik/kimlik_repository.dart';
 import 'cari_kaydi.dart';
 import 'cari_sayfasi.dart';
 
@@ -211,19 +212,19 @@ class CariRepository {
 
   VeriHatasi _veriHatasi(Object hata) {
     if (hata is FirebaseException && hata.code == 'permission-denied') {
-      return const VeriHatasi.yetkisiz();
+      return const VeriHatasi.oturumYok();
     }
     return const VeriHatasi.okunamadi();
   }
 }
 
-/// Giriş yapmış kullanıcının cari deposu.
+/// İşletmenin cari deposu.
 ///
-/// Oturum kapandığında `isletmeKimligiSaglayici` `null` olur ve bu sağlayıcı
-/// hata verir; ekranlar zaten yönlendirici tarafından giriş ekranına taşınır.
+/// Oturum açılmadan `isletmeKimligiSaglayici` `null` olur ve bu sağlayıcı hata
+/// verir; ekranlar zaten yönlendirici tarafından açılış ekranında tutulur.
 final cariRepositorySaglayici = Provider<CariRepository>((ref) {
   final isletmeId = ref.watch(isletmeKimligiSaglayici);
-  if (isletmeId == null) throw const VeriHatasi.yetkisiz();
+  if (isletmeId == null) throw const VeriHatasi.oturumYok();
 
   return CariRepository(
     firestore: ref.watch(firestoreSaglayici),

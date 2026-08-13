@@ -5,26 +5,19 @@ import '../../../../domain/isletme/isletme.dart';
 
 /// İşletme formundaki metin denetleyicileri.
 ///
-/// Kurulum ve profil düzenleme ekranı birebir aynı alanları gösteriyor.
-/// Denetleyicileri tek yerde toplamak, iki ekranda da yedi alanlık listeyi
-/// elle tekrarlamayı ve birinde unutulan `dispose` çağrısını önler.
+/// Denetleyicileri tek yerde toplamak, alan listesini ekranda elle tekrarlamayı
+/// ve unutulan bir `dispose` çağrısını önler.
 class IsletmeFormKontrolculeri {
   IsletmeFormKontrolculeri([Isletme? mevcut])
     : ad = TextEditingController(text: mevcut?.ad ?? ''),
       unvan = TextEditingController(text: mevcut?.unvan ?? ''),
       adres = TextEditingController(text: mevcut?.adres ?? ''),
-      telefon = TextEditingController(text: mevcut?.telefon ?? ''),
-      faks = TextEditingController(text: mevcut?.faks ?? ''),
-      vergiDairesi = TextEditingController(text: mevcut?.vergiDairesi ?? ''),
-      vergiNo = TextEditingController(text: mevcut?.vergiNo ?? '');
+      telefon = TextEditingController(text: mevcut?.telefon ?? '');
 
   final TextEditingController ad;
   final TextEditingController unvan;
   final TextEditingController adres;
   final TextEditingController telefon;
-  final TextEditingController faks;
-  final TextEditingController vergiDairesi;
-  final TextEditingController vergiNo;
 
   /// Formdaki değerleri [temel] kaydın üzerine uygular.
   ///
@@ -38,9 +31,6 @@ class IsletmeFormKontrolculeri {
     unvan: unvan.text.trim(),
     adres: adres.text.trim(),
     telefon: telefon.text.trim(),
-    faks: faks.text.trim().isEmpty ? null : faks.text.trim(),
-    vergiDairesi: vergiDairesi.text.trim(),
-    vergiNo: vergiNo.text.trim(),
     bankaHesaplari: bankaHesaplari,
   );
 
@@ -49,8 +39,5 @@ class IsletmeFormKontrolculeri {
     unvan.dispose();
     adres.dispose();
     telefon.dispose();
-    faks.dispose();
-    vergiDairesi.dispose();
-    vergiNo.dispose();
   }
 }

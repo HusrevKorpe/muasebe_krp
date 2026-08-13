@@ -1,9 +1,11 @@
 /// Referans ekstrenin dokuz işlemi — fazın ana doğruluk ölçütü.
 ///
 /// Tutarlar, tarihler ve kalemler `~/Desktop/Favori_Fidancılık_Ekstresi.pdf`
-/// dosyasındaki gerçek ekstreden birebir alınmıştır; ürettiğimiz bakiye
-/// kolonunun onunla kuruşu kuruşuna tutması gerekir. Cari adı, vergi numarası
-/// ve IBAN gibi kişisel bilgiler bilerek alınmamıştır — gerçek müşteri verisi
+/// dosyasındaki gerçek ekstreden birebir alınmıştır — tek istisna
+/// [sertCekirdekliFaturasi]'ndaki vergi satırıdır, orada anlatılıyor.
+/// Ürettiğimiz bakiye kolonunun PDF ile kuruşu kuruşuna tutması gerekir.
+/// Cari adı ve IBAN gibi
+/// kişisel bilgiler bilerek alınmamıştır — gerçek müşteri verisi
 /// repoya commit edilmez (bkz. KURALLAR.md §7).
 ///
 /// Belge kimlikleri sıra numarasıdır: aynı güne düşen iki işlemin (17 Eylül
@@ -13,7 +15,6 @@ library;
 
 import 'package:fidancari/core/para/kurus.dart';
 import 'package:fidancari/domain/islem/islem.dart';
-import 'package:fidancari/domain/islem/islem_durumu.dart';
 import 'package:fidancari/domain/islem/islem_kalemi.dart';
 import 'package:fidancari/domain/islem/islem_tipi.dart';
 
@@ -27,8 +28,6 @@ final Islem zeytinHurmaFaturasi = Islem.fatura(
   tip: IslemTipi.satisFaturasi,
   baslik: 'Zeytin-Hurma',
   islemTarihi: DateTime(2021, 9, 17),
-  vadeTarihi: DateTime(2021, 10, 26),
-  durum: IslemDurumu.teslimEdildi,
   kalemler: <IslemKalemi>[
     IslemKalemi.birimFiyattan(
       ad: 'zeytin',
@@ -54,8 +53,6 @@ final Islem hachiyaFaturasi = Islem.fatura(
   tip: IslemTipi.satisFaturasi,
   baslik: 'Hachiya Tüplü-Çam-Gemlik 2 Yaş',
   islemTarihi: DateTime(2024, 12, 5),
-  vadeTarihi: DateTime(2024, 12, 5),
-  durum: IslemDurumu.teslimEdildi,
   kalemler: <IslemKalemi>[
     IslemKalemi.birimFiyattan(
       ad: 'hachiya',
@@ -77,16 +74,18 @@ final Islem hachiyaFaturasi = Islem.fatura(
 
 /// `20 Ocak 2025` — Alış Faturası, Sert Çekirdekli Meyve Fidanı.
 ///
-/// Ekstredeki tek KDV'li fatura: ara toplam `140.625,00 ₺`, %1 KDV ile
-/// `142.031,25 ₺`. Alış faturası olduğu için bakiyeyi negatife düşürür —
-/// bir cari hem müşteri hem tedarikçi olabilir.
+/// Toplamı `142.031,25 ₺`. Alış faturası olduğu için bakiyeyi negatife
+/// düşürür — bir cari hem müşteri hem tedarikçi olabilir.
+///
+/// Ekstrede bu faturaya %1 vergi işlenmiştir: fidan kalemleri `140.625,00 ₺`,
+/// üzerine `1.406,25 ₺`. Uygulamada vergi diye ayrı bir alan yok; böyle bir
+/// tutar "nakliye" gibi serbest metin kalemi olarak girilir. Fatura toplamı ve
+/// dolayısıyla ekstrenin bakiye kolonu PDF ile birebir aynı kalır.
 final Islem sertCekirdekliFaturasi = Islem.fatura(
   id: '09',
   tip: IslemTipi.alisFaturasi,
   baslik: 'Sert Çekirdekli Meyve Fidanı',
   islemTarihi: DateTime(2025, 1, 20),
-  vadeTarihi: DateTime(2025, 1, 20),
-  kdvOrani: 1,
   kalemler: <IslemKalemi>[
     for (final ad in <String>['elma', 'armut', 'kiraz', 'ayva'])
       IslemKalemi.birimFiyattan(
@@ -98,6 +97,11 @@ final Islem sertCekirdekliFaturasi = Islem.fatura(
       ad: 'asma anacı atasarısı',
       miktar: 725,
       birimFiyat: Kurus.liradan(45),
+    ),
+    IslemKalemi.birimFiyattan(
+      ad: 'vergi',
+      miktar: 1,
+      birimFiyat: Kurus.liradan(1406, 25),
     ),
   ],
 );

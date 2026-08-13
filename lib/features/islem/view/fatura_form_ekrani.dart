@@ -3,10 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/hata/hatalar.dart';
 import '../../../core/metin/metinler.dart';
+import '../../../core/para/kurus.dart';
 import '../../../domain/islem/fatura_hesaplayici.dart';
-import '../../../domain/islem/fatura_toplami.dart';
 import '../../../domain/islem/islem.dart';
-import '../../../domain/islem/islem_durumu.dart';
+import '../../../domain/islem/islem_basligi.dart';
 import '../../../domain/islem/islem_kalemi.dart';
 import '../../../domain/islem/islem_tipi.dart';
 import '../../ortak/view/tarih_alani.dart';
@@ -16,11 +16,15 @@ import 'widget/islem_tipi_gorunumu.dart';
 import 'widget/kalem_dialogu.dart';
 import 'widget/kalem_listesi.dart';
 
-/// Satış ve alış faturası giriş formu.
+/// "Sattım" ve "Aldım" giriş formu.
 ///
 /// Tutar hesabı burada yapılmaz: kalem tutarları [IslemKalemi] fabrikalarında,
 /// fatura toplamı [FaturaHesaplayici] içinde üretilir (bkz. KURALLAR.md §1.3).
 /// Ekran yalnızca kullanıcının girdiklerini toplayıp domain'e verir.
+///
+/// Açıklama alanı **zorunlu değil**: boş bırakılırsa başlık kalem adlarından
+/// üretilir (bkz. [IslemBasligi]). Bir satış girmek için doldurulması gereken
+/// tek şey satırlar.
 class FaturaFormEkrani extends ConsumerStatefulWidget {
   const FaturaFormEkrani({
     required this.cariId,
@@ -41,9 +45,6 @@ class _FaturaFormEkraniDurumu extends ConsumerState<FaturaFormEkrani> {
   final _kalemler = <IslemKalemi>[];
 
   late DateTime _islemTarihi = _bugun();
-  DateTime? _vadeTarihi;
-  bool _teslimEdildi = false;
-  bool _kdvVar = false;
 
   /// Saat bileşeni sıfırlanır: aynı gün girilen iki işlemin sırası saate değil,
   /// belge kimliğine göre belirlenir (bkz. `islem_siralamasi.dart`).
@@ -52,12 +53,7 @@ class _FaturaFormEkraniDurumu extends ConsumerState<FaturaFormEkrani> {
     return DateTime(an.year, an.month, an.day);
   }
 
-  FaturaToplami get _toplam => FaturaHesaplayici.hesapla(
-    kalemler: _kalemler,
-    kdvOrani: _kdvVar
-        ? FaturaHesaplayici.varsayilanKdvOrani
-        : FaturaHesaplayici.kdvsiz,
-  );
+  Kurus get _toplam => FaturaHesaplayici.hesapla(kalemler: _kalemler);
 
   @override
   void dispose() {
@@ -86,16 +82,12 @@ class _FaturaFormEkraniDurumu extends ConsumerState<FaturaFormEkrani> {
 
     final fatura = Islem.fatura(
       tip: widget.tip,
-      baslik: _baslik.text.trim(),
+      baslik: IslemBasligi.uret(
+        yazilan: _baslik.text,
+        kalemler: _kalemler,
+      ),
       islemTarihi: _islemTarihi,
-      vadeTarihi: _vadeTarihi,
-      durum: _teslimEdildi
-          ? IslemDurumu.teslimEdildi
-          : IslemDurumu.beklemede,
       kalemler: _kalemler,
-      kdvOrani: _kdvVar
-          ? FaturaHesaplayici.varsayilanKdvOrani
-          : FaturaHesaplayici.kdvsiz,
     );
 
     final basarili = await ref
@@ -124,7 +116,7 @@ class _FaturaFormEkraniDurumu extends ConsumerState<FaturaFormEkrani> {
     final islemSuruyor = ref.watch(islemFormViewModelSaglayici).isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.tip.formBasligi)),
+      appBar: AppBar(title: Text(widget.tip.ad)),
       body: SafeArea(
         child: Form(
           key: _formAnahtari,
@@ -134,20 +126,8 @@ class _FaturaFormEkraniDurumu extends ConsumerState<FaturaFormEkrani> {
               _BilgiBolumu(
                 baslik: _baslik,
                 islemTarihi: _islemTarihi,
-                vadeTarihi: _vadeTarihi,
-                teslimEdildi: _teslimEdildi,
                 etkin: !islemSuruyor,
-                onIslemTarihi: (tarih) => setState(() {
-                  _islemTarihi = tarih;
-                  // Vade işlem tarihinden önce kalmışsa temizlenir; aksi hâlde
-                  // kaydetme anında doğrulama hatası verirdi.
-                  if (_vadeTarihi != null && _vadeTarihi!.isBefore(tarih)) {
-                    _vadeTarihi = null;
-                  }
-                }),
-                onVadeTarihi: (tarih) => setState(() => _vadeTarihi = tarih),
-                onVadeTemizle: () => setState(() => _vadeTarihi = null),
-                onTeslim: (deger) => setState(() => _teslimEdildi = deger),
+                onIslemTarihi: (tarih) => setState(() => _islemTarihi = tarih),
               ),
               const SizedBox(height: 24),
               _KalemBolumu(
@@ -158,15 +138,6 @@ class _FaturaFormEkraniDurumu extends ConsumerState<FaturaFormEkrani> {
                 onSil: _kalemSil,
               ),
               const SizedBox(height: 24),
-              SwitchListTile(
-                value: _kdvVar,
-                onChanged: islemSuruyor
-                    ? null
-                    : (deger) => setState(() => _kdvVar = deger),
-                title: const Text(Metinler.kdvUygula),
-                contentPadding: EdgeInsets.zero,
-              ),
-              const SizedBox(height: 8),
               FaturaOzeti(toplam: _toplam),
               const SizedBox(height: 24),
               FilledButton(
@@ -186,29 +157,19 @@ class _FaturaFormEkraniDurumu extends ConsumerState<FaturaFormEkrani> {
   }
 }
 
-/// Açıklama, tarihler ve teslim durumu.
+/// Açıklama ve işlem tarihi.
 class _BilgiBolumu extends StatelessWidget {
   const _BilgiBolumu({
     required this.baslik,
     required this.islemTarihi,
-    required this.vadeTarihi,
-    required this.teslimEdildi,
     required this.etkin,
     required this.onIslemTarihi,
-    required this.onVadeTarihi,
-    required this.onVadeTemizle,
-    required this.onTeslim,
   });
 
   final TextEditingController baslik;
   final DateTime islemTarihi;
-  final DateTime? vadeTarihi;
-  final bool teslimEdildi;
   final bool etkin;
   final ValueChanged<DateTime> onIslemTarihi;
-  final ValueChanged<DateTime> onVadeTarihi;
-  final VoidCallback onVadeTemizle;
-  final ValueChanged<bool> onTeslim;
 
   @override
   Widget build(BuildContext context) {
@@ -219,12 +180,12 @@ class _BilgiBolumu extends StatelessWidget {
           enabled: etkin,
           textCapitalization: TextCapitalization.sentences,
           decoration: const InputDecoration(
-            labelText: Metinler.aciklama,
+            labelText: '${Metinler.aciklama} (${Metinler.istegeBagli})',
             hintText: Metinler.aciklamaIpucu,
             prefixIcon: Icon(Icons.description_outlined),
+            helperText: Metinler.aciklamaAciklamasi,
+            helperMaxLines: 2,
           ),
-          validator: (deger) =>
-              (deger ?? '').trim().isEmpty ? Metinler.aciklamaGerekli : null,
         ),
         const SizedBox(height: 16),
         TarihAlani(
@@ -232,24 +193,6 @@ class _BilgiBolumu extends StatelessWidget {
           tarih: islemTarihi,
           etkin: etkin,
           onSecildi: onIslemTarihi,
-        ),
-        const SizedBox(height: 16),
-        TarihAlani(
-          etiket: Metinler.vadeTarihi,
-          tarih: vadeTarihi,
-          etkin: etkin,
-          bosMetin: Metinler.vadeYok,
-          simge: Icons.event_available_outlined,
-          enErken: islemTarihi,
-          onSecildi: onVadeTarihi,
-          onTemizlendi: onVadeTemizle,
-        ),
-        const SizedBox(height: 8),
-        SwitchListTile(
-          value: teslimEdildi,
-          onChanged: etkin ? onTeslim : null,
-          title: const Text(Metinler.teslimEdildi),
-          contentPadding: EdgeInsets.zero,
         ),
       ],
     );
