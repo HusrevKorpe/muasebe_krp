@@ -14,55 +14,33 @@ sealed class UygulamaHatasi implements Exception {
 
 /// Oturum açma hatası.
 ///
-/// Giriş Google hesabıyla yapılıyor; şifre diye bir şey yok. Bu yüzden
-/// mesajlar kullanıcıya "şifreni düzelt" demez — ya bağlantı yoktur, ya hesap
-/// kapatılmıştır, ya da derleme yanlış yapılandırılmıştır.
+/// Giriş e-posta ve şifreyle yapılıyor. Hesapları Firebase Console açtığı için
+/// "kayıt olun" gibi bir yönlendirme yok: yanlış bilgi girildiyse kullanıcı
+/// ya tekrar dener ya da hesabı veren kişiye sorar.
 class KimlikHatasi extends UygulamaHatasi {
   const KimlikHatasi(super.mesaj);
 
-  /// Google girişi yapılandırılmamış: `Info.plist` içindeki `GIDClientID` /
-  /// URL şeması eksik ya da Firebase Console'da Google sağlayıcısı kapalı.
-  const KimlikHatasi.yapilandirilmamis()
-    : super(
-        'Uygulama eksik kurulmuş: Google girişi yapılandırılmamış. '
-        'Uygulamayı kuran kişiye bildirin.',
-      );
-
-  /// Giriş akışı yarıda kaldı. Beklenmez; yine de sessiz kalmaktansa
-  /// anlaşılır bir mesaj gösterilir.
-  const KimlikHatasi.acilamadi()
-    : super('Giriş yapılamadı. Lütfen tekrar deneyin.');
-
   /// Firebase Auth hata kodunu Türkçe mesaja çevirir.
   factory KimlikHatasi.koddan(String kod) => KimlikHatasi(switch (kod) {
+    // Firebase, hesap var mı yok mu bilgisini sızdırmamak için yanlış şifre ile
+    // olmayan hesabı aynı kodla ('invalid-credential') döner; eski sürümler
+    // ayrı kodlar veriyordu. Mesaj her hâlde aynı olduğu için hepsi bir arada.
+    'invalid-credential' ||
+    'invalid-email' ||
+    'wrong-password' ||
+    'user-not-found' =>
+      'E-posta veya şifre hatalı.',
     'network-request-failed' =>
       'İnternet bağlantısı yok. Bağlantınızı kontrol edip tekrar deneyin.',
     'too-many-requests' =>
       'Çok fazla deneme yapıldı. Bir süre sonra tekrar deneyin.',
     'user-disabled' => 'Bu hesap devre dışı bırakılmış.',
-    // Aşağıdakiler kullanıcı hatası değil, yapılandırma hatasıdır: Firebase
-    // Console'da Google sağlayıcısı kapalı ya da istemci kimliği yanlış.
-    'operation-not-allowed' ||
-    'invalid-credential' ||
-    'account-exists-with-different-credential' =>
-      'Google girişi bu projede etkin değil. Uygulamayı kuran kişiye bildirin.',
+    // Kullanıcı hatası değil, yapılandırma hatası: Firebase Console →
+    // Authentication → Sign-in method altında Email/Password kapalı.
+    'operation-not-allowed' =>
+      'E-posta ile giriş bu projede kapalı. Uygulamayı kuran kişiye bildirin.',
     _ => 'Giriş yapılamadı. Lütfen tekrar deneyin.',
   });
-}
-
-/// Oturum açık ama hesap izin listesinde değil.
-///
-/// İzin `firestore.rules` içindeki `izinliler` koleksiyonundan geliyor; listeye
-/// e-posta eklemek konsoldan yapılan bir iş, kullanıcının uygulama içinde
-/// düzeltebileceği bir şey değil.
-///
-/// Ayrı bir tip olmasının sebebi: yönlendirici ve giriş ekranı bu durumu
-/// "veriler yüklenemedi"den ayırt edip kullanıcıyı çıkış düğmesine
-/// yönlendirmeli. Mesaja bakarak ayırmak kırılgan olurdu.
-class YetkiHatasi extends UygulamaHatasi {
-  const YetkiHatasi()
-      : super('Bu hesabın deftere erişim izni yok. Uygulamayı kuran kişiden '
-            'e-posta adresinizi izin listesine eklemesini isteyin.');
 }
 
 /// Veri okuma/yazma hatası.

@@ -9,11 +9,10 @@ import 'emulator_yardimcilari.dart';
 
 /// `firestore.rules` doğrulaması.
 ///
-/// Ortak defter modeli: veri kişiye değil işletmeye ait, izni `izinliler`
-/// koleksiyonu veriyor. Bu dosya kuralın gerçekten tuttuğunu sınar — kural
+/// Ortak defter modeli: veri kişiye değil işletmeye ait, erişimin tek koşulu
+/// açık bir oturum. Bu dosya kuralın gerçekten tuttuğunu sınar — kural
 /// dosyasını okumak yetmez, çünkü yanlış yazılmış bir `match` sessizce her şeyi
-/// açar, yanlış yazılmış bir `exists()` de sessizce herkesi kilitler
-/// (KURALLAR.md §4.1).
+/// açar (KURALLAR.md §4.1).
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -47,7 +46,7 @@ void main() {
     ),
   );
 
-  test('izin listesindeki hesap ortak defteri okuyup yazabilir', () async {
+  test('giriş yapmış hesap ortak defteri okuyup yazabilir', () async {
     await yeniKullaniciAc(kimlik);
 
     await carilerYolu(Isletme.ortakId).doc('benim').set(<String, Object?>{
@@ -61,7 +60,7 @@ void main() {
     expect(anlik.data()![Cari.alanAd], 'Ortak Cari');
   });
 
-  test('izinli iki hesap aynı veriyi görür', () async {
+  test('iki hesap aynı veriyi görür', () async {
     // Modelin can alıcı noktası: uygulamayı iki kişi kullanıyor ve ikisi de
     // aynı defteri açmalı. Eski kural (uid == isletmeId) burada düşerdi.
     await yeniKullaniciAc(kimlik);
@@ -79,45 +78,7 @@ void main() {
     expect(anlik.data()![Cari.alanAd], 'Paylaşılan Cari');
   });
 
-  test('izin listesinde olmayan hesap okuyamaz', () async {
-    await yeniKullaniciAc(kimlik);
-    await carilerYolu(Isletme.ortakId).doc('gizli').set(<String, Object?>{
-      Cari.alanAd: 'Gizli Cari',
-      Cari.alanAktif: true,
-    });
-    await kimlik.signOut();
-
-    await yeniKullaniciAc(kimlik, izinli: false);
-
-    expect(
-      () => carilerYolu(Isletme.ortakId).doc('gizli').get(sunucudan),
-      yetkiReddi(),
-    );
-  });
-
-  test('izin listesinde olmayan hesap yazamaz', () async {
-    await yeniKullaniciAc(kimlik, izinli: false);
-
-    expect(
-      () => carilerYolu(Isletme.ortakId).doc('sizinti').set(<String, Object?>{
-        Cari.alanAd: 'Sızıntı',
-      }),
-      throwsA(isA<FirebaseException>()),
-    );
-  });
-
-  test('izin listesinde olmayan hesap liste sorgulayamaz', () async {
-    await yeniKullaniciAc(kimlik, izinli: false);
-
-    expect(
-      () => carilerYolu(Isletme.ortakId)
-          .where(Cari.alanAktif, isEqualTo: true)
-          .get(sunucudan),
-      yetkiReddi(),
-    );
-  });
-
-  test('oturum açmamış kullanıcı hiçbir veriye erişemez', () async {
+  test('oturum açmamış kullanıcı okuyamaz', () async {
     await yeniKullaniciAc(kimlik);
     await carilerYolu(Isletme.ortakId).doc('benim').set(<String, Object?>{
       Cari.alanAd: 'Ortak Cari',
@@ -130,14 +91,34 @@ void main() {
     );
   });
 
-  test('izin listesi istemciye kapalı', () async {
-    // Uygulamayı ele geçiren biri kendini listeye ekleyememeli; listeyi
-    // okuyup kimlerin izinli olduğunu da öğrenememeli.
-    await yeniKullaniciAc(kimlik);
-    final liste = firestore.collection('izinliler');
+  test('oturum açmamış kullanıcı liste sorgulayamaz', () async {
+    expect(
+      () => carilerYolu(Isletme.ortakId)
+          .where(Cari.alanAktif, isEqualTo: true)
+          .get(sunucudan),
+      yetkiReddi(),
+    );
+  });
 
-    expect(() => liste.doc('sahte@ornek.com').set(<String, Object?>{}),
-        throwsA(isA<FirebaseException>()));
-    expect(() => liste.get(sunucudan), yetkiReddi());
+  test('oturum açmamış kullanıcı yazamaz', () async {
+    expect(
+      () => carilerYolu(Isletme.ortakId).doc('sizinti').set(<String, Object?>{
+        Cari.alanAd: 'Sızıntı',
+      }),
+      throwsA(isA<FirebaseException>()),
+    );
+  });
+
+  test('defterin dışındaki yollar giriş yapmış hesaba da kapalı', () async {
+    // Kural yalnızca `isletmeler/**` altını açıyor; kök seviyeye yeni bir
+    // koleksiyon açılamamalı.
+    await yeniKullaniciAc(kimlik);
+    final baskaYol = firestore.collection('rastgele');
+
+    expect(
+      () => baskaYol.doc('belge').set(<String, Object?>{'a': 1}),
+      throwsA(isA<FirebaseException>()),
+    );
+    expect(() => baskaYol.get(sunucudan), yetkiReddi());
   });
 }

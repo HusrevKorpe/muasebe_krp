@@ -51,44 +51,23 @@ const String testSifresi = 'sifre123';
 /// aramıyor (defter ortak), ama ayrı kimlikler testleri birbirinden ayırmaya
 /// yarıyor.
 ///
-/// Kullanıcı öntanımlı olarak izin listesine de eklenir; [izinli] `false`
-/// verilirse eklenmez ve kuralların onu geri çevirmesi sınanabilir.
-///
-/// Uygulamanın kendisi hesap açmaz — Google ile giriş yapar. Bu yardımcı
-/// yalnızca testin veri izolasyonu için var; emulator'de sağlayıcı kısıtlaması
-/// olmadığından burada e-posta/şifre ile hesap açılabiliyor.
-Future<String> yeniKullaniciAc(
-  FirebaseAuth kimlik, {
-  bool izinli = true,
-}) async {
+/// Gerçek projede hesabı Firebase Console açıyor; uygulamanın kendisi hesap
+/// açmıyor. Emulator'de konsol olmadığı için test hesabı burada açılıyor.
+Future<String> yeniKullaniciAc(FirebaseAuth kimlik) async {
   final benzersiz = DateTime.now().microsecondsSinceEpoch;
-  final ePosta = 'test$benzersiz@fidancari.test';
 
   final sonuc = await kimlik.createUserWithEmailAndPassword(
-    email: ePosta,
+    email: 'test$benzersiz@fidancari.test',
     password: testSifresi,
   );
-  if (izinli) await izinListesineEkle(ePosta);
 
   return sonuc.user!.uid;
 }
 
-/// İzin listesine (`izinliler/{ePosta}`) bir e-posta ekler.
-///
-/// Bu koleksiyon istemciye kapalı — kural motoru dışında kimse okuyamaz, kimse
-/// yazamaz (bkz. `firestore.rules`). Test onu [_yonetici] yoluyla doldurur.
-/// Gerçek projede aynı işi Firebase Console yapıyor.
-Future<void> izinListesineEkle(String ePosta) => _yonetici(
-  'PATCH',
-  '/v1/projects/$_projeKimligi/databases/(default)/documents/izinliler/$ePosta',
-  govde: <String, Object?>{'fields': <String, Object?>{}},
-);
-
 /// Emulator'deki tüm Firestore verisini siler.
 ///
 /// Ortak defter modelinde her test aynı yola (`isletmeler/ortak`) yazıyor;
-/// önceki koşudan kalan kayıtlar "liste boş" beklentisini bozar. Bunu çağıran
-/// test, silmeden **sonra** kullanıcısını açmalı — izin listesi de siliniyor.
+/// önceki koşudan kalan kayıtlar "liste boş" beklentisini bozar.
 Future<void> firestoreVerisiniSil() => _yonetici(
   'DELETE',
   '/emulator/v1/projects/$_projeKimligi/databases/(default)/documents',
@@ -100,11 +79,7 @@ String get _projeKimligi => DefaultFirebaseOptions.currentPlatform.projectId;
 ///
 /// `Authorization: Bearer owner` başlığıyla gelen istekleri emulator yönetici
 /// sayar ve güvenlik kurallarını hiç değerlendirmez.
-Future<void> _yonetici(
-  String yontem,
-  String yol, {
-  Map<String, Object?>? govde,
-}) async {
+Future<void> _yonetici(String yontem, String yol) async {
   final adres = Uri.parse(
     'http://$emulatorSunucusu:$firestoreEmulatorKapisi$yol',
   );
@@ -113,10 +88,6 @@ Future<void> _yonetici(
   try {
     final istek = await istemci.openUrl(yontem, adres);
     istek.headers.set(HttpHeaders.authorizationHeader, 'Bearer owner');
-    if (govde != null) {
-      istek.headers.contentType = ContentType.json;
-      istek.write(jsonEncode(govde));
-    }
 
     final yanit = await istek.close();
     final cevap = await yanit.transform(utf8.decoder).join();

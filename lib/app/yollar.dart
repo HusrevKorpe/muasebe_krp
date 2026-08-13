@@ -5,8 +5,7 @@ abstract final class Yollar {
   /// Saklanan oturum yüklenene kadar beklenen ekran.
   static const String acilis = '/acilis';
 
-  /// Google ile giriş ekranı. Hesabın izin listesinde olmadığı da burada
-  /// söylenir — bkz. `features/giris/view/giris_ekrani.dart`.
+  /// E-posta ve şifreyle giriş ekranı.
   static const String giris = '/giris';
 
   /// Ana ekran: kişi listesi. Alt sekmelerin ilki.

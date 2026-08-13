@@ -72,15 +72,13 @@ Sorularınız için: <a href="mailto:ILETISIM@ORNEK.COM">ILETISIM@ORNEK.COM</a><
 aracı ve üçüncü taraf izleyici <strong>kullanılmaz</strong>.</p>
 
 <h3>2.1 Hesap bilgisi</h3>
-<p>Uygulamaya <strong>Google hesabınızla</strong> girersiniz. Google, girişi
-doğruladıktan sonra uygulamaya <strong>e-posta adresinizi</strong> ve bir
-kullanıcı kimliğini bildirir; uygulama bu ikisini saklar. Şifreniz uygulamaya
-hiçbir zaman girilmez ve uygulama tarafından görülmez.</p>
+<p>Uygulamaya <strong>e-posta adresiniz ve şifrenizle</strong> girersiniz.
+Uygulama, e-posta adresinizi ve Firebase'in verdiği kullanıcı kimliğini saklar;
+şifreniz saklanmaz, doğrulamayı Firebase Authentication yapar.</p>
 <p>E-posta adresi yalnızca iki iş için kullanılır: oturumunuzu sürdürmek ve
-erişim izninizi denetlemek. Uygulamada kayıt olma adımı yoktur; hangi
-adreslerin girebileceğini uygulamayı kuran kişi elle belirler. Adresiniz
-pazarlama, analiz veya izleme amacıyla kullanılmaz, üçüncü taraflara
-verilmez.</p>
+kimin giriş yaptığını göstermek. Uygulamada kayıt olma adımı yoktur; hesabınızı
+uygulamayı kuran kişi açar ve bilgileri size verir. Adresiniz pazarlama, analiz
+veya izleme amacıyla kullanılmaz, üçüncü taraflara verilmez.</p>
 
 <h3>2.2 Kullanıcı içeriği</h3>
 <p>Uygulamaya <strong>kendi girdiğiniz</strong> ön muhasebe kayıtları:</p>
@@ -91,9 +89,9 @@ verilmez.</p>
   <li>Fidan katalogu: tür, çeşit, anaç, yaş, kök tipi, fiyat</li>
 </ul>
 <p>Bu kayıtlar <strong>tek bir ortak deftere</strong> yazılır. Uygulamayı aynı
-işletmede birden fazla kişi kullanabilir; erişim izni verilmiş hesaplar aynı
-kayıtları görür. İzin listesinde olmayan hiç kimse, giriş yapmış olsa bile tek
-bir kaydı göremez.</p>
+işletmede birden fazla kişi kullanabilir; işletme için açılmış hesaplar aynı
+kayıtları görür. Defter, uygulamayı kuran kişinin açtığı hesapların dışına
+çıkmaz.</p>
 
 <h3>2.3 Toplanmayan veriler</h3>
 <ul>
@@ -112,9 +110,10 @@ bu yüzden App Tracking Transparency izni de istemez.
 saklanır. Firebase, Google Ireland Limited / Google LLC tarafından işletilir ve
 veri Google'ın sunucularında barındırılır. Google bu hizmette “veri işleyen”
 sıfatıyla hareket eder.</p>
-<p>Firebase güvenlik kuralları, veriye <strong>yalnızca izin listesindeki
-hesapların</strong> erişmesine izin verecek şekilde yapılandırılmıştır. Liste
-sunucuda tutulur ve uygulama üzerinden değiştirilemez.</p>
+<p>Firebase güvenlik kuralları, veriye <strong>yalnızca bu işletme için açılmış
+hesapların</strong> erişmesine izin verecek şekilde yapılandırılmıştır. Hesaplar
+yalnızca uygulamayı kuran kişi tarafından açılır; uygulama üzerinden yeni hesap
+açılamaz.</p>
 <p>Uygulama çevrimdışı çalışabilmek için verinin bir kopyasını cihazınızda tutar.
 Uygulamayı sildiğinizde bu yerel kopya da silinir.</p>
 
@@ -130,10 +129,9 @@ gerektirdiği ölçüde yetkili makamlarla paylaşılabilir.</p>
 <h2>5. Saklama süresi ve verinin silinmesi</h2>
 <p>Verileriniz, silinmesini isteyene kadar saklanır.</p>
 <div class="kutu">
-Uygulama hesap açtırmaz — Google hesabınızı siz zaten kendiniz açtınız, uygulama
-yalnızca ona erişim izni tanır. Bu yüzden uygulama içinde bir “hesabı sil” adımı
-yoktur. Erişim izninizin kaldırılmasını ya da tüm verinin kalıcı olarak
-silinmesini istiyorsanız
+Hesabınızı uygulama açmaz — sizin için uygulamayı kuran kişi açar. Bu yüzden
+uygulama içinde bir “hesabı sil” adımı yoktur. Hesabınızın kapatılmasını ya da
+tüm verinin kalıcı olarak silinmesini istiyorsanız
 <a href="mailto:ILETISIM@ORNEK.COM">ILETISIM@ORNEK.COM</a> adresine yazmanız
 yeterlidir.
 </div>

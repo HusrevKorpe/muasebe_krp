@@ -24,8 +24,12 @@ abstract final class Metinler {
 
   // ─── Giriş ───────────────────────────────────────────────────────────────
   static const String girisAciklama =
-      'Devam etmek için Google hesabınızla giriş yapın.';
-  static const String googleIleGir = 'Google ile giriş yap';
+      'Devam etmek için e-posta ve şifrenizi girin.';
+  static const String ePosta = 'E-posta';
+  static const String sifre = 'Şifre';
+  static const String sifreyiGoster = 'Şifreyi göster';
+  static const String sifreyiGizle = 'Şifreyi gizle';
+  static const String girisYap = 'Giriş yap';
   static const String cikisYap = 'Çıkış yap';
   static const String cikisOnay =
       'Çıkış yapılsın mı? Kayıtlar silinmez; yeniden giriş yapınca hepsi '

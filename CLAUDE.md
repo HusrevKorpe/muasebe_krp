@@ -83,7 +83,7 @@ deposu eskiyse `pod install --repo-update` gerekir.
 | Firebase projesi | `muasebe-takip` (662432068913) |
 | Platform | iOS, minimum **15.0** (Firebase SDK şartı) |
 | Stack | Flutter 3.41 · Dart 3.11 · Firestore · Riverpod · MVVM |
-| Kullanım | **Ortak defter.** Google ile giriş yapan izinli hesaplar (2 kişi) aynı veriyi görür |
+| Kullanım | **Ortak defter.** E-posta/şifreyle giren hesaplar (2 kişi) aynı veriyi görür |
 
 ## Klasör yapısı
 
@@ -120,17 +120,18 @@ tool/              # Varlık üreticileri (uygulama ikonu)
   Manager üzerinden geliyor; CocoaPods'un Ekim 2026 riski kapandı. Geriye tek
   eklenti kaldı: `printing` henüz `Package.swift` yayınlamıyor, o yüzden
   `Podfile` duruyor. `pod install` hâlâ gerekli.
-- **Google ile giriş, ortak defter.** Uygulamayı iki kişi kullanıyor ve ikisi de
-  **aynı** veriyi görüyor. Bu yüzden veri artık `isletmeler/{uid}` altında
+- **E-posta/şifre ile giriş, ortak defter.** Uygulamayı iki kişi kullanıyor ve
+  ikisi de **aynı** veriyi görüyor. Bu yüzden veri `isletmeler/{uid}` altında
   değil, sabit `isletmeler/ortak` altında (`Isletme.ortakId`).
-  Kimliği Google girişi doğrular (`KimlikRepository.girisYap`), erişim iznini
-  Firestore'daki `izinliler` koleksiyonu verir: belge kimliği hesabın
-  e-postasıdır, içeriği boş olabilir. Kişi eklemek/çıkarmak Firebase Console →
-  Firestore → `izinliler` işidir; kod değişikliği ya da yeni derleme gerekmez.
-  Listede olmayan hesap giriş yapabilir ama tek bir kayıt bile göremez; giriş
-  ekranı ona durumu söyleyip çıkış düğmesi gösterir.
-  **Manuel adımlar:** Authentication → Sign-in method → Google açık, diğerleri
-  kapalı; Firestore'da `izinliler` altına en az bir e-posta.
+  Giriş ekranı e-posta ve şifre sorar (`KimlikRepository.girisYap`); Firestore
+  kuralı yalnızca "oturum açık mı" diye bakar (`request.auth != null`).
+  **Uygulama hesap açmaz:** kayıt ekranı, şifre sıfırlama ve hesap silme yok.
+  Kişi eklemek/çıkarmak Firebase Console → Authentication → Users işidir; kod
+  değişikliği ya da yeni derleme gerekmez.
+  **Manuel adımlar:** Authentication → Sign-in method → Email/Password açık,
+  diğerleri kapalı; Settings → User actions → "Enable create (sign-up)" **kapalı**
+  (açık kalırsa dışarıdan hesap açılıp deftere girilebilir); Users → Add user
+  ile kullanacak kişilerin hesapları.
 - **İşletme profili zorunlu değil.** Eskiden ilk açılışta doldurulması gereken
   bir kurulum ekranı vardı; kaldırıldı. Profil yalnızca PDF ekstre başlığını
   besliyor, boşsa başlık sade çıkar. Ayarlar → İşletme bilgileri'nden istendiği

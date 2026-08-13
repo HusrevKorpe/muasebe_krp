@@ -14,10 +14,6 @@ import '../kimlik/kimlik_repository.dart';
 ///
 /// Bu belge ekstre başlığını üretir. Doldurulması zorunlu değil: yoksa ekstre
 /// başlığı sade çıkar, uygulamanın başka hiçbir yeri buna bakmaz.
-///
-/// Belge aynı zamanda erişim yoklamasıdır: defterin en üstündeki tek belge
-/// olduğu için, izin listesinde olmayan bir hesabın ilk çarptığı yer burasıdır
-/// ve yönlendirici bu hatayı görüp kullanıcıyı giriş ekranına döndürür.
 class IsletmeRepository {
   const IsletmeRepository({
     required FirebaseFirestore firestore,
@@ -45,7 +41,7 @@ class IsletmeRepository {
         )
         .handleError((Object hata, StackTrace yigin) {
           Log.hata('İşletme profili okunamadı', hata, yigin);
-          throw _okumaHatasi(hata as FirebaseException);
+          throw const VeriHatasi.okunamadi();
         }, test: (hata) => hata is FirebaseException);
   }
 
@@ -56,16 +52,9 @@ class IsletmeRepository {
       return Isletme.fromMap(anlik.id, firestoreHaritasi(anlik.data()));
     } on FirebaseException catch (hata, yigin) {
       Log.hata('İşletme profili okunamadı: ${hata.code}', hata, yigin);
-      throw _okumaHatasi(hata);
+      throw const VeriHatasi.okunamadi();
     }
   }
-
-  /// Yetki reddi ayrı tutulur: hesabın izin listesinde olmadığını yalnızca bu
-  /// kod söyler ve yönlendirici buna bakarak giriş ekranına döner.
-  UygulamaHatasi _okumaHatasi(FirebaseException hata) =>
-      hata.code == 'permission-denied'
-      ? const YetkiHatasi()
-      : const VeriHatasi.okunamadi();
 
   /// Profili yazar. Belge yoksa oluşturur, varsa yalnızca gönderilen alanları
   /// günceller.
@@ -105,21 +94,9 @@ final isletmeRepositorySaglayici = Provider<IsletmeRepository>((ref) {
 
 /// İşletme profili. Doldurulmadıysa `null` — bu bir eksiklik değil, geçerli
 /// bir durum; ekstre başlığı sade çıkar.
-///
-/// Yönlendirici bu sağlayıcının **hatasına** bakar: [YetkiHatasi] gelirse
-/// hesap izin listesinde değildir ve kullanıcı giriş ekranına döner.
 final isletmeProfiliSaglayici = StreamProvider<Isletme?>((ref) {
   final isletmeId = ref.watch(isletmeKimligiSaglayici);
   if (isletmeId == null) return Stream<Isletme?>.value(null);
 
   return ref.watch(isletmeRepositorySaglayici).izle();
-});
-
-/// Hesabın deftere erişimi reddedildi mi.
-///
-/// İzin listesi sunucuda duruyor ve istemci onu okuyamıyor; tek yoklama yolu
-/// defterin kapısını çalmak. Profil akışı [YetkiHatasi] verirse hesap listede
-/// değildir.
-final erisimReddedildiSaglayici = Provider<bool>((ref) {
-  return ref.watch(isletmeProfiliSaglayici).error is YetkiHatasi;
 });

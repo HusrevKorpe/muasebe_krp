@@ -20,7 +20,7 @@ hem alım hem satım yapıldığı için bir cari aynı anda müşteri ve tedari
 - **Fidan katalogu** — Tür/Çeşit/Anaç/Yaş/Kök tipi ve fiyat listesi
 - **PDF ekstre** — tarih aralığına göre işlem dökümü, banka bilgileri ve toplamlarla
 - **Çevrimdışı çalışma** — internet olmadan veri girilir, bağlantı gelince eşitlenir
-- **Ortak defter** — Google ile giriş yapan izinli hesaplar aynı kayıtları görür
+- **Ortak defter** — e-posta ve şifreyle giren hesapların hepsi aynı kayıtları görür
 
 ## Teknik
 
@@ -45,13 +45,13 @@ ilk derlemede kendisi indirir. `pod install` hâlâ gerekli çünkü `printing`
 eklentisi yalnızca CocoaPods yayınlıyor.
 
 Firebase yapılandırması repoda mevcuttur (`lib/firebase_options.dart`,
-`ios/Runner/GoogleService-Info.plist`, `Info.plist` içindeki `GIDClientID` ve
-Google URL şeması). Bunlar istemci anahtarıdır; erişim güvenliği Firestore
-kurallarıyla sağlanır.
+`ios/Runner/GoogleService-Info.plist`). Bunlar istemci anahtarıdır; erişim
+güvenliği Firestore kurallarıyla sağlanır.
 
-Uygulamaya girebilmek için hesabın izin listesinde olması gerekir:
-Firebase Console → Firestore → `izinliler` koleksiyonu → belge kimliği =
-e-posta adresi (küçük harf, alan gerekmez). Liste boşken kimse giremez.
+Uygulama hesap açmaz. Kullanacak kişilerin hesabı Firebase Console →
+Authentication → Users → **Add user** ile açılır ve e-posta/şifre onlara
+verilir. Aynı ekranın Settings → User actions bölümünde **"Enable create
+(sign-up)" kapalı** olmalı — açık kalırsa dışarıdan hesap açılabilir.
 
 ## Geliştirme
 

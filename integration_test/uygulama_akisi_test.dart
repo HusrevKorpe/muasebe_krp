@@ -16,9 +16,8 @@ import 'emulator_yardimcilari.dart';
 /// yönlendiricinin kapısını, alt sekmeleri ve ekranların birbirine bağlanmasını
 /// sınar — parçalar tek tek doğru olup birleşince yanlış davranabilir.
 ///
-/// Google giriş ekranı burada sınanmıyor: hesap seçme akışı Google'ın kendi
-/// arayüzünde geçiyor ve testten sürülemiyor. Test bunun yerine açık bir oturum
-/// hazırlıyor; uygulama da açılışta saklı oturumu bulup doğrudan içeri giriyor.
+/// Giriş ekranı burada sınanmıyor: test açık bir oturumla başlıyor, uygulama da
+/// açılışta saklı oturumu bulup doğrudan içeri giriyor.
 ///
 /// Defter ortak olduğu için önceki koşuların kayıtları burada karşımıza çıkar;
 /// o yüzden emulator verisi baştan siliniyor.

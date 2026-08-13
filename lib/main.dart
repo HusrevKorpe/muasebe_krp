@@ -14,9 +14,9 @@ import 'firebase_options.dart';
 /// dokunmadan kayıt ve arama akışını denemek içindir; sürüm derlemesinde
 /// tanımlanmadığı için etkisizdir.
 ///
-/// Not: emulator kipinde Google girişi çalışmaz — Auth emulator'ü gerçek bir
-/// Google jetonu doğrulayamaz. Bu kiple denemek için emulator'e elle bir hesap
-/// açmak gerekir.
+/// Not: emulator kendi kullanıcı listesini tutar; canlı projedeki hesapla
+/// giriş yapılamaz. Bu kiple denemek için emulator arayüzünden (localhost:4000)
+/// bir e-posta/şifre hesabı açmak gerekir.
 const bool _emulatorKullan = bool.fromEnvironment('EMULATOR');
 
 const String _emulatorSunucusu = 'localhost';

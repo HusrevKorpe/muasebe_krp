@@ -3,11 +3,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../core/hata/hatalar.dart';
-import '../data/isletme/isletme_repository.dart';
 import '../data/kimlik/kimlik_repository.dart';
 import '../domain/islem/islem_tipi.dart';
-import '../domain/isletme/isletme.dart';
 import '../features/ayarlar/view/ayarlar_ekrani.dart';
 import '../features/cari/view/cari_detay_ekrani.dart';
 import '../features/cari/view/cari_duzenle_ekrani.dart';
@@ -29,15 +26,14 @@ import 'yollar.dart';
 /// Uygulama yönlendiricisi.
 ///
 /// Tek kapı var: giriş. Uygulamayı birkaç kişi kullanıyor ve hepsi aynı
-/// defteri görüyor; kimlik Google hesabıyla doğrulanıyor, erişim iznini ise
-/// sunucudaki izin listesi veriyor. Buradaki üç durum:
+/// defteri görüyor; hesapları Firebase Console açıyor, kullanıcı e-posta ve
+/// şifresiyle giriyor. Buradaki üç durum:
 ///
 /// * Saklanan oturum henüz yüklenmedi → açılış ekranı.
 /// * Oturum yok → giriş ekranı.
-/// * Oturum var ama hesap izin listesinde değil → yine giriş ekranı; orası
-///   durumu anlatıp çıkış düğmesini gösteriyor.
+/// * Oturum var → uygulama.
 ///
-/// İşletme profili artık bir kapı değil: doldurulmadan da uygulama açılır.
+/// İşletme profili bir kapı değil: doldurulmadan da uygulama açılır.
 ///
 /// Durum değiştiğinde yönlendirici yeniden kurulmaz; yalnızca
 /// [GoRouter.refreshListenable] tetiklenir. Böylece gezinme yığını sıfırlanmaz
@@ -46,28 +42,17 @@ final yonlendiriciSaglayici = Provider<GoRouter>((ref) {
   final oturumBildirici = ValueNotifier<AsyncValue<User?>>(
     const AsyncValue<User?>.loading(),
   );
-  final profilBildirici = ValueNotifier<AsyncValue<Isletme?>>(
-    const AsyncValue<Isletme?>.loading(),
-  );
   ref.onDispose(oturumBildirici.dispose);
-  ref.onDispose(profilBildirici.dispose);
 
   ref.listen<AsyncValue<User?>>(
     oturumSaglayici,
     (onceki, yeni) => oturumBildirici.value = yeni,
     fireImmediately: true,
   );
-  ref.listen<AsyncValue<Isletme?>>(
-    isletmeProfiliSaglayici,
-    (onceki, yeni) => profilBildirici.value = yeni,
-    fireImmediately: true,
-  );
-
-  final degisimler = Listenable.merge([oturumBildirici, profilBildirici]);
 
   return GoRouter(
     initialLocation: Yollar.acilis,
-    refreshListenable: degisimler,
+    refreshListenable: oturumBildirici,
     redirect: (context, durum) {
       final oturum = oturumBildirici.value;
       final konum = durum.matchedLocation;
@@ -82,12 +67,6 @@ final yonlendiriciSaglayici = Provider<GoRouter>((ref) {
 
       // Oturum yok — ya da okunamadı; ikisinde de yapılacak şey aynı.
       if (oturum.value == null) {
-        return konum == Yollar.giris ? null : Yollar.giris;
-      }
-
-      // Oturum var; sıra erişim izninde. İzin listesi sunucuda olduğu için
-      // yoklama profil belgesi üzerinden yapılıyor.
-      if (profilBildirici.value.error is YetkiHatasi) {
         return konum == Yollar.giris ? null : Yollar.giris;
       }
 

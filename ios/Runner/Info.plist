@@ -27,23 +27,6 @@
 	<string>$(FLUTTER_BUILD_NAME)</string>
 	<key>CFBundleSignature</key>
 	<string>????</string>
-	<!-- Google girişi. İki değer de GoogleService-Info.plist'ten geliyor
-	     (CLIENT_ID ve REVERSED_CLIENT_ID) ve gizli değil: ikisi de zaten
-	     uygulama paketinin içinde duruyor. URL şeması olmadan Google'dan
-	     dönen yanıt uygulamaya ulaşamaz. -->
-	<key>GIDClientID</key>
-	<string>662432068913-49macdp12alesurjq8pciibjrn5vs05v.apps.googleusercontent.com</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>com.googleusercontent.apps.662432068913-49macdp12alesurjq8pciibjrn5vs05v</string>
-			</array>
-		</dict>
-	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>

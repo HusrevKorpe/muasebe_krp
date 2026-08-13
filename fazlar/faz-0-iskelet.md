@@ -60,32 +60,37 @@ actions → **"Enable create (sign-up)" kapatılmalı.** Şifre IPA'dan
 okunabildiği için, o bilgiyle yeni hesap açılmasını sunucu reddetmeli. Hesap
 yalnızca konsoldan açılır.
 
-### Revize 2 (13 Ağustos 2026): Google girişi ve ortak defter
+### Revize 2 (13 Ağustos 2026): giriş ekranı geri geldi, defter ortak
 
 Uygulamayı **iki kişi** kullanacak ve ikisi de **aynı** veriyi görecek. Sabit
-hesap modeli bunu taşımıyordu: şifre paylaşmak gerekiyordu ve kimin ne girdiği
-belli olmuyordu. Yerine:
+(derlemeye gömülü) hesap modeli bunu taşımıyordu: kimin ne girdiği belli
+olmuyordu ve şifre IPA'nın içinde duruyordu. Yerine:
 
-- **Google ile giriş.** `google_sign_in` hesabı seçtirir, alınan `idToken` ile
-  Firebase oturumu açılır (`KimlikRepository.girisYap`). Şifre yok, dolayısıyla
-  `gizli.json` ve `--dart-define-from-file` de yok — kaldırıldı.
+- **Giriş ekranı geri geldi.** Kullanıcı e-posta ve şifresini yazar
+  (`KimlikRepository.girisYap`). `gizli.json` ve `--dart-define-from-file`
+  kaldırıldı; derlemede sır kalmadı.
+- **Hesabı uygulama açmaz.** Kayıt ekranı, şifre sıfırlama ve hesap silme yok;
+  hesaplar Firebase Console → Authentication → Users altında elle açılır.
 - **Veri ortak.** `isletmeler/{uid}` yerine sabit `isletmeler/ortak`
   (`Isletme.ortakId`). Kimin girdiğinden bağımsız aynı defter açılır.
-- **Yetki listeden gelir.** Erişimi `izinliler/{ePosta}` koleksiyonu verir;
-  koleksiyon istemciye kapalı, yalnızca güvenlik kuralı okur. Kişi eklemek
-  Firebase Console'dan bir belge açmaktır.
+- **Kural sadeleşti.** Erişimin tek koşulu açık oturum: `request.auth != null`.
+  Hesap açmak konsol işi olduğu için istemci tarafında ayrı bir izin listesine
+  gerek kalmadı.
 - İşletme profili kapısı da bu revizeyle kalktı: profil boşken de uygulama
   açılır (bkz. `fazlar/faz-1-cari.md`).
 
+> Apple notu hâlâ geçerli: yalnızca e-posta + şifre kullandığımız için
+> "Sign in with Apple" zorunluluğu doğmuyor.
+
 **Yeni manuel adımlar:**
 
-1. Authentication → Sign-in method → **Google açık**, Email/Password ve
-   Anonymous **kapalı**. ("Enable create (sign-up)" ise **açık** kalmalı;
-   kapalıyken federe giriş de ilk hesabı oluşturamaz.)
-2. Firestore → `izinliler` koleksiyonu → izin verilecek her e-posta için bir
-   belge (belge kimliği = e-posta, küçük harf; alan gerekmez).
-3. iOS: `Info.plist` içine `GIDClientID` ve `REVERSED_CLIENT_ID` URL şeması —
-   ikisi de `GoogleService-Info.plist`'ten geliyor, gizli değil.
+1. Authentication → Sign-in method → **Email/Password açık**, diğerleri
+   (Google, Anonymous) **kapalı**.
+2. Authentication → Settings → User actions → **"Enable create (sign-up)"
+   kapalı.** Açık kalırsa uygulamanın API anahtarını eline geçiren biri kendine
+   hesap açıp deftere girebilir; kural yalnızca "oturum açık mı" diye soruyor.
+3. Authentication → Users → **Add user** ile kullanacak kişilerin hesabı
+   açılır; e-posta ve şifre onlara verilir.
 
 ---
 
@@ -93,11 +98,10 @@ belli olmuyordu. Yerine:
 
 ```
 isletmeler/ortak                # sabit kimlik — herkes aynı defteri açar
-izinliler/{ePosta}              # erişim listesi; yalnızca kurallar okur
 ```
 
 Tüm veri bu belgenin altında yaşar. Güvenlik kuralı tek satırla kurulur:
-kullanıcı yalnızca kendi `uid`'si altındaki belgelere erişebilir.
+giriş yapmış her hesap bu defteri okur ve yazar.
 
 ---
 

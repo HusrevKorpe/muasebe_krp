@@ -9,12 +9,13 @@ import '../../ortak/viewmodel/islem_viewmodel.dart';
 /// yönlendirici ona bakıyor. Bu ViewModel yalnızca düğmeye basıldığında dönen
 /// göstergeyi ve hata mesajını taşır.
 class GirisViewModel extends IslemViewModel {
-  /// Google hesabı seçtirir. Kullanıcı vazgeçerse hata gösterilmez; durum
-  /// sessizce eski hâline döner.
-  Future<bool> googleIleGir() => calistir(
-    () => ref.read(kimlikRepositorySaglayici).girisYap(),
-    etiket: 'Google girişi',
-  );
+  Future<bool> girisYap({required String ePosta, required String sifre}) =>
+      calistir(
+        () => ref
+            .read(kimlikRepositorySaglayici)
+            .girisYap(ePosta: ePosta, sifre: sifre),
+        etiket: 'Giriş',
+      );
 
   Future<bool> cikisYap() => calistir(
     () => ref.read(kimlikRepositorySaglayici).cikisYap(),

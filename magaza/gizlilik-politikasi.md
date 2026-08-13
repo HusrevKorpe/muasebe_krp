@@ -23,12 +23,16 @@ Sorularınız için: `[İLETİŞİM E-POSTASI]`
 Uygulama yalnızca çalışması için gereken veriyi işler. Reklam ağı, analiz
 aracı ve üçüncü taraf izleyici **kullanılmaz**.
 
-### 2.1 Hesap bilgisi — **toplanmaz**
+### 2.1 Hesap bilgisi
 
-Uygulamada kayıt olma ya da giriş yapma adımı yoktur; sizden e-posta, şifre
-veya başka bir kimlik bilgisi istenmez. Uygulama, veritabanına bağlanmak için
-kendi içine gömülü tek bir servis hesabını kullanır ve bu hesap uygulamayı
-kuran kişiye aittir.
+Uygulamaya **e-posta adresiniz ve şifrenizle** girersiniz. Hesabı siz açmazsınız:
+uygulamayı kuran kişi sizin için bir hesap açar ve bilgileri size verir;
+uygulamada kayıt olma adımı yoktur.
+
+Uygulama, e-posta adresinizi ve Firebase'in verdiği kullanıcı kimliğini saklar.
+Şifreniz saklanmaz — doğrulamayı Firebase Authentication yapar. E-posta adresi
+yalnızca oturumunuzu sürdürmek ve kimin giriş yaptığını göstermek için
+kullanılır; pazarlama, analiz veya izleme amacıyla kullanılmaz.
 
 ### 2.2 Kullanıcı içeriği
 
@@ -39,8 +43,10 @@ Uygulamaya **kendi girdiğiniz** ön muhasebe kayıtları:
 - İşlemler: satış/alış faturaları, tahsilat ve ödemeler, fatura kalemleri
 - Fidan katalogu: tür, çeşit, anaç, yaş, kök tipi, fiyat
 
-Bu kayıtlar **yalnızca bu kurulumun servis hesabına bağlıdır**. Uygulama,
-verinizi başka kullanıcılara göstermez.
+Bu kayıtlar **ortak bir deftere** yazılır: uygulama aynı işletmeyi birden fazla
+kişinin takip etmesi için tasarlandı ve işletme için açılmış hesapların hepsi
+aynı kayıtları görür. Defter, uygulamayı kuran kişinin izin verdiği hesapların
+dışına çıkmaz.
 
 ### 2.3 Toplanmayan veriler
 
@@ -61,8 +67,10 @@ saklanır. Firebase, Google Ireland Limited / Google LLC tarafından işletilir 
 veri Google'ın sunucularında barındırılır. Google bu hizmette "veri işleyen"
 sıfatıyla hareket eder.
 
-Firebase güvenlik kuralları, her hesabın **yalnızca kendi verisine** erişmesine
-izin verecek şekilde yapılandırılmıştır.
+Firebase güvenlik kuralları, veriye **yalnızca bu işletme için açılmış
+hesapların** erişmesine izin verecek şekilde yapılandırılmıştır. Hesaplar
+yalnızca uygulamayı kuran kişi tarafından açılabilir; uygulama üzerinden yeni
+hesap açılamaz.
 
 Uygulama çevrimdışı çalışabilmek için verinin bir kopyasını cihazınızda tutar.
 Uygulamayı sildiğinizde bu yerel kopya da silinir.
@@ -86,9 +94,10 @@ Yasal zorunluluk hâlinde (mahkeme kararı vb.) veri, yalnızca yasanın gerekti
 
 Verileriniz, silinmesini isteyene kadar saklanır.
 
-Uygulama hesap açtırmadığı için uygulama içinde bir "hesabı sil" adımı yoktur.
-Tüm verinizin kalıcı olarak silinmesini istiyorsanız `[İLETİŞİM E-POSTASI]`
-adresine yazmanız yeterlidir; talep şunları kapsayacak şekilde yerine getirilir:
+Hesabınızı uygulama açmadığı için uygulama içinde bir "hesabı sil" adımı
+yoktur. Hesabınızın kapatılmasını ya da tüm verinizin kalıcı olarak silinmesini
+istiyorsanız `[İLETİŞİM E-POSTASI]` adresine yazmanız yeterlidir; talep şunları
+kapsayacak şekilde yerine getirilir:
 
 - Tüm cari kayıtları ve bunlara bağlı işlemler
 - Fidan katalogu

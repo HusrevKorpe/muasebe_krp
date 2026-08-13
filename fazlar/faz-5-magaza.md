@@ -90,11 +90,10 @@ flutter build ipa
 # Xcode → Organizer ya da Transporter uygulamasıyla yüklenir.
 ```
 
-> Derleme artık `--dart-define-from-file=gizli.json` istemiyor: sabit hesap
-> Google girişine taşındı ve derlemeye gömülecek bir sır kalmadı
-> (bkz. `fazlar/faz-0-iskelet.md` → "Revize 2"). Google giriş yapılandırması
-> `ios/Runner/Info.plist` içinde duruyor, yani Xcode'dan doğrudan alınan arşiv
-> de çalışır.
+> Derleme artık `--dart-define-from-file=gizli.json` istemiyor: sabit hesabın
+> yerini kullanıcının girdiği e-posta/şifre aldı ve derlemeye gömülecek bir sır
+> kalmadı (bkz. `fazlar/faz-0-iskelet.md` → "Revize 2"). Yani Xcode'dan
+> doğrudan alınan arşiv de çalışır.
 
 Her yüklemede build numarası artmalı: `pubspec.yaml` → `version: 1.0.0+N`.
 
@@ -160,18 +159,19 @@ talep etmek — konsoldan silinir.
 
 #### Güncelleme (13 Ağustos 2026): giriş geri geldi — açık uçlar
 
-Uygulama Google girişine taşındı (bkz. `fazlar/faz-0-iskelet.md` → "Revize 2").
-Bu, mağaza tarafında iki maddeyi yeniden açar:
+Uygulamaya e-posta/şifre giriş ekranı geri geldi (bkz.
+`fazlar/faz-0-iskelet.md` → "Revize 2"). Bu, mağaza tarafında iki maddeyi
+yeniden açar:
 
 - **Hesap silme (5.1.1(v)).** Şart hâlâ tartışmalı: uygulama hesap
-  *açtırmıyor* — Google hesabını kullanıcı zaten kendisi açmış, uygulamadaki
-  erişimi ise geliştirici izin listesine elle ekliyor. Yine de artık görünür
-  bir "giriş yap" düğmesi var ve inceleyen kişi bunu hesap açma sanabilir.
-  Reddedilirse en ucuz yanıt: ayarlara "verimi sil" akışı eklemek yerine
-  gizlilik politikasındaki talep yolunu göstermek; ısrar ederse akış yazılır.
+  *açtırmıyor* — kayıt ekranı yok, hesapları geliştirici konsoldan açıyor.
+  Yine de artık görünür bir giriş formu var ve inceleyen kişi bunu hesap açma
+  sanabilir. Reddedilirse en ucuz yanıt: ayarlara "verimi sil" akışı eklemek
+  yerine gizlilik politikasındaki talep yolunu göstermek; ısrar ederse akış
+  yazılır.
 - **Demo hesabı.** Artık giriş ekranı görünüyor, yani App Review "Sign-in
   required" sorusuna **evet** işaretlenip inceleme hesabı verilmeli. Bunun için
-  bir Google hesabı açılıp `izinliler` listesine eklenmesi gerekir.
+  konsoldan bir e-posta/şifre hesabı açmak yeter.
 
 İkisi de App Store gönderimini ilgilendiriyor; iç TestFlight testinde inceleme
 yapılmadığı için o aşamada engel değil.
@@ -217,9 +217,9 @@ Apple gözden geçirmeci uygulamayı açıp denemek zorunda. Boş bir uygulama
 görürlerse reddedebilirler.
 
 - [x] İnceleme notu yazıldı (TR + EN)
-- [ ] ~~**Demo giriş bilgisi gerekmiyor**~~ → **Gerekiyor.** Google girişine
-      geçildiği için panelde "Sign-in required" **evet** işaretlenir ve
-      inceleme için izin listesine eklenmiş bir Google hesabı verilir.
+- [ ] ~~**Demo giriş bilgisi gerekmiyor**~~ → **Gerekiyor.** Giriş ekranı
+      göründüğü için panelde "Sign-in required" **evet** işaretlenir ve
+      inceleme için konsoldan açılmış bir e-posta/şifre verilir.
 - [ ] **Örnek veri — App Store gönderimine ertelendi.** İç TestFlight testinde
       inceleme yapılmadığı için gerekmiyor; dış test ya da mağaza gönderimi
       açılmadan önce uygulama örnek cari ve işlemle dolu olmalı.
@@ -236,15 +236,16 @@ görürlerse reddedebilirler.
 - [ ] Uçak modunda veri girişi ve sonradan senkron
 - [ ] Firestore güvenlik kuralları **canlıda** yayında ve test modu kapalı
 - [x] Repoda gerçek müşteri verisi, IBAN veya kişisel bilgi yok
-- [ ] Google girişi **cihazda** doğrulandı: ilk giriş (internetli), ikinci açılış
+- [ ] Giriş **cihazda** doğrulandı: ilk giriş (internetli), ikinci açılış
       (uçak modunda — saklı oturumla açılmalı), çıkış yapıp yeniden giriş
+- [ ] Yanlış şifre girilince "E-posta veya şifre hatalı." mesajı çıkıyor
 - [ ] **İki hesapla** doğrulandı: ikinci telefonda diğer hesapla girilince aynı
       kayıtlar görünüyor
-- [ ] İzin listesinde **olmayan** bir hesapla girilince "erişim izni yok" ekranı
-      çıkıyor ve çıkış düğmesi çalışıyor
-- [ ] Firebase Console → Authentication → Sign-in method: Google **açık**,
-      Email/Password ve Anonymous **kapalı**
-- [ ] Firestore → `izinliler` altında kullanacak herkesin e-postası var
+- [ ] Firebase Console → Authentication → Sign-in method: Email/Password
+      **açık**, Google ve Anonymous **kapalı**
+- [ ] Authentication → Settings → User actions → "Enable create (sign-up)"
+      **kapalı**
+- [ ] Authentication → Users altında kullanacak herkesin hesabı açık
 - [ ] TestFlight'ta en az bir dış test turu yapıldı
 
 ---
@@ -265,13 +266,11 @@ görürlerse reddedebilirler.
 
 - **Apple Developer hesabı onayı** birkaç gün sürebilir. Faz başında başvurulmalı.
 - ~~**Hesap silme özelliği** en sık atlanan reddedilme sebebi.~~ → Uygulama hesap
-  açtırmıyor, ama Google girişi görünür olduğu için inceleme yine takılabilir;
+  açtırmıyor, ama giriş formu görünür olduğu için inceleme yine takılabilir;
   bkz. yukarıdaki "Güncelleme (13 Ağustos 2026)".
-- **`izinliler` listesi boş kalırsa** giriş yapan herkes "erişim izni yok"
-  ekranında kalır. Kural doğru çalışıyor demektir; eksik olan konsoldaki belge.
-- **Google girişi yapılandırması iOS'ta iki parçalı:** `Info.plist` içindeki
-  `GIDClientID` **ve** `REVERSED_CLIENT_ID` URL şeması. İkincisi unutulursa
-  hesap seçme penceresi açılır ama yanıt uygulamaya dönmez.
+- **Kayıt uç noktası açık kalırsa defter açıkta demektir.** Kural yalnızca
+  "oturum açık mı" diye soruyor; Authentication → Settings → User actions →
+  "Enable create (sign-up)" kapatılmazsa dışarıdan hesap açılıp veri okunabilir.
 - ~~**SPM geçişi** derlemeyi kırabilir.~~ → Geçiş yapıldı, derleme çalışıyor.
 - **Boş uygulama görüntüsü.** İnceleme öncesi uygulama örnek veriyle dolu olmalı.
 - **iPad ekran görüntüsü.** Uygulama iPad yönelimlerini de destekliyor; bu,

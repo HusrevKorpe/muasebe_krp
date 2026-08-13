@@ -18,7 +18,7 @@ ve sonraki sürümde sıfırdan yazılmaz.
 |---|---|
 | Beta App Description | `FidanCari, fidancılar için cari hesap ve ön muhasebe defteridir. Müşterilerinizi kaydedin, fatura ve tahsilat girin, yürüyen bakiyeyi izleyin, PDF ekstre üretip paylaşın.` |
 | Feedback Email | `[İLETİŞİM E-POSTASI]` |
-| Beta App Review — giriş bilgisi | **Gerekiyor** — Google ile giriş var. "Sign-in required" evet işaretlenir; izin listesine eklenmiş bir Google hesabı verilir |
+| Beta App Review — giriş bilgisi | **Gerekiyor** — giriş ekranı var. "Sign-in required" evet işaretlenir; konsoldan açılmış bir e-posta/şifre verilir |
 | Gizlilik politikası URL'si | `[YAYIN ADRESİ]/gizlilik.html` |
 
 ---
@@ -127,12 +127,11 @@ takibi ve reklam SDK'sı **yoktur** — derlenen ikilide `GoogleAppMeasurement`
 sembolü bulunmuyor, yalnızca `FirebaseCore`, `FirebaseAuth` ve
 `FirebaseFirestore` bağlanıyor.
 
-> Giriş Google hesabıyla yapılıyor (bkz.
+> Giriş e-posta ve şifreyle yapılıyor (bkz.
 > `lib/data/kimlik/kimlik_repository.dart`), yani **e-posta adresi toplanıyor**
-> ve kimliğe bağlı. Şifre uygulamaya hiç girilmiyor; kimlik doğrulamasını
-> Google yapıp Firebase'e jeton veriyor. E-posta yalnızca kimin girdiğini
-> bilmek ve erişim iznini denetlemek için kullanılıyor; pazarlama, analiz ya da
-> izleme amacıyla kullanılmıyor.
+> ve kimliğe bağlı. Şifre saklanmıyor; doğrulamayı Firebase Authentication
+> yapıyor. E-posta yalnızca oturumu sürdürmek ve kimin girdiğini göstermek için
+> kullanılıyor; pazarlama, analiz ya da izleme amacıyla kullanılmıyor.
 
 **"Does this app collect data?" → Yes**
 
@@ -144,8 +143,8 @@ sembolü bulunmuyor, yalnızca `FirebaseCore`, `FirebaseAuth` ve
 
 Diğer tüm kategoriler: **Data Not Collected**.
 
-> E-posta ve kullanıcı kimliği Google girişiyle geliyor; ikisi de yalnızca
-> oturumu ve erişim iznini yürütmek için kullanılıyor. Kullanıcı içeriği de
+> E-posta ve kullanıcı kimliği giriş sırasında Firebase'den geliyor; ikisi de
+> yalnızca oturumu yürütmek için kullanılıyor. Kullanıcı içeriği de
 > artık kimliğe bağlı sayılmalı: giriş yapan hesap belli olduğu için kayıtlar
 > anonim değil.
 

@@ -150,20 +150,20 @@ Bu kural Firestore'da saklanan alanları da kapsar — veritabanına da `int` ya
 - **Güvenlik kuralları yazılmadan hiçbir koleksiyon canlıya çıkmaz.**
   Firebase'in test modu 30 gün sonra kapanır; o güne kadar veritabanı herkese açıktır.
 - `firestore.rules` ve `firestore.indexes.json` repoda versiyonlanır.
-- **Giriş Google hesabıyla yapılır; defter ortaktır.** Uygulamayı birkaç kişi
+- **Giriş e-posta ve şifreyle yapılır; defter ortaktır.** Uygulamayı birkaç kişi
   kullanıyor ve hepsi aynı veriyi görüyor: tüm kayıtlar `isletmeler/ortak`
-  altında (`Isletme.ortakId`). Bunun iki bağlayıcı sonucu var:
-  - **Kimlik ≠ yetki.** Google girişi yalnızca "kimsin" sorusunu yanıtlar.
-    Veriye erişim iznini `izinliler/{ePosta}` koleksiyonu verir ve bu koleksiyon
-    istemciye tamamen kapalıdır — yalnızca kural motoru okur. Kişi eklemek
-    Firebase Console'dan yapılan bir iştir, kod değişikliği değil.
+  altında (`Isletme.ortakId`). Bunun üç bağlayıcı sonucu var:
+  - **Uygulama hesap açmaz.** Kayıt ekranı, şifre sıfırlama ve hesap silme
+    yoktur; hesaplar Firebase Console → Authentication → Users altında elle
+    açılır. Kişi eklemek konsol işidir, kod değişikliği değil.
   - Kural **hiçbir yerde `uid` karşılaştırmaz.** Defter ortak olduğu için
     sahiplik diye bir şey yok; yanlışlıkla `uid == isletmeId` yazmak iki
     kullanıcının birbirinin verisini görememesine yol açar. Bu, emulator
     testiyle sınanır (`integration_test/guvenlik_kurallari_test.dart`).
-  - Firebase Console → Authentication → Sign-in method: **yalnızca Google**
-    açık olmalı. Email/Password ya da Anonymous açık kalırsa, izin listesindeki
-    bir adresle başka bir yoldan hesap açılıp defterin kapısı zorlanabilir.
+  - Firebase Console → Authentication → Settings → User actions →
+    **"Enable create (sign-up)" kapalı olmalı.** Kural yalnızca "oturum açık mı"
+    diye sorduğu için, kayıt uç noktası açık kalırsa uygulamanın API anahtarını
+    eline geçiren biri kendine hesap açıp deftere girebilir.
 
 ### 4.2 Veri bütünlüğü
 
