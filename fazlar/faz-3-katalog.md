@@ -11,6 +11,15 @@ alınabilir hâle gelir.
 > Kullanıcının tarifi: *"Tür çeşit anaç şeklinde olacak. Mesela elma çeşidi
 > scarlet çeşiti m9 anacı şeklinde."*
 
+> **Bu dosya kısmen eskidir.** Model `Fidan` iken `Urun` oldu, katalog önce tek
+> serbest ada sadeleşti, sonra kullanıcının isteğiyle yeniden Tür/Çeşit/Anaç'a
+> bölündü — bu kez yaş ve kök tipi olmadan, ve aynı üç kutu fatura satırında da
+> var. Tür/anaç öneri listesi (`oneriler`) ve `turAnahtari` alanı kaldırıldı;
+> yerine kullanıcının kendi girdiği üç seçim listesi geldi (bkz. aşağıdaki
+> "Tür ve anaç listeleri"). Güncel durum için CLAUDE.md → "Bilinmesi
+> gerekenler". Aşağıdaki alan tabloları ve dosya adları ilk sürümü anlatıyor;
+> kabul kriterleri hâlâ geçerli.
+
 ---
 
 ## Kapsam
@@ -70,6 +79,10 @@ Görünen ad bu alanlardan üretilir: `Elma / Scarlet / M9 · 2 Yaş · Tüplü`
 
 ### Tür ve anaç listeleri
 
+> **Bu bölümdeki karar tersine döndü.** Aşağıdaki tasarım (öneri listesini
+> mevcut fidanlardan türetmek) yazıldı, çalıştı, sonra kaldırıldı. Bugünkü hâli
+> bölümün sonundaki "Bugün: üç ayrı liste" başlığında.
+
 `tur` ve `anac` serbest metin olarak tutulur, ama giriş sırasında daha önce
 girilmiş değerler önerilir. Ayrı bir "türler" koleksiyonu açılmaz — kullanıcı
 tek kişi, öneri listesi mevcut fidanlardan türetilebilir.
@@ -86,6 +99,37 @@ sınırlanıyor, ayrı değerler taranan belgelerden türetiliyor.
 **Öneri sorgusu yazılan metnin tamamıyla değil ilk harfiyle anahtarlanır.**
 "E", "El", "Elm", "Elma" tek bir Firestore okumasına düşer, daralan eşleşme
 ekranda yerel olarak süzülür. Aksi hâlde her tuşa basış bir okuma olurdu.
+
+#### Bugün: üç ayrı liste
+
+Öneri listesi kaldırıldı, yerine kullanıcının kendi doldurduğu üç koleksiyon
+geldi: `turler`, `cesitler`, `anaclar` (`lib/domain/secenek/`).
+
+> Kullanıcının tarifi: *"Ürünlerden seç aynı o şekilde kalsın, altına anaçlardan
+> seç yazalım. Anaçları gireyim ben, tıklayınca hangi anaç olduğunu şey yapalım.
+> Bir de çeşitlerden seç diye bir şey yapalım... Onları hemen ilk başta
+> kaydedeyim, tıkla tıkla vereyim direkt."*
+
+**Neden ürün katalogu yetmedi.** Katalogdaki kayıt tam kombinasyondur
+(`Elma Scarlet M9`). Kombinasyon sayısı üç alanın çarpımı kadar; kullanıcı
+`Elma Scarlet M9`, `Elma Scarlet MM106`, `Elma Granny M9` … hepsini ayrı ürün
+olarak giremiyor ve pratikte üç kutuyu her satışta elle yazıyordu. Üç küçük
+liste bir çarpım tablosunun yerini tutuyor: 3 tür + 5 çeşit + 4 anaç = 12 kayıt,
+karşılığında 60 kombinasyon.
+
+**Neden öneri listesi değil de elle girilen liste.** Öneri, katalogda o değer
+zaten varsa çalışıyor; kullanıcı listeyi *önden* kurmak istiyor ("hemen ilk
+başta kaydedeyim"). Ayrıca öneri sorgusu bu dosyada anlatılan iki ek anahtar
+alanını ve tarama sınırını gerektiriyordu; ayrı koleksiyon ikisini de gereksiz
+kılıyor.
+
+| Karar | Gerekçe |
+|---|---|
+| Tip alanı yok, koleksiyon adı taşıyor | Tek koleksiyon + `tip` alanı, `tip == x` süzgecini ada göre sıralamayla birleştirir ve bileşik index isterdi. Bu şemada tek alanlık otomatik index yetiyor; `firestore.indexes.json` hiç değişmedi. |
+| Silme var, pasife alma yok | Satıra kimlikle bağlı geçmiş kayıt yok: kalem, seçilen satırın kimliğini değil **metnini** kopyalıyor. Yanlış yazılmış bir anaç listeden temizlenebilmeli (KURALLAR.md §4.2 muhasebe kaydını korur, yazım kolaylığını değil). |
+| Düğmeler kutuların içinde, üstte alt alta değil | Kullanıcı "üründen seçin altına" demişti; kalem kutusu zaten uzun ve dört tam genişlik düğme tutar alanını ekranın altına indiriyordu. Her düğme kendi kutusunun sağında duruyor. |
+| Tür için de liste var | Kullanıcı yalnızca çeşit ve anaç saydı, ama tür elle yazılmaya devam etseydi "tıkla tıkla" isteği yarım kalırdı. |
+| Seçim sayfasından ekleme kutuyu dolduruyor | Listede bulunmayan anacı ekleyip bir de listeden seçmek zorunda kalmak, tam olarak tezgahta tıkanılan yer. |
 
 ---
 

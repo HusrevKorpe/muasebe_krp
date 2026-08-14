@@ -2,7 +2,7 @@ import 'islem_kaydi.dart';
 
 /// Bir sayfalık işlem listesi.
 ///
-/// Firestore okuma başına ücretlendirir; işlem listesi tek `get()` ile çekilmez
+/// Firestore okuma başına ücretlendirir; işlem listesi tek seferde çekilmez
 /// (bkz. KURALLAR.md §4.3).
 class IslemSayfasi {
   const IslemSayfasi({required this.kayitlar, required this.dahaVar});
@@ -15,6 +15,7 @@ class IslemSayfasi {
   /// En yeniden en eskiye sıralı kayıtlar.
   final List<IslemKaydi> kayitlar;
 
-  /// Sunucuda okunacak daha eski kayıt var mı?
+  /// Okunacak daha eski kayıt var mı? Sorgunun sınırı kadar kayıt geldiyse
+  /// devamı olduğu varsayılır.
   final bool dahaVar;
 }

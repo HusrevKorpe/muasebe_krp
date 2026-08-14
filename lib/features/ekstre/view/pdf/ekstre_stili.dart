@@ -27,6 +27,15 @@ class EkstreStili {
   /// Uygulamanın fidan yeşili — başlıktaki işletme adında kullanılır.
   static const PdfColor vurgu = PdfColor.fromInt(0xFF2E7D32);
 
+  /// Alacak satırlarının zemini: tahsilat ve alış faturası.
+  ///
+  /// Kullanıcının isteği — "para aldığım ve fidan aldığım" satırlar tabloya göz
+  /// atınca ayrışsın; borç satırları beyaz kalır. Ton kasten çok açık: bu belge
+  /// çoğu zaman siyah-beyaz basılıyor, koyu bir zemin üstündeki rakamı yutardı.
+  /// Yine de tam soluk değil: lazer yazıcıda %96 griden açık tonlar kâğıda hiç
+  /// düşmüyor ve ayrım yalnızca ekranda kalıyor.
+  static const PdfColor alacakZemini = PdfColor.fromInt(0xFFE4EFE6);
+
   // ─── Kolon genişlikleri ──────────────────────────────────────────────────
   /// Satır başındaki işlem tipi simgesinin kolonu ve o kolonun dar boşluğu.
   ///

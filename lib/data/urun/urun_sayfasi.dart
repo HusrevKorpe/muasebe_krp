@@ -2,7 +2,7 @@ import 'urun_kaydi.dart';
 
 /// Ürün listesinin tek bir sayfası.
 ///
-/// Liste de cari listesi gibi sayfalanır: koleksiyonun tamamı tek `get()` ile
+/// Liste de cari listesi gibi sayfalanır: koleksiyonun tamamı tek seferde
 /// çekilmez, Firestore okuma başına ücretlendirir (bkz. KURALLAR.md §4.3).
 class UrunSayfasi {
   const UrunSayfasi({required this.kayitlar, required this.dahaVar});
@@ -14,7 +14,7 @@ class UrunSayfasi {
 
   final List<UrunKaydi> kayitlar;
 
-  /// Sunucuda okunacak kayıt kaldı mı. İstenen sayfa boyu kadar kayıt geldiyse
-  /// devamı olduğu varsayılır.
+  /// Okunacak kayıt kaldı mı. Sorgunun sınırı kadar kayıt geldiyse devamı
+  /// olduğu varsayılır.
   final bool dahaVar;
 }

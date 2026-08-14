@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fidancari/data/cari/cari_repository.dart';
 import 'package:fidancari/domain/cari/cari.dart';
 import 'package:fidancari/domain/cari/cari_siralamasi.dart';
+import 'package:fidancari/domain/cari/cari_suzgeci.dart';
 import 'package:fidancari/domain/isletme/isletme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -48,17 +49,40 @@ void main() {
     return cariId;
   }
 
+  /// Canlı listenin ilk yayınındaki adlar.
+  ///
+  /// İlk yayın önbellekten gelir; testteki her yazma `sunucudaBekle` ile
+  /// onaylandığı ve yerel yazma önbelleğe anında düştüğü için o yayın da tam
+  /// sonucu taşır.
   Future<List<String>> adlariListele({
+    CariSuzgeci suzgec = CariSuzgeci.tumu,
     CariSiralamasi siralama = CariSiralamasi.ad,
     String arama = '',
-    int sayfaBoyu = CariRepository.varsayilanSayfaBoyu,
+    int sinir = CariRepository.varsayilanSayfaBoyu,
   }) async {
-    final sayfa = await repository.listele(
-      siralama: siralama,
-      arama: arama,
-      sayfaBoyu: sayfaBoyu,
-    );
+    final sayfa = await repository
+        .listeyiIzle(
+          suzgec: suzgec,
+          siralama: siralama,
+          arama: arama,
+          sinir: sinir,
+        )
+        .first;
     return sayfa.kayitlar.map((kayit) => kayit.cari.ad).toList();
+  }
+
+  /// Bakiyeyi doğrudan yazar ve sunucu onayını bekler.
+  ///
+  /// Bakiye normalde işlem kaydıyla birlikte transaction içinde dolar; burada
+  /// sınanan şey sorgu, işlem akışı değil.
+  Future<void> bakiyeYaz(String cariId, int kurus) async {
+    await koleksiyon.doc(cariId).update(<String, Object?>{
+      Cari.alanBakiyeKurus: kurus,
+    });
+    await sunucudaBekle(
+      koleksiyon.doc(cariId),
+      kosul: (veri) => veri[Cari.alanBakiyeKurus] == kurus,
+    );
   }
 
   group('ekle', () {
@@ -77,7 +101,7 @@ void main() {
     });
   });
 
-  group('listele', () {
+  group('listeyiIzle', () {
     test('yalnızca aktif cariler döner', () async {
       await cariEkle('Aktif Cari');
       final pasifId = await cariEkle('Pasif Cari');
@@ -108,65 +132,54 @@ void main() {
       ]);
     });
 
-    test('sayfalama kayıt tekrarlamaz ve atlamaz', () async {
+    test('sınır büyüdükçe kayıt tekrarlamaz ve atlamaz', () async {
       for (final ad in <String>['A Cari', 'B Cari', 'C Cari', 'D Cari']) {
         await cariEkle(ad);
       }
 
-      final toplananlar = <String>[];
-      var sayfa = await repository.listele(sayfaBoyu: 2);
-      toplananlar.addAll(sayfa.kayitlar.map((kayit) => kayit.cari.ad));
-
-      while (sayfa.dahaVar) {
-        sayfa = await repository.listele(
-          sayfaBoyu: 2,
-          sonrasindan: sayfa.kayitlar.last,
-        );
-        toplananlar.addAll(sayfa.kayitlar.map((kayit) => kayit.cari.ad));
-      }
-
-      expect(toplananlar, <String>['A Cari', 'B Cari', 'C Cari', 'D Cari']);
+      // "Daha yükle" imleci yürütmez, sınırı büyütür: her adımda liste baştan
+      // gelir ve öncekini olduğu gibi kapsamalıdır.
+      expect(await adlariListele(sinir: 2), <String>['A Cari', 'B Cari']);
+      expect(await adlariListele(sinir: 4), <String>[
+        'A Cari',
+        'B Cari',
+        'C Cari',
+        'D Cari',
+      ]);
     });
 
-    test('aynı adlı cariler sayfa sınırında kaybolmaz', () async {
-      // İmleç yalnızca ada baksaydı, sayfa tam bu ikilinin ortasında bittiğinde
-      // ikinci kayıt atlanırdı. Belge kimliği ikinci sıralama ölçütü.
+    test('aynı adlı cariler sınır büyürken kaybolmaz', () async {
+      // Sıralama yalnızca ada baksaydı iki kayıt aynı yere düşer, sınır
+      // büyüdükçe sıra değişir ve kullanıcı satır atlardı. Belge kimliği ikinci
+      // sıralama ölçütü.
       for (var sira = 0; sira < 4; sira++) {
         await cariEkle('Ayni Ad');
       }
 
-      final toplananlar = <String>[];
-      var sayfa = await repository.listele(sayfaBoyu: 1);
-      toplananlar.addAll(sayfa.kayitlar.map((kayit) => kayit.cari.id));
-
-      while (sayfa.dahaVar) {
-        sayfa = await repository.listele(
-          sayfaBoyu: 1,
-          sonrasindan: sayfa.kayitlar.last,
+      final kimlikler = <List<String>>[];
+      for (final sinir in <int>[1, 2, 3, 4]) {
+        final sayfa = await repository.listeyiIzle(sinir: sinir).first;
+        kimlikler.add(
+          sayfa.kayitlar.map((kayit) => kayit.cari.id).toList(growable: false),
         );
-        toplananlar.addAll(sayfa.kayitlar.map((kayit) => kayit.cari.id));
       }
 
-      expect(toplananlar, hasLength(4));
-      expect(toplananlar.toSet(), hasLength(4), reason: 'kayıt tekrarlanmamalı');
+      expect(kimlikler.last.toSet(), hasLength(4), reason: 'kayıt tekrarlanmamalı');
+      for (var sira = 1; sira < kimlikler.length; sira++) {
+        expect(
+          kimlikler[sira].take(sira),
+          kimlikler[sira - 1],
+          reason: 'sınır ${sira + 1} olunca önceki sıra bozulmamalı',
+        );
+      }
     });
 
     test('bakiyeye göre sıralamada en borçlu başta gelir', () async {
       final dusuk = await cariEkle('Düşük Bakiye');
       final yuksek = await cariEkle('Yüksek Bakiye');
 
-      // Bakiye Faz 2'de transaction ile dolacak; burada sıralamayı sınamak için
-      // doğrudan yazılıyor.
-      await koleksiyon.doc(dusuk).update(<String, Object?>{
-        Cari.alanBakiyeKurus: 100000,
-      });
-      await koleksiyon.doc(yuksek).update(<String, Object?>{
-        Cari.alanBakiyeKurus: 9400000,
-      });
-      await sunucudaBekle(
-        koleksiyon.doc(yuksek),
-        kosul: (veri) => veri[Cari.alanBakiyeKurus] == 9400000,
-      );
+      await bakiyeYaz(dusuk, 100000);
+      await bakiyeYaz(yuksek, 9400000);
 
       expect(
         await adlariListele(siralama: CariSiralamasi.bakiye),
@@ -190,6 +203,84 @@ void main() {
       final adlar = await adlariListele(siralama: CariSiralamasi.sonIslem);
       expect(adlar.first, 'İşlem Görmüş');
       expect(adlar, hasLength(2));
+    });
+  });
+
+  group('açık hesap süzgeci', () {
+    test('bakiyesi sıfır olanlar listeye girmez', () async {
+      final borclu = await cariEkle('Borçlu Cari');
+      final alacakli = await cariEkle('Alacaklı Cari');
+      await cariEkle('Kapalı Hesap');
+
+      await bakiyeYaz(borclu, 9400000);
+      await bakiyeYaz(alacakli, -180000);
+
+      // Hesabın açık olması için yön önemli değil: iki taraf da listede.
+      expect(
+        (await adlariListele(suzgec: CariSuzgeci.acikHesap)).toSet(),
+        <String>{'Borçlu Cari', 'Alacaklı Cari'},
+      );
+    });
+
+    test('en borçlu başta, borçlu olduğumuz sonda gelir', () async {
+      final az = await cariEkle('Az Borçlu');
+      final cok = await cariEkle('Çok Borçlu');
+      final bizimBorc = await cariEkle('Bize Alacaklı');
+
+      await bakiyeYaz(az, 100000);
+      await bakiyeYaz(cok, 9400000);
+      await bakiyeYaz(bizimBorc, -500000);
+
+      expect(await adlariListele(suzgec: CariSuzgeci.acikHesap), <String>[
+        'Çok Borçlu',
+        'Az Borçlu',
+        'Bize Alacaklı',
+      ]);
+    });
+
+    test('pasif cari açık bakiyesiyle de listede görünmez', () async {
+      final pasif = await cariEkle('Pasif Borçlu');
+      await bakiyeYaz(pasif, 9400000);
+
+      await repository.aktifligiDegistir(pasif, aktif: false);
+      await sunucudaBekle(
+        koleksiyon.doc(pasif),
+        kosul: (veri) => veri[Cari.alanAktif] == false,
+      );
+
+      expect(await adlariListele(suzgec: CariSuzgeci.acikHesap), isEmpty);
+    });
+
+    test('hesap kapanınca kayıt listeden düşer', () async {
+      final cariId = await cariEkle('Ödeyen Cari');
+      await bakiyeYaz(cariId, 9400000);
+
+      expect(await adlariListele(suzgec: CariSuzgeci.acikHesap), <String>[
+        'Ödeyen Cari',
+      ]);
+
+      // Tahsilat bakiyeyi sıfırladığında satır kendiliğinden kaybolmalı.
+      await bakiyeYaz(cariId, 0);
+
+      expect(await adlariListele(suzgec: CariSuzgeci.acikHesap), isEmpty);
+    });
+
+    test('sınır büyüdükçe kayıt tekrarlamaz ve atlamaz', () async {
+      for (var sira = 0; sira < 4; sira++) {
+        final cariId = await cariEkle('Borçlu $sira');
+        await bakiyeYaz(cariId, (sira + 1) * 100000);
+      }
+
+      expect(
+        await adlariListele(suzgec: CariSuzgeci.acikHesap, sinir: 2),
+        <String>['Borçlu 3', 'Borçlu 2'],
+      );
+      expect(await adlariListele(suzgec: CariSuzgeci.acikHesap, sinir: 4), [
+        'Borçlu 3',
+        'Borçlu 2',
+        'Borçlu 1',
+        'Borçlu 0',
+      ]);
     });
   });
 

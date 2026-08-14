@@ -37,7 +37,7 @@ void main() {
   /// güvenebilsin diye. Oluşturma tarihinin dolması, sunucunun yazmayı
   /// gerçekten onayladığının işareti.
   Future<String> urunEkle(String ad, {Kurus fiyat = Kurus.sifir}) async {
-    final urunId = await repository.ekle(Urun(id: '', ad: ad, fiyat: fiyat));
+    final urunId = await repository.ekle(Urun(id: '', tur: ad, fiyat: fiyat));
     await sunucudaBekle(
       koleksiyon.doc(urunId),
       kosul: (veri) => veri[Urun.alanOlusturmaTarihi] != null,
@@ -45,11 +45,18 @@ void main() {
     return urunId;
   }
 
+  /// Canlı listenin ilk yayınındaki adlar.
+  ///
+  /// İlk yayın önbellekten gelir; testteki her yazma `sunucudaBekle` ile
+  /// onaylandığı ve yerel yazma önbelleğe anında düştüğü için o yayın da tam
+  /// sonucu taşır.
   Future<List<String>> adlariListele({
     String arama = '',
-    int sayfaBoyu = UrunRepository.varsayilanSayfaBoyu,
+    int sinir = UrunRepository.varsayilanSayfaBoyu,
   }) async {
-    final sayfa = await repository.listele(arama: arama, sayfaBoyu: sayfaBoyu);
+    final sayfa = await repository
+        .listeyiIzle(arama: arama, sinir: sinir)
+        .first;
     return sayfa.kayitlar
         .map((kayit) => kayit.urun.ad)
         .toList(growable: false);
@@ -79,7 +86,7 @@ void main() {
     });
   });
 
-  group('listele', () {
+  group('listeyiIzle', () {
     test('yalnızca aktif ürünler döner, kayıt silinmez', () async {
       await urunEkle('Elma Scarlet');
       final pasifId = await urunEkle('Zeytin Gemlik');
@@ -108,24 +115,18 @@ void main() {
       ]);
     });
 
-    test('sayfalama kayıt tekrarlamaz ve atlamaz', () async {
+    test('sınır büyüdükçe kayıt tekrarlamaz ve atlamaz', () async {
       for (final cesit in <String>['Amasya', 'Golden', 'Scarlet', 'Starking']) {
         await urunEkle('Elma $cesit');
       }
 
-      final toplananlar = <String>[];
-      var sayfa = await repository.listele(sayfaBoyu: 2);
-      toplananlar.addAll(sayfa.kayitlar.map((kayit) => kayit.urun.ad));
-
-      while (sayfa.dahaVar) {
-        sayfa = await repository.listele(
-          sayfaBoyu: 2,
-          sonrasindan: sayfa.kayitlar.last,
-        );
-        toplananlar.addAll(sayfa.kayitlar.map((kayit) => kayit.urun.ad));
-      }
-
-      expect(toplananlar, <String>[
+      // "Daha yükle" imleci yürütmez, sınırı büyütür: her adımda liste baştan
+      // gelir ve öncekini olduğu gibi kapsamalıdır.
+      expect(await adlariListele(sinir: 2), <String>[
+        'Elma Amasya',
+        'Elma Golden',
+      ]);
+      expect(await adlariListele(sinir: 4), <String>[
         'Elma Amasya',
         'Elma Golden',
         'Elma Scarlet',
@@ -133,27 +134,29 @@ void main() {
       ]);
     });
 
-    test('aynı adlı kayıtlar sayfa sınırında kaybolmaz', () async {
-      // Arama anahtarları birebir aynı; imleç yalnızca anahtara baksaydı
-      // sayfa tam bu üçlünün ortasında bittiğinde kayıt atlanırdı.
+    test('aynı adlı kayıtlar sınır büyürken kaybolmaz', () async {
+      // Arama anahtarları birebir aynı; sıralama yalnızca anahtara baksaydı
+      // sınır büyüdükçe sıra değişir ve kullanıcı satır atlardı.
       for (var sira = 0; sira < 3; sira++) {
         await urunEkle('Elma Scarlet M9');
       }
 
-      final toplananlar = <String>[];
-      var sayfa = await repository.listele(sayfaBoyu: 1);
-      toplananlar.addAll(sayfa.kayitlar.map((kayit) => kayit.urun.id));
-
-      while (sayfa.dahaVar) {
-        sayfa = await repository.listele(
-          sayfaBoyu: 1,
-          sonrasindan: sayfa.kayitlar.last,
+      final kimlikler = <List<String>>[];
+      for (final sinir in <int>[1, 2, 3]) {
+        final sayfa = await repository.listeyiIzle(sinir: sinir).first;
+        kimlikler.add(
+          sayfa.kayitlar.map((kayit) => kayit.urun.id).toList(growable: false),
         );
-        toplananlar.addAll(sayfa.kayitlar.map((kayit) => kayit.urun.id));
       }
 
-      expect(toplananlar, hasLength(3));
-      expect(toplananlar.toSet(), hasLength(3), reason: 'kayıt tekrarlanmamalı');
+      expect(kimlikler.last.toSet(), hasLength(3), reason: 'kayıt tekrarlanmamalı');
+      for (var sira = 1; sira < kimlikler.length; sira++) {
+        expect(
+          kimlikler[sira].take(sira),
+          kimlikler[sira - 1],
+          reason: 'sınır ${sira + 1} olunca önceki sıra bozulmamalı',
+        );
+      }
     });
   });
 
@@ -181,12 +184,14 @@ void main() {
     });
   });
 
+  // Sorgu yalnızca yerel önbellekte koşuyor (kaydetme düğmesi ağa bağlanmasın
+  // diye). Buradaki ürünleri bu istemci yazdığı için hepsi önbellekte.
   group('benzerleriBul', () {
     test('mükerrer kayıt yakalanır', () async {
       await urunEkle('Elma Scarlet M9');
 
       // Yazım farkı mükerrerliği gizlememeli.
-      const aday = Urun(id: '', ad: 'ELMA  scarlet  m9');
+      const aday = Urun(id: '', tur: 'ELMA  scarlet  m9');
       final benzerler = await repository.benzerleriBul(aday);
 
       expect(benzerler.any(aday.ayniUrunMu), isTrue);
@@ -195,7 +200,7 @@ void main() {
     test('farklı adlı ürün mükerrer sayılmaz', () async {
       await urunEkle('Elma Scarlet M9 1 yaş');
 
-      const aday = Urun(id: '', ad: 'Elma Scarlet M9 2 yaş');
+      const aday = Urun(id: '', tur: 'Elma Scarlet M9 2 yaş');
       final benzerler = await repository.benzerleriBul(aday);
 
       expect(benzerler, isEmpty);
@@ -205,7 +210,7 @@ void main() {
       final urunId = await urunEkle('Elma Scarlet');
 
       final benzerler = await repository.benzerleriBul(
-        Urun(id: urunId, ad: 'Elma Scarlet'),
+        Urun(id: urunId, tur: 'Elma Scarlet'),
       );
 
       expect(benzerler, isEmpty, reason: 'düzenleme kendini mükerrer sanmamalı');
@@ -218,7 +223,7 @@ void main() {
       final oncesi = (await sunucudaBekle(koleksiyon.doc(urunId))).data()!;
 
       await repository.guncelle(
-        Urun(id: urunId, ad: 'Elma Şeker MM106', fiyat: Kurus.liradan(52, 50)),
+        Urun(id: urunId, tur: 'Elma Şeker MM106', fiyat: Kurus.liradan(52, 50)),
       );
       final sonrasi = (await sunucudaBekle(
         koleksiyon.doc(urunId),

@@ -1,4 +1,5 @@
 import '../domain/islem/islem_tipi.dart';
+import '../domain/secenek/secenek_tipi.dart';
 
 /// Uygulama gezinme yolları. Metin sabitleri tek yerde tutulur.
 abstract final class Yollar {
@@ -28,6 +29,9 @@ abstract final class Yollar {
   /// İşlem detayı: `/cari/{cariId}/islem/{islemId}`
   static const String islemDetay = '/cari/:cariId/islem/:islemId';
 
+  /// Kayıtlı işlemi düzenleme: `/cari/{cariId}/islem/{islemId}/duzenle`
+  static const String islemDuzenle = '/cari/:cariId/islem/:islemId/duzenle';
+
   /// PDF ekstre: `/cari/{cariId}/ekstre`
   static const String ekstre = '/cari/:cariId/ekstre';
 
@@ -37,6 +41,11 @@ abstract final class Yollar {
 
   /// Ürün düzenleme: `/urunler/{urunId}` — [urunDuzenleYolu] ile üretilir.
   static const String urunDuzenle = '/urunler/:urunId';
+
+  /// Tür, çeşit ve anaç listeleri: `/listeler/{tip}` — [seceneklerYolu] ile
+  /// üretilir. Ayarlar'dan açılır; fatura kalemindeki seçim sayfası bu yoldan
+  /// değil doğrudan `Navigator` ile açılır, çünkü geriye bir değer döndürüyor.
+  static const String secenekler = '/listeler/:tip';
 
   /// Yol parametrelerinin adı.
   static const String cariIdParametresi = 'cariId';
@@ -54,7 +63,12 @@ abstract final class Yollar {
   static String islemDetayYolu(String cariId, String islemId) =>
       '/cari/$cariId/islem/$islemId';
 
+  static String islemDuzenleYolu(String cariId, String islemId) =>
+      '/cari/$cariId/islem/$islemId/duzenle';
+
   static String ekstreYolu(String cariId) => '/cari/$cariId/ekstre';
 
   static String urunDuzenleYolu(String urunId) => '/urunler/$urunId';
+
+  static String seceneklerYolu(SecenekTipi tip) => '/listeler/${tip.anahtar}';
 }

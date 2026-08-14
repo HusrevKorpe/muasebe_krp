@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   IslemKalemi kalem(int lira) => IslemKalemi.birimFiyattan(
-    ad: 'fidan',
+    tur: 'fidan',
     miktar: 1,
     birimFiyat: Kurus.liradan(lira),
   );
@@ -32,7 +32,7 @@ void main() {
       final tekTek = <IslemKalemi>[
         for (final ad in <String>['a', 'b', 'c'])
           IslemKalemi(
-            ad: ad,
+            tur: ad,
             miktar: 1,
             birimFiyat: const Kurus(50),
             tutar: const Kurus(50),

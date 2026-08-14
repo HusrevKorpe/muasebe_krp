@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/urun/urun_kaydi.dart';
 import '../../../data/urun/urun_repository.dart';
+import '../../ortak/viewmodel/saglayici_onbellegi.dart';
 
 /// Tek bir ürünü canlı izler.
 ///
@@ -9,5 +10,6 @@ import '../../../data/urun/urun_repository.dart';
 /// güncellenip geri dönüldüğünde ekran kendiliğinden tazelenir. Belge yoksa
 /// `null` yayar.
 final urunSaglayici = StreamProvider.family<UrunKaydi?, String>((ref, urunId) {
+  birSureSakla(ref);
   return ref.watch(urunRepositorySaglayici).izle(urunId);
 }, isAutoDispose: true);

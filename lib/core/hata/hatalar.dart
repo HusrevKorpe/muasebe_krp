@@ -55,6 +55,17 @@ class VeriHatasi extends UygulamaHatasi {
   /// programlama hatasıdır: yönlendirici o ana kadar açılış ekranında bekletir.
   const VeriHatasi.oturumYok() : super('Oturum açık değil.');
 
+  /// Firestore `permission-denied` döndü: oturum açık ama kurallar okumayı
+  /// reddediyor.
+  ///
+  /// [oturumYok] ile karıştırılmamalı — bir kez karıştırıldı ve tanı saatler
+  /// aldı. Oturum kapalıyken kullanıcı zaten giriş ekranındadır, veri ekranına
+  /// hiç ulaşamaz; bu ekranda "oturum yok" yazıyorsa sebep oturum değil,
+  /// kuraldır. Tipik nedeni `firestore.rules` dosyasının değişip canlıya
+  /// yayınlanmamış olması (`firebase deploy --only firestore:rules`).
+  const VeriHatasi.erisimReddedildi()
+    : super('Bu hesabın deftere erişimi yok. Uygulamayı kuran kişiye bildirin.');
+
   /// Ekstre, açılış bakiyesi için aralıktan önceki tüm işlemleri okumak
   /// zorundadır ve sayfalanamaz. Okuma sınırı aşılırsa eksik veriyle ekstre
   /// üretmek yerine kullanıcıdan aralığı daraltması istenir — yanlış bakiye

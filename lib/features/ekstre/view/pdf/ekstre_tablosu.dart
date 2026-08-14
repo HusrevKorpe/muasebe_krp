@@ -112,6 +112,7 @@ pw.TableRow _islemSatiri({
   required EkstreStili stil,
 }) {
   return pw.TableRow(
+    decoration: _satirZemini(islem),
     children: <pw.Widget>[
       // Simge kolonu dar; normal kolon boşluğu uygulanırsa çizime yer kalmıyor.
       _hucre(_tipSimgesi(islem.tip), yatayBosluk: EkstreStili.simgeBoslugu),
@@ -133,6 +134,23 @@ pw.TableRow _islemSatiri({
     ],
   );
 }
+
+/// Satır açık zeminde mi basılacak?
+///
+/// Kullanıcının isteği: "para aldığım ve fidan aldığım" satırlar ayrışsın —
+/// yani tahsilat ve alış faturası. İkisi de ekstrenin alacak tarafıdır, bu
+/// yüzden ölçüt tip listesi değil **alacak kolonundaki tutardır**.
+///
+/// [Islem.alacak] iptalli kayıtta sıfır döner; iptalli bir tahsilat da bu
+/// yüzden zeminsiz kalır. Tutarları boş basılan bir satırı boyamak "para girdi"
+/// derdi.
+bool ekstreAlacakSatiriMi(Islem islem) => !islem.alacak.sifirMi;
+
+/// Zemin satırın tamamına çizilir ve hücre çizgileri üstüne biner; `pw.Table`
+/// satır dekorasyonunu hücrelerden önce boyar.
+pw.BoxDecoration? _satirZemini(Islem islem) => ekstreAlacakSatiriMi(islem)
+    ? const pw.BoxDecoration(color: EkstreStili.alacakZemini)
+    : null;
 
 pw.Widget _aciklamaHucresi(Islem islem, EkstreStili stil) {
   return pw.Column(

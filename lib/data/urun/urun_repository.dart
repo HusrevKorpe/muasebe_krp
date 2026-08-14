@@ -18,8 +18,8 @@ import 'urun_sayfasi.dart';
 ///
 /// Koleksiyon adının neden `fidanlar` kaldığı [Urun.koleksiyon]'da anlatılıyor.
 ///
-/// Firestore tipleri bu sınıfın dışına çıkmaz; sayfalama imleci bile
-/// `DocumentSnapshot` yerine bir önceki sayfanın son [Urun] kaydından üretilir
+/// Firestore tipleri bu sınıfın dışına çıkmaz: dışarıya `DocumentSnapshot`
+/// değil [UrunKaydi] verilir, sayfalama da imleç yerine kayıt sınırıyla yapılır
 /// (bkz. KURALLAR.md §1.3).
 ///
 /// Liste her zaman [Urun.alanAramaAnahtari] sırasına göre gelir — yani ada
@@ -48,30 +48,28 @@ class UrunRepository {
       .doc(_isletmeId)
       .collection(Urun.koleksiyon);
 
-  /// Listedeki aktif ürünlerin bir sayfasını döner.
-  Future<UrunSayfasi> listele({
+  /// Listedeki aktif ürünlerin ilk [sinir] tanesini **canlı** yayar.
+  ///
+  /// Akış önce yerel önbellekten yayar, sunucu cevabı gelince ikinci kez yayar.
+  /// Sayfalama imleçle değil [sinir] büyütülerek yapılır — gerekçesi
+  /// `AkisListesiViewModel`'de.
+  Stream<UrunSayfasi> listeyiIzle({
     String arama = '',
-    UrunKaydi? sonrasindan,
-    int sayfaBoyu = varsayilanSayfaBoyu,
-  }) async {
-    try {
-      var sorgu = _sorguKur(turkce.aramaAnahtari(arama));
-      if (sonrasindan != null) {
-        sorgu = sorgu.startAfter(<Object?>[
-          sonrasindan.urun.aramaAnahtari,
-          sonrasindan.urun.id,
-        ]);
-      }
-
-      final anlik = await sorgu.limit(sayfaBoyu).get();
-      return UrunSayfasi(
-        kayitlar: anlik.docs.map(_kayda).toList(growable: false),
-        dahaVar: anlik.docs.length == sayfaBoyu,
-      );
-    } on FirebaseException catch (hata, yigin) {
-      Log.hata('Ürün listesi okunamadı: ${hata.code}', hata, yigin);
-      throw _veriHatasi(hata);
-    }
+    int sinir = varsayilanSayfaBoyu,
+  }) {
+    return _sorguKur(turkce.aramaAnahtari(arama))
+        .limit(sinir)
+        .snapshots()
+        .map(
+          (anlik) => UrunSayfasi(
+            kayitlar: anlik.docs.map(_kayda).toList(growable: false),
+            dahaVar: anlik.docs.length == sinir,
+          ),
+        )
+        .handleError((Object hata, StackTrace yigin) {
+          Log.hata('Ürün listesi okunamadı', hata, yigin);
+          throw _veriHatasi(hata);
+        }, test: (hata) => hata is FirebaseException);
   }
 
   /// Tek bir ürünü canlı izler. Belge silinmiş ya da hiç yoksa `null` yayar.
@@ -142,6 +140,12 @@ class UrunRepository {
   /// Mükerrer kayıt listeyi zamanla çöplüğe çevirir; ekleme ekranı bu listeyi
   /// kullanıcıya gösterir. Ürünün kendisi listeye alınmaz; düzenleme ekranı
   /// kendi kaydını mükerrer sanmasın diye.
+  ///
+  /// Sorgu **yalnızca yerel önbellekte** koşar. Sunucuya sorulsaydı kaydetme
+  /// düğmesi ağa bağlanırdı: bağlantı yavaşken kullanıcı, kaydı çoktan yerele
+  /// yazılabilecekken dakikalarca beklerdi (KURALLAR.md §4.4). Karşılığında
+  /// önbellekte hiç görülmemiş bir ürünün ikizi yakalanamaz — mükerrer kontrolü
+  /// bir kolaylıktır, muhasebe değil; bakiyeye dokunmaz.
   Future<List<Urun>> benzerleriBul(Urun urun) async {
     final anahtar = urun.aramaAnahtari;
     if (anahtar.isEmpty) return const <Urun>[];
@@ -151,7 +155,7 @@ class UrunRepository {
           .where(Urun.alanAktif, isEqualTo: true)
           .where(Urun.alanAramaAnahtari, isEqualTo: anahtar)
           .limit(enCokBenzer)
-          .get();
+          .get(const GetOptions(source: Source.cache));
 
       return anlik.docs
           .where((belge) => belge.id != urun.id)
@@ -203,7 +207,7 @@ class UrunRepository {
 
   VeriHatasi _veriHatasi(Object hata) {
     if (hata is FirebaseException && hata.code == 'permission-denied') {
-      return const VeriHatasi.oturumYok();
+      return const VeriHatasi.erisimReddedildi();
     }
     return const VeriHatasi.okunamadi();
   }

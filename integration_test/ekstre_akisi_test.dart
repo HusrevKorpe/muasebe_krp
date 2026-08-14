@@ -92,7 +92,7 @@ void main() {
         islemTarihi: DateTime(2025, 3, 8),
         kalemler: <IslemKalemi>[
           IslemKalemi.birimFiyattan(
-            ad: 'şeftali',
+            tur: 'şeftali',
             miktar: 1200,
             birimFiyat: Kurus.liradan(38, 50),
           ),

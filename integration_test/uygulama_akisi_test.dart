@@ -71,12 +71,15 @@ void main() {
     await tester.tap(find.widgetWithText(FloatingActionButton, Metinler.urunEkle));
     await _dinlen(tester);
 
-    await _doldur(tester, Metinler.urunAdi, 'zeytin');
+    // Fidan kimliği üç ayrı kutuya giriliyor; listede birleşik ad görünmeli.
+    await _doldur(tester, Metinler.tur, 'Elma');
+    await _doldur(tester, Metinler.cesit, 'Scarlet');
+    await _doldur(tester, Metinler.anac, 'M9');
     await _doldur(tester, Metinler.urunFiyati, '7');
     await tester.tap(find.widgetWithText(FilledButton, Metinler.kaydet));
     await _dinlen(tester);
 
-    expect(find.text('zeytin'), findsOneWidget);
+    expect(find.text('Elma Scarlet M9'), findsOneWidget);
     expect(find.text('7,00 ₺'), findsOneWidget);
 
     // ── Kişi ekleme ───────────────────────────────────────────────────────
@@ -141,7 +144,8 @@ void main() {
     await tester.tap(find.widgetWithText(TextButton, Metinler.kalemEkle));
     await _dinlen(tester);
 
-    await _doldur(tester, Metinler.kalemAdi, 'zeytin');
+    // Serbest kalem yolu: yalnızca tür dolduruluyor, çeşit ve anaç boş kalıyor.
+    await _doldur(tester, Metinler.tur, 'zeytin');
     await _doldur(tester, Metinler.miktar, '100');
     await _doldur(tester, Metinler.birimFiyat, '7');
     await tester.tap(find.widgetWithText(FilledButton, Metinler.ekle));

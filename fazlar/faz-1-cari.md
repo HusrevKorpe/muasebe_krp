@@ -86,7 +86,13 @@ kimliği sabit; herkes aynı defteri açıyor (bkz. `faz-0` → "Revize 2").
 - [x] `features/cari/viewmodel/` — Riverpod notifier'ları
 
 ### Liste ekranı davranışı
-- [x] Arama kutusu — `aramaAnahtari` üzerinden, 300 ms gecikmeli
+- [x] **İki sekme: "Tümü" ve "Açık Hesaplar"** (14 Ağustos 2026 eklemesi,
+      kullanıcı isteği: *"hesabı kapanmayanları ayrı bir sekmede görebilelim"*).
+      Açık hesap = `bakiyeKurus != 0`; yön ayrımı yok, iki taraf da açık sayılır.
+      Sekmenin başında yüklenmiş kayıtların alacak/borç toplamı duruyor.
+- [x] Arama kutusu — `aramaAnahtari` üzerinden, 300 ms gecikmeli. **Yalnızca
+      "Tümü" sekmesinde:** açık hesap sorgusu bakiyeye aralık süzgeci uyguluyor,
+      Firestore aynı sorguda ikinci bir aralık süzgecini sıralayamıyor.
 - [x] Sayfalama (sonsuz kaydırma), tek `get()` ile tüm koleksiyon çekilmez
 - [x] Sıralama: liste her zaman ada göre. Ekranda seçim menüsü yok; ölçüt
       repository'de duruyor (`CariSiralamasi`), çağrı yeri açıkça isterse verir.

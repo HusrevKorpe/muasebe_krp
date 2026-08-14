@@ -11,6 +11,7 @@ import '../../../domain/islem/islem_kalemi.dart';
 import '../../../domain/islem/islem_tipi.dart';
 import '../../ortak/view/tarih_alani.dart';
 import '../viewmodel/islem_form_viewmodel.dart';
+import 'widget/duzenleme_uyarisi.dart';
 import 'widget/fatura_ozeti.dart';
 import 'widget/islem_tipi_gorunumu.dart';
 import 'widget/kalem_dialogu.dart';
@@ -25,15 +26,25 @@ import 'widget/kalem_listesi.dart';
 /// Açıklama alanı **zorunlu değil**: boş bırakılırsa başlık kalem adlarından
 /// üretilir (bkz. [IslemBasligi]). Bir satış girmek için doldurulması gereken
 /// tek şey satırlar.
+///
+/// [mevcut] verilirse kayıtlı bir fatura düzenlenir: alanlar aynı, tek fark
+/// kaydın yeni belge açmak yerine yerinde güncellenmesi
+/// (bkz. `IslemRepository.guncelle`). Fiyatı ya da adedi yanlış girilmiş bir
+/// satış bu yoldan düzeltilir; tip değiştirilemez, çünkü satışı alışa çevirmek
+/// yeni bir kayıt girmekle aynı şeydir.
 class FaturaFormEkrani extends ConsumerStatefulWidget {
   const FaturaFormEkrani({
     required this.cariId,
     required this.tip,
+    this.mevcut,
     super.key,
   });
 
   final String cariId;
   final IslemTipi tip;
+
+  /// Düzenlenen kayıt. `null` ise yeni fatura girilir.
+  final Islem? mevcut;
 
   @override
   ConsumerState<FaturaFormEkrani> createState() => _FaturaFormEkraniDurumu();
@@ -41,16 +52,35 @@ class FaturaFormEkrani extends ConsumerStatefulWidget {
 
 class _FaturaFormEkraniDurumu extends ConsumerState<FaturaFormEkrani> {
   final _formAnahtari = GlobalKey<FormState>();
-  final _baslik = TextEditingController();
-  final _kalemler = <IslemKalemi>[];
+  late final _baslik = TextEditingController(text: _baslikMetni());
+  late final _kalemler = <IslemKalemi>[...?widget.mevcut?.kalemler];
 
-  late DateTime _islemTarihi = _bugun();
+  late DateTime _islemTarihi = widget.mevcut?.islemTarihi ?? _bugun();
+
+  bool get _duzenlemeMi => widget.mevcut != null;
 
   /// Saat bileşeni sıfırlanır: aynı gün girilen iki işlemin sırası saate değil,
   /// belge kimliğine göre belirlenir (bkz. `islem_siralamasi.dart`).
   static DateTime _bugun() {
     final an = DateTime.now();
     return DateTime(an.year, an.month, an.day);
+  }
+
+  /// Açıklama kutusunun açılış değeri.
+  ///
+  /// Kayıtlı başlık kalemlerden türetilmişse kutu **boş** açılır: kullanıcı
+  /// açıklamayı yazmamış demektir ve bir satırı değiştirdiğinde başlık da
+  /// kendiliğinden yenilenmeli (bkz. [IslemBasligi.turetilmisMi]).
+  String _baslikMetni() {
+    final mevcut = widget.mevcut;
+    if (mevcut == null) return '';
+
+    return IslemBasligi.turetilmisMi(
+          baslik: mevcut.baslik,
+          kalemler: mevcut.kalemler,
+        )
+        ? ''
+        : mevcut.baslik;
   }
 
   Kurus get _toplam => FaturaHesaplayici.hesapla(kalemler: _kalemler);
@@ -80,7 +110,9 @@ class _FaturaFormEkraniDurumu extends ConsumerState<FaturaFormEkrani> {
       return;
     }
 
+    final mevcut = widget.mevcut;
     final fatura = Islem.fatura(
+      id: mevcut?.id ?? '',
       tip: widget.tip,
       baslik: IslemBasligi.uret(
         yazilan: _baslik.text,
@@ -90,12 +122,19 @@ class _FaturaFormEkraniDurumu extends ConsumerState<FaturaFormEkrani> {
       kalemler: _kalemler,
     );
 
-    final basarili = await ref
-        .read(islemFormViewModelSaglayici.notifier)
-        .kaydet(cariId: widget.cariId, islem: fatura);
+    final viewModel = ref.read(islemFormViewModelSaglayici.notifier);
+    final basarili = mevcut == null
+        ? await viewModel.kaydet(cariId: widget.cariId, islem: fatura)
+        : await viewModel.guncelle(
+            cariId: widget.cariId,
+            eski: mevcut,
+            yeni: fatura,
+          );
 
     if (!mounted) return;
     if (basarili) {
+      // Ekran kapanıyor; onay mesajı bir üstteki detay sayfasında görünsün.
+      if (_duzenlemeMi) _uyariGoster(Metinler.islemGuncellendi);
       Navigator.of(context).pop(true);
     } else {
       final hata = ref.read(islemFormViewModelSaglayici).error;
@@ -116,13 +155,23 @@ class _FaturaFormEkraniDurumu extends ConsumerState<FaturaFormEkrani> {
     final islemSuruyor = ref.watch(islemFormViewModelSaglayici).isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.tip.ad)),
+      appBar: AppBar(
+        title: Text(
+          _duzenlemeMi
+              ? '${widget.tip.ad} · ${Metinler.duzenle}'
+              : widget.tip.ad,
+        ),
+      ),
       body: SafeArea(
         child: Form(
           key: _formAnahtari,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
+              if (_duzenlemeMi) ...[
+                const DuzenlemeUyarisi(),
+                const SizedBox(height: 16),
+              ],
               _BilgiBolumu(
                 baslik: _baslik,
                 islemTarihi: _islemTarihi,

@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fidancari/core/hata/hatalar.dart';
 import 'package:fidancari/core/para/kurus.dart';
 import 'package:fidancari/data/cari/cari_repository.dart';
 import 'package:fidancari/data/islem/islem_repository.dart';
+import 'package:fidancari/data/islem/islem_sayfasi.dart';
 import 'package:fidancari/domain/cari/cari.dart';
 import 'package:fidancari/domain/islem/islem.dart';
 import 'package:fidancari/domain/islem/islem_kalemi.dart';
@@ -16,8 +18,9 @@ import 'emulator_yardimcilari.dart';
 /// `IslemRepository` — emulator testleri.
 ///
 /// Fazın en riskli kısmı burada doğrulanır: işlem kaydı ile cari bakiyesinin
-/// aynı atomik yazmada güncellenmesi, iptalin bakiyeyi geri alması ve
-/// eşzamanlı yazmalarda bakiyenin bozulmaması.
+/// aynı atomik yazmada güncellenmesi, düzeltmenin bakiyeye yalnızca farkı
+/// işlemesi, iptalin bakiyeyi geri alması ve eşzamanlı yazmalarda bakiyenin
+/// bozulmaması.
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
@@ -79,7 +82,7 @@ void main() {
         islemTarihi: tarih ?? DateTime(2024, 3, 1),
         kalemler: <IslemKalemi>[
           IslemKalemi.birimFiyattan(
-            ad: 'fidan',
+            tur: 'fidan',
             miktar: 1,
             birimFiyat: Kurus.liradan(lira),
           ),
@@ -158,16 +161,32 @@ void main() {
     });
   });
 
-  group('listele', () {
+  group('listeyiIzle', () {
+    /// Akıştan, [kayitSayisi] kadar kayıt taşıyan ilk sayfayı bekler.
+    Future<IslemSayfasi> sayfa({
+      required int kayitSayisi,
+      DateTime? baslangic,
+      DateTime? bitis,
+      int sinir = IslemRepository.varsayilanSayfaBoyu,
+    }) => sayfayiBekle(
+      repository.listeyiIzle(
+        cariId: cariId,
+        baslangic: baslangic,
+        bitis: bitis,
+        sinir: sinir,
+      ),
+      kosul: (sayfa) => sayfa.kayitlar.length == kayitSayisi,
+    );
+
     test('en yeniden en eskiye sıralanır', () async {
       await faturaEkle(tarih: DateTime(2024, 1, 1));
       await tahsilatEkle(tarih: DateTime(2024, 3, 1));
       await tahsilatEkle(tarih: DateTime(2024, 2, 1));
 
-      final sayfa = await repository.listele(cariId: cariId);
+      final ilk = await sayfa(kayitSayisi: 3);
 
       expect(
-        sayfa.kayitlar.map((kayit) => kayit.islem.islemTarihi),
+        ilk.kayitlar.map((kayit) => kayit.islem.islemTarihi),
         <DateTime>[DateTime(2024, 3, 1), DateTime(2024, 2, 1), DateTime(2024, 1, 1)],
       );
     });
@@ -177,41 +196,50 @@ void main() {
       final faturaId = await faturaEkle(tarih: ayniGun);
       final tahsilatId = await tahsilatEkle(tarih: ayniGun);
 
-      final sayfa = await repository.listele(cariId: cariId);
+      final ilk = await sayfa(kayitSayisi: 2);
 
       // Liste yeniden eskiye: sonra girilen tahsilat üstte olmalı.
-      expect(sayfa.kayitlar.map((kayit) => kayit.islem.id), <String>[
+      expect(ilk.kayitlar.map((kayit) => kayit.islem.id), <String>[
         tahsilatId,
         faturaId,
       ]);
     });
 
-    test('sayfalama kayıt tekrarlamaz ve atlamaz', () async {
+    test('yeni işlem akışa kendiliğinden düşer', () async {
+      await tahsilatEkle(tarih: DateTime(2024, 4, 1));
+
+      // Akışa abone olunduktan sonra girilen işlem, sorgu yeniden atılmadan
+      // listede belirmeli — liste ekranlarının `get()` yerine `snapshots()`
+      // dinlemesinin bütün sebebi bu.
+      final ikiKayit = sayfa(kayitSayisi: 2);
+      await tahsilatEkle(tarih: DateTime(2024, 4, 2));
+
+      expect(
+        (await ikiKayit).kayitlar.first.islem.islemTarihi,
+        DateTime(2024, 4, 2),
+      );
+    });
+
+    test('sınır büyüdükçe kayıt tekrarlamaz ve atlamaz', () async {
       for (var gun = 1; gun <= 5; gun++) {
         await tahsilatEkle(lira: gun * 100, tarih: DateTime(2024, 4, gun));
       }
 
-      final ilk = await repository.listele(cariId: cariId, sayfaBoyu: 2);
-      final ikinci = await repository.listele(
-        cariId: cariId,
-        sayfaBoyu: 2,
-        sonrasindan: ilk.kayitlar.last,
-      );
-      final ucuncu = await repository.listele(
-        cariId: cariId,
-        sayfaBoyu: 2,
-        sonrasindan: ikinci.kayitlar.last,
-      );
+      final ilkSayfa = await sayfa(kayitSayisi: 2, sinir: 2);
+      final tamami = await sayfa(kayitSayisi: 5, sinir: 4 + 2);
 
-      final kimlikler = <String>[
-        ...ilk.kayitlar.map((kayit) => kayit.islem.id),
-        ...ikinci.kayitlar.map((kayit) => kayit.islem.id),
-        ...ucuncu.kayitlar.map((kayit) => kayit.islem.id),
-      ];
-
-      expect(kimlikler.toSet(), hasLength(5));
-      expect(ilk.dahaVar, isTrue);
-      expect(ucuncu.dahaVar, isFalse);
+      expect(ilkSayfa.dahaVar, isTrue);
+      expect(tamami.dahaVar, isFalse);
+      // Büyüyen sınır ilk sayfayı olduğu gibi kapsamalı: "daha yükle" eldeki
+      // kayıtları kaydırırsa kullanıcı satır atlar ya da satırı iki kez görür.
+      expect(
+        tamami.kayitlar.take(2).map((kayit) => kayit.islem.id),
+        ilkSayfa.kayitlar.map((kayit) => kayit.islem.id),
+      );
+      expect(
+        tamami.kayitlar.map((kayit) => kayit.islem.id).toSet(),
+        hasLength(5),
+      );
     });
 
     test('tarih aralığı süzgeci yalnızca aralıktakileri döner', () async {
@@ -219,14 +247,13 @@ void main() {
       await tahsilatEkle(tarih: DateTime(2024, 2, 15));
       await tahsilatEkle(tarih: DateTime(2025, 1, 1));
 
-      final sayfa = await repository.listele(
-        cariId: cariId,
+      final aralik = await sayfa(
+        kayitSayisi: 1,
         baslangic: DateTime(2024, 1, 1),
         bitis: DateTime(2024, 12, 31),
       );
 
-      expect(sayfa.kayitlar, hasLength(1));
-      expect(sayfa.kayitlar.single.islem.islemTarihi, DateTime(2024, 2, 15));
+      expect(aralik.kayitlar.single.islem.islemTarihi, DateTime(2024, 2, 15));
     });
   });
 
@@ -289,6 +316,157 @@ void main() {
       expect(ekstreIslemleri, hasLength(1));
       expect(ekstreIslemleri.single.iptalMi, isTrue);
       expect(ekstreIslemleri.single.bakiyeEtkisi, Kurus.sifir);
+    });
+  });
+
+  group('guncelle', () {
+    /// Kaydın sunucudaki güncel hâli. Bakiye farkı bunun üzerinden hesaplanır.
+    Future<Islem> islemiOku(String islemId) async {
+      final kayit = await repository
+          .izle(cariId: cariId, islemId: islemId)
+          .firstWhere((kayit) => kayit != null);
+      return kayit!.islem;
+    }
+
+    Islem fiyatiDegistir(Islem eski, int lira) => Islem.fatura(
+      id: eski.id,
+      tip: eski.tip,
+      baslik: eski.baslik,
+      islemTarihi: eski.islemTarihi,
+      kalemler: <IslemKalemi>[
+        IslemKalemi.birimFiyattan(
+          tur: 'fidan',
+          miktar: 1,
+          birimFiyat: Kurus.liradan(lira),
+        ),
+      ],
+    );
+
+    test('fiyat düzeltilince aynı belge güncellenir, yenisi açılmaz', () async {
+      final islemId = await faturaEkle(lira: 1000);
+      await bakiyeyiBekle(100000);
+      final eski = await islemiOku(islemId);
+
+      await repository.guncelle(
+        cariId: cariId,
+        eski: eski,
+        yeni: fiyatiDegistir(eski, 1200),
+      );
+
+      final veri = (await sunucudaBekle(
+        islemler().doc(islemId),
+        kosul: (veri) => veri[Islem.alanToplamKurus] == 120000,
+      )).data()!;
+      expect(veri[Islem.alanToplamKurus], isA<int>());
+      expect(veri[Islem.alanIptal], isFalse, reason: 'iptal alanı korunur');
+      expect(veri[Islem.alanOlusturmaTarihi], isNotNull);
+      expect((await islemler().get()).docs, hasLength(1));
+    });
+
+    test('bakiyeye yalnızca fark işlenir', () async {
+      final islemId = await faturaEkle(lira: 1000);
+      await bakiyeyiBekle(100000);
+      final eski = await islemiOku(islemId);
+
+      await repository.guncelle(
+        cariId: cariId,
+        eski: eski,
+        yeni: fiyatiDegistir(eski, 1200),
+      );
+
+      expect(await bakiyeyiBekle(120000), 120000);
+    });
+
+    test('tahsilat düzeltmesi bakiyeyi ters yönde kaydırır', () async {
+      await faturaEkle(lira: 1000);
+      final islemId = await tahsilatEkle(lira: 400);
+      await bakiyeyiBekle(60000);
+      final eski = await islemiOku(islemId);
+
+      await repository.guncelle(
+        cariId: cariId,
+        eski: eski,
+        yeni: Islem.odeme(
+          id: eski.id,
+          tip: eski.tip,
+          baslik: eski.baslik,
+          islemTarihi: eski.islemTarihi,
+          tutar: Kurus.liradan(600),
+        ),
+      );
+
+      expect(await bakiyeyiBekle(40000), 40000);
+    });
+
+    test('düzenleme sunucu saatiyle işaretlenir', () async {
+      final islemId = await faturaEkle(lira: 1000);
+      final eski = await islemiOku(islemId);
+      expect(eski.duzenlenmisMi, isFalse);
+
+      await repository.guncelle(
+        cariId: cariId,
+        eski: eski,
+        yeni: fiyatiDegistir(eski, 1200),
+      );
+
+      final veri = (await sunucudaBekle(
+        islemler().doc(islemId),
+        kosul: (veri) => veri[Islem.alanGuncellemeTarihi] != null,
+      )).data()!;
+      expect(veri[Islem.alanGuncellemeTarihi], isA<Timestamp>());
+    });
+
+    test('düzenlenmiş kayıtta yeniden hesaplanan bakiye tutar', () async {
+      final islemId = await faturaEkle(lira: 1000);
+      await tahsilatEkle(lira: 400);
+      await bakiyeyiBekle(60000);
+      final eski = await islemiOku(islemId);
+
+      await repository.guncelle(
+        cariId: cariId,
+        eski: eski,
+        yeni: fiyatiDegistir(eski, 1200),
+      );
+      await bakiyeyiBekle(80000);
+
+      final bakiye = await repository.bakiyeYenidenHesapla(cariId);
+      expect(bakiye.deger, 80000);
+    });
+
+    test('iptalli kayıt düzenlenmez', () async {
+      final islemId = await faturaEkle(lira: 1000);
+      await bakiyeyiBekle(100000);
+      await repository.iptalEt(cariId: cariId, islem: await islemiOku(islemId));
+      await bakiyeyiBekle(0);
+
+      final iptalli = await repository
+          .izle(cariId: cariId, islemId: islemId)
+          .firstWhere((kayit) => kayit != null && kayit.islem.iptalMi);
+
+      await expectLater(
+        repository.guncelle(
+          cariId: cariId,
+          eski: iptalli!.islem,
+          yeni: fiyatiDegistir(iptalli.islem, 1200),
+        ),
+        throwsA(isA<VeriHatasi>()),
+      );
+      expect(await bakiyeyiBekle(0), 0);
+    });
+
+    test('kaydedilmemiş işlem güncellenmez', () async {
+      final yeni = Islem(
+        id: '',
+        tip: IslemTipi.satisFaturasi,
+        baslik: 'Kaydedilmemiş',
+        islemTarihi: DateTime(2024, 3, 1),
+        toplam: Kurus.sifir,
+      );
+
+      await expectLater(
+        repository.guncelle(cariId: cariId, eski: yeni, yeni: yeni),
+        throwsA(isA<VeriHatasi>()),
+      );
     });
   });
 

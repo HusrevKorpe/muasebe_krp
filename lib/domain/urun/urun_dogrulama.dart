@@ -6,14 +6,17 @@ import '../../core/para/para_girisi.dart';
 /// `TextFormField.validator` sözleşmesine uyar. Saf Dart olduğu için cihazsız
 /// test edilir (bkz. KURALLAR.md §5.1).
 abstract final class UrunDogrulama {
-  /// Ad tek zorunlu alan: ürünün kimliği o.
+  /// Tür tek zorunlu alan: ürünün kimliği ondan başlıyor.
   static const int enAzUzunluk = 2;
 
-  static String? ad(String? deger) {
+  /// Çeşit ve anaç doğrulanmaz, çünkü ikisi de isteğe bağlı: `nakliye`
+  /// kaleminin çeşidi yok, `çam` fidanının anacı yok. Boş bırakılan alan ada
+  /// hiç girmez (bkz. [urunAdi]).
+  static String? tur(String? deger) {
     final metin = (deger ?? '').trim();
-    if (metin.isEmpty) return 'Ürün adı gerekli.';
+    if (metin.isEmpty) return 'Tür gerekli.';
     if (metin.length < enAzUzunluk) {
-      return 'Ürün adı en az $enAzUzunluk karakter olmalı.';
+      return 'Tür en az $enAzUzunluk karakter olmalı.';
     }
     return null;
   }

@@ -15,7 +15,7 @@ void main() {
         islemTarihi: DateTime(2024, 3, 1),
         kalemler: <IslemKalemi>[
           IslemKalemi.birimFiyattan(
-            ad: 'zeytin',
+            tur: 'zeytin',
             miktar: 100,
             birimFiyat: Kurus.liradan(7),
           ),
@@ -33,7 +33,7 @@ void main() {
         islemTarihi: DateTime(2024, 3, 1),
         kalemler: <IslemKalemi>[
           IslemKalemi.birimFiyattan(
-            ad: 'zeytin',
+            tur: 'zeytin',
             miktar: 1,
             birimFiyat: Kurus.liradan(7),
           ),
@@ -43,7 +43,7 @@ void main() {
       expect(
         () => fatura.kalemler.add(
           IslemKalemi.birimFiyattan(
-            ad: 'ek',
+            tur: 'ek',
             miktar: 1,
             birimFiyat: Kurus.liradan(1),
           ),
@@ -120,6 +120,33 @@ void main() {
       expect(veri.containsKey(Islem.alanIptalNedeni), isFalse);
       expect(veri.containsKey(Islem.alanOlusturmaTarihi), isFalse);
       expect(veri[Islem.alanTip], 'satisFaturasi');
+    });
+
+    test('güncelleme tarihini de repository yazar, model değil', () {
+      // Sunucu saatiyle yazılan alanlar `yazilabilirAlanlar` dışında kalır;
+      // aksi hâlde düzenleme cihaz saatini yazardı (bkz. KURALLAR.md §4.2).
+      final veri = zeytinHurmaFaturasi.yazilabilirAlanlar();
+
+      expect(veri.containsKey(Islem.alanGuncellemeTarihi), isFalse);
+    });
+
+    test('düzenlenmiş kaydın güncelleme tarihi okunur', () {
+      final veri = <String, Object?>{
+        ...zeytinHurmaFaturasi.toMap(),
+        Islem.alanGuncellemeTarihi: DateTime(2024, 5, 6, 14, 30),
+      };
+
+      final donen = Islem.fromMap('01', veri);
+
+      expect(donen.guncellemeTarihi, DateTime(2024, 5, 6, 14, 30));
+      expect(donen.duzenlenmisMi, isTrue);
+    });
+
+    test('hiç düzenlenmemiş kayıt düzenlenmiş görünmez', () {
+      final donen = Islem.fromMap('01', zeytinHurmaFaturasi.toMap());
+
+      expect(donen.guncellemeTarihi, isNull);
+      expect(donen.duzenlenmisMi, isFalse);
     });
 
     test('vade ve durum alanları artık yazılmaz', () {

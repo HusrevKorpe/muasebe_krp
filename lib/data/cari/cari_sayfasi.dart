@@ -2,7 +2,7 @@ import 'cari_kaydi.dart';
 
 /// Cari listesinin tek bir sayfası.
 ///
-/// Koleksiyonun tamamı hiçbir zaman tek `get()` ile çekilmez; Firestore okuma
+/// Koleksiyonun tamamı hiçbir zaman tek seferde çekilmez; Firestore okuma
 /// başına ücretlendirir ve 500 carili bir listede her açılış 500 okuma demektir
 /// (bkz. KURALLAR.md §4.3).
 class CariSayfasi {
@@ -15,7 +15,7 @@ class CariSayfasi {
 
   final List<CariKaydi> kayitlar;
 
-  /// Sunucuda okunacak kayıt kaldı mı. İstenen sayfa boyu kadar kayıt geldiyse
-  /// devamı olduğu varsayılır.
+  /// Okunacak kayıt kaldı mı. Sorgunun sınırı kadar kayıt geldiyse devamı
+  /// olduğu varsayılır.
   final bool dahaVar;
 }

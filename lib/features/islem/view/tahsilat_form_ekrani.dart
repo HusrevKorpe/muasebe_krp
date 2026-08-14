@@ -10,6 +10,7 @@ import '../../../domain/islem/islem.dart';
 import '../../../domain/islem/islem_tipi.dart';
 import '../../ortak/view/tarih_alani.dart';
 import '../viewmodel/islem_form_viewmodel.dart';
+import 'widget/duzenleme_uyarisi.dart';
 import 'widget/islem_tipi_gorunumu.dart';
 
 /// "Para aldım" ve "Para verdim" giriş formu.
@@ -18,15 +19,22 @@ import 'widget/islem_tipi_gorunumu.dart';
 /// Açıklama zorunlu değil; boş bırakılırsa tipin varsayılan metni yazılır
 /// ("Müşteriden Tahsilat"), çünkü hesap dökümünde satırın bir açıklaması
 /// olmalı.
+///
+/// [mevcut] verilirse kayıtlı bir tahsilat düzenlenir; yanlış girilmiş bir
+/// tutar bu yoldan düzeltilir (bkz. `FaturaFormEkrani`).
 class TahsilatFormEkrani extends ConsumerStatefulWidget {
   const TahsilatFormEkrani({
     required this.cariId,
     required this.tip,
+    this.mevcut,
     super.key,
   });
 
   final String cariId;
   final IslemTipi tip;
+
+  /// Düzenlenen kayıt. `null` ise yeni tahsilat girilir.
+  final Islem? mevcut;
 
   @override
   ConsumerState<TahsilatFormEkrani> createState() =>
@@ -35,12 +43,16 @@ class TahsilatFormEkrani extends ConsumerStatefulWidget {
 
 class _TahsilatFormEkraniDurumu extends ConsumerState<TahsilatFormEkrani> {
   final _formAnahtari = GlobalKey<FormState>();
-  final _tutar = TextEditingController();
+  late final TextEditingController _tutar = TextEditingController(
+    text: widget.mevcut == null ? '' : kurusMetni(widget.mevcut!.toplam),
+  );
   late final TextEditingController _baslik = TextEditingController(
-    text: widget.tip.varsayilanBaslik,
+    text: widget.mevcut?.baslik ?? widget.tip.varsayilanBaslik,
   );
 
-  late DateTime _islemTarihi = _bugun();
+  late DateTime _islemTarihi = widget.mevcut?.islemTarihi ?? _bugun();
+
+  bool get _duzenlemeMi => widget.mevcut != null;
 
   static DateTime _bugun() {
     final an = DateTime.now();
@@ -61,32 +73,41 @@ class _TahsilatFormEkraniDurumu extends ConsumerState<TahsilatFormEkrani> {
     if (tutar == null) return;
 
     final yazilan = _baslik.text.trim();
+    final mevcut = widget.mevcut;
     final islem = Islem.odeme(
+      id: mevcut?.id ?? '',
       tip: widget.tip,
       baslik: yazilan.isEmpty ? widget.tip.varsayilanBaslik : yazilan,
       islemTarihi: _islemTarihi,
       tutar: tutar,
     );
 
-    final basarili = await ref
-        .read(islemFormViewModelSaglayici.notifier)
-        .kaydet(cariId: widget.cariId, islem: islem);
+    final viewModel = ref.read(islemFormViewModelSaglayici.notifier);
+    final basarili = mevcut == null
+        ? await viewModel.kaydet(cariId: widget.cariId, islem: islem)
+        : await viewModel.guncelle(
+            cariId: widget.cariId,
+            eski: mevcut,
+            yeni: islem,
+          );
 
     if (!mounted) return;
     if (basarili) {
+      // Ekran kapanıyor; onay mesajı bir üstteki detay sayfasında görünsün.
+      if (_duzenlemeMi) _uyariGoster(Metinler.islemGuncellendi);
       Navigator.of(context).pop(true);
     } else {
       final hata = ref.read(islemFormViewModelSaglayici).error;
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text(
-              hata is UygulamaHatasi ? hata.mesaj : Metinler.beklenmeyenHata,
-            ),
-          ),
-        );
+      _uyariGoster(
+        hata is UygulamaHatasi ? hata.mesaj : Metinler.beklenmeyenHata,
+      );
     }
+  }
+
+  void _uyariGoster(String mesaj) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(mesaj)));
   }
 
   @override
@@ -94,13 +115,23 @@ class _TahsilatFormEkraniDurumu extends ConsumerState<TahsilatFormEkrani> {
     final islemSuruyor = ref.watch(islemFormViewModelSaglayici).isLoading;
 
     return Scaffold(
-      appBar: AppBar(title: Text(widget.tip.ad)),
+      appBar: AppBar(
+        title: Text(
+          _duzenlemeMi
+              ? '${widget.tip.ad} · ${Metinler.duzenle}'
+              : widget.tip.ad,
+        ),
+      ),
       body: SafeArea(
         child: Form(
           key: _formAnahtari,
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
+              if (_duzenlemeMi) ...[
+                const DuzenlemeUyarisi(),
+                const SizedBox(height: 16),
+              ],
               TextFormField(
                 controller: _tutar,
                 enabled: !islemSuruyor,

@@ -1,23 +1,35 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import '../../../../core/metin/metinler.dart';
 import '../../../../core/para/para_bicimi.dart';
 import '../../../../core/para/para_girisi.dart';
 import '../../../../domain/islem/islem_kalemi.dart';
 import '../../../../domain/islem/kalem_giris_modu.dart';
+import '../../../../domain/secenek/secenek_tipi.dart';
+import '../../../secenek/view/secenek_listesi_ekrani.dart';
 import '../../../urun/view/urun_secim_sayfasi.dart';
+import 'kalem_alanlari.dart';
 
 /// Fatura kalemi ekleme/düzenleme kutusu.
+///
+/// Fidan kimliği üç ayrı kutuya giriliyor — Tür, Çeşit, Anaç — ve her satışta
+/// yeniden yazılabiliyor. Kutuların gerekçesi [KalemAlanlari]'nda anlatılıyor.
 ///
 /// Kullanıcı tutarı iki uçtan da girebilir: birim fiyattan ya da toplamdan.
 /// İkinci mod zorunludur, çünkü kullanıcı yuvarlak toplam üzerinden çalışır —
 /// referans ekstredeki `1.650 Adet × 18,79 ₺ = 31.000 ₺` satırı yalnızca böyle
 /// tutar (bkz. [KalemGirisModu]).
 ///
-/// Kalem adı ürün listesinden seçilebilir ama **serbest metin girişi
-/// korunur**: "nakliye" gibi kalemler listede yer almaz ve seçim zorunlu
-/// olsaydı kullanıcı tezgahta tıkanırdı (bkz. `fazlar/faz-3-katalog.md`).
+/// Kalem iki ayrı yoldan doldurulabilir. **Üründen seç** hazır bir kombinasyonu
+/// getirir ve fiyatı da ön dolgu yapar. Üç kutunun kendi liste düğmeleri ise
+/// parçaları ayrı ayrı getirir: kullanıcı türleri, çeşitleri ve anaçları bir
+/// kez giriyor, sonra `Elma` + `Scarlet` + `M9` diye tıklıyor. Katalogdaki
+/// kayıt tam kombinasyon olduğu için kombinasyon sayısı çarpım kadar; hepsini
+/// ürün olarak girmek pratikte yürümüyordu (bkz. [SecenekTipi]).
+///
+/// İkisi de **zorunlu değil**, serbest giriş korunur: "nakliye" gibi kalemler
+/// hiçbir listede yer almaz ve seçim zorunlu olsaydı kullanıcı tezgahta
+/// tıkanırdı (bkz. `fazlar/faz-3-katalog.md`).
 class KalemDialogu extends StatefulWidget {
   const KalemDialogu({this.mevcut, super.key});
 
@@ -38,14 +50,16 @@ class KalemDialogu extends StatefulWidget {
 
 class _KalemDialoguDurumu extends State<KalemDialogu> {
   final _formAnahtari = GlobalKey<FormState>();
-  late final TextEditingController _ad;
+  late final TextEditingController _tur;
+  late final TextEditingController _cesit;
+  late final TextEditingController _anac;
   late final TextEditingController _miktar;
   late final TextEditingController _deger;
 
   KalemGirisModu _mod = KalemGirisModu.birimFiyat;
 
-  /// Listeden seçilen ürünün kimliği. Serbest metin kalemlerde `null` kalır
-  /// ve daha önce girilmiş eski kalemler bu hâliyle bozulmadan açılır.
+  /// Listeden seçilen ürünün kimliği. Serbest girişte `null` kalır ve daha önce
+  /// girilmiş eski kalemler bu hâliyle bozulmadan açılır.
   String? _urunId;
 
   bool get _duzenlemeMi => widget.mevcut != null;
@@ -60,7 +74,9 @@ class _KalemDialoguDurumu extends State<KalemDialogu> {
     _mod = mevcut != null && mevcut.birimFiyatYuvarlanmisMi
         ? KalemGirisModu.toplam
         : KalemGirisModu.birimFiyat;
-    _ad = TextEditingController(text: mevcut?.ad ?? '');
+    _tur = TextEditingController(text: mevcut?.tur ?? '');
+    _cesit = TextEditingController(text: mevcut?.cesit ?? '');
+    _anac = TextEditingController(text: mevcut?.anac ?? '');
     _miktar = TextEditingController(
       text: mevcut == null ? '' : miktarBicimle(mevcut.miktar),
     );
@@ -75,7 +91,9 @@ class _KalemDialoguDurumu extends State<KalemDialogu> {
 
   @override
   void dispose() {
-    _ad.dispose();
+    _tur.dispose();
+    _cesit.dispose();
+    _anac.dispose();
     _miktar.dispose();
     _deger.dispose();
     super.dispose();
@@ -87,16 +105,23 @@ class _KalemDialoguDurumu extends State<KalemDialogu> {
     final deger = kurusAyristir(_deger.text);
     if (miktar == null || miktar <= 0 || deger == null) return null;
 
-    final ad = _ad.text.trim();
+    final tur = _tur.text.trim();
+    final cesit = _cesit.text.trim();
+    final anac = _anac.text.trim();
+
     return switch (_mod) {
       KalemGirisModu.birimFiyat => IslemKalemi.birimFiyattan(
-        ad: ad,
+        tur: tur,
+        cesit: cesit,
+        anac: anac,
         miktar: miktar,
         birimFiyat: deger,
         urunId: _urunId,
       ),
       KalemGirisModu.toplam => IslemKalemi.toplamdan(
-        ad: ad,
+        tur: tur,
+        cesit: cesit,
+        anac: anac,
         miktar: miktar,
         toplam: deger,
         urunId: _urunId,
@@ -111,7 +136,7 @@ class _KalemDialoguDurumu extends State<KalemDialogu> {
     Navigator.of(context).pop(kalem);
   }
 
-  /// Listeden ürün seçer: ad ve birim fiyat ön dolgu gelir.
+  /// Listeden ürün seçer: üç kutu ve birim fiyat ön dolgu gelir.
   ///
   /// Gelen fiyat yalnızca bir başlangıç değeridir; kullanıcı alanı olduğu gibi
   /// değiştirebilir. Faturaya giren tutar listedeki fiyattan bağımsızdır
@@ -122,10 +147,33 @@ class _KalemDialoguDurumu extends State<KalemDialogu> {
 
     setState(() {
       _urunId = urun.id;
-      _ad.text = urun.ad;
+      _tur.text = urun.tur;
+      _cesit.text = urun.cesit;
+      _anac.text = urun.anac;
       if (!urun.fiyat.sifirMi) {
         _mod = KalemGirisModu.birimFiyat;
         _deger.text = kurusMetni(urun.fiyat);
+      }
+    });
+  }
+
+  /// Tek bir kutuyu kendi listesinden doldurur.
+  ///
+  /// Ürün bağı **bozulmaz**: kullanıcı katalogdan seçtiği kalemin yalnızca
+  /// anacını değiştiriyor olabilir ve bağ, elle yazınca da kopmuyor
+  /// (bkz. [_urunSec]). Bağı kaldırmak rozetin kendi işi.
+  Future<void> _secenekSec(SecenekTipi tip) async {
+    final ad = await SecenekListesiEkrani.sec(context, tip);
+    if (ad == null || !mounted) return;
+
+    setState(() {
+      switch (tip) {
+        case SecenekTipi.tur:
+          _tur.text = ad;
+        case SecenekTipi.cesit:
+          _cesit.text = ad;
+        case SecenekTipi.anac:
+          _anac.text = ad;
       }
     });
   }
@@ -137,15 +185,18 @@ class _KalemDialoguDurumu extends State<KalemDialogu> {
       content: SingleChildScrollView(
         child: Form(
           key: _formAnahtari,
-          child: _KalemAlanlari(
-            ad: _ad,
+          child: KalemAlanlari(
+            tur: _tur,
+            cesit: _cesit,
+            anac: _anac,
             miktar: _miktar,
             deger: _deger,
             mod: _mod,
             urunBagliMi: _urunId != null,
-            adaOdaklan: !_duzenlemeMi,
+            tureOdaklan: !_duzenlemeMi,
             onizleme: _kalemiKur(),
             onUrunSec: _urunSec,
+            onSecenekSec: _secenekSec,
             onBagiKaldir: () => setState(() => _urunId = null),
             onModDegisti: (mod) => setState(() => _mod = mod),
             onDegisti: () => setState(() {}),
@@ -162,249 +213,6 @@ class _KalemDialoguDurumu extends State<KalemDialogu> {
           child: Text(_duzenlemeMi ? Metinler.kaydet : Metinler.ekle),
         ),
       ],
-    );
-  }
-}
-
-/// Kutunun içindeki alanlar: ürün satırı, ad, miktar, giriş modu ve tutar.
-class _KalemAlanlari extends StatelessWidget {
-  const _KalemAlanlari({
-    required this.ad,
-    required this.miktar,
-    required this.deger,
-    required this.mod,
-    required this.urunBagliMi,
-    required this.adaOdaklan,
-    required this.onizleme,
-    required this.onUrunSec,
-    required this.onBagiKaldir,
-    required this.onModDegisti,
-    required this.onDegisti,
-  });
-
-  final TextEditingController ad;
-  final TextEditingController miktar;
-  final TextEditingController deger;
-  final KalemGirisModu mod;
-  final bool urunBagliMi;
-  final bool adaOdaklan;
-
-  /// Girilen değerlerden kurulan kalem; alanlar eksikse `null`.
-  final IslemKalemi? onizleme;
-
-  final VoidCallback onUrunSec;
-  final VoidCallback onBagiKaldir;
-  final ValueChanged<KalemGirisModu> onModDegisti;
-  final VoidCallback onDegisti;
-
-  bool get _birimFiyatModu => mod == KalemGirisModu.birimFiyat;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _UrunSatiri(
-          bagliMi: urunBagliMi,
-          onSec: onUrunSec,
-          onBagiKaldir: onBagiKaldir,
-        ),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: ad,
-          autofocus: adaOdaklan,
-          textCapitalization: TextCapitalization.sentences,
-          decoration: const InputDecoration(
-            labelText: Metinler.kalemAdi,
-            hintText: Metinler.kalemAdiIpucu,
-            helperText: Metinler.urunSerbestMetinAciklama,
-            helperMaxLines: 2,
-          ),
-          validator: (deger) =>
-              (deger ?? '').trim().isEmpty ? Metinler.kalemAdiGerekli : null,
-          onChanged: (_) => onDegisti(),
-        ),
-        const SizedBox(height: 16),
-        TextFormField(
-          controller: miktar,
-          keyboardType: TextInputType.number,
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
-          ],
-          decoration: const InputDecoration(
-            labelText: Metinler.miktar,
-            suffixText: IslemKalemi.varsayilanBirim,
-          ),
-          validator: _miktarDogrula,
-          onChanged: (_) => onDegisti(),
-        ),
-        const SizedBox(height: 16),
-        _ModSecici(mod: mod, onDegisti: onModDegisti),
-        const SizedBox(height: 12),
-        TextFormField(
-          controller: deger,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: <TextInputFormatter>[
-            FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
-          ],
-          decoration: InputDecoration(
-            labelText: _birimFiyatModu
-                ? Metinler.birimFiyat
-                : Metinler.toplamGir,
-            suffixText: paraSimgesi,
-            helperText: _birimFiyatModu
-                ? Metinler.birimFiyatGirAciklama
-                : Metinler.toplamGirAciklama,
-            helperMaxLines: 2,
-          ),
-          validator: _tutarDogrula,
-          onChanged: (_) => onDegisti(),
-        ),
-        if (onizleme != null) ...[
-          const SizedBox(height: 16),
-          _Onizleme(kalem: onizleme!, mod: mod),
-        ],
-      ],
-    );
-  }
-
-  static String? _miktarDogrula(String? deger) {
-    if ((deger ?? '').trim().isEmpty) return Metinler.miktarGerekli;
-    final miktar = miktarAyristir(deger);
-    if (miktar == null) return Metinler.miktarGecersiz;
-    return miktar <= 0 ? Metinler.miktarGecersiz : null;
-  }
-
-  static String? _tutarDogrula(String? deger) {
-    if ((deger ?? '').trim().isEmpty) return Metinler.tutarGerekli;
-    final tutar = kurusAyristir(deger);
-    if (tutar == null) return Metinler.tutarGecersiz;
-    return tutar.pozitifMi ? null : Metinler.tutarSifirOlamaz;
-  }
-}
-
-/// Listeden seçme düğmesi ve bağlı ürün rozeti.
-///
-/// Rozet kaldırıldığında kalem serbest metne döner: ad alanındaki yazı durur,
-/// yalnızca ürün bağı kopar.
-class _UrunSatiri extends StatelessWidget {
-  const _UrunSatiri({
-    required this.bagliMi,
-    required this.onSec,
-    required this.onBagiKaldir,
-  });
-
-  final bool bagliMi;
-  final VoidCallback onSec;
-  final VoidCallback onBagiKaldir;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: OutlinedButton.icon(
-            onPressed: onSec,
-            icon: const Icon(Icons.sell_outlined),
-            label: const Text(Metinler.urundenSec),
-          ),
-        ),
-        if (bagliMi) ...[
-          const SizedBox(width: 8),
-          InputChip(
-            label: const Text(Metinler.urunBagi),
-            onDeleted: onBagiKaldir,
-            deleteButtonTooltipMessage: Metinler.urunBaginiKaldir,
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-/// Birim fiyat / toplam tutar seçimi.
-class _ModSecici extends StatelessWidget {
-  const _ModSecici({required this.mod, required this.onDegisti});
-
-  final KalemGirisModu mod;
-  final ValueChanged<KalemGirisModu> onDegisti;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(Metinler.girisModu, style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: 6),
-        SegmentedButton<KalemGirisModu>(
-          segments: const <ButtonSegment<KalemGirisModu>>[
-            ButtonSegment<KalemGirisModu>(
-              value: KalemGirisModu.birimFiyat,
-              label: Text(Metinler.birimFiyatGir),
-            ),
-            ButtonSegment<KalemGirisModu>(
-              value: KalemGirisModu.toplam,
-              label: Text(Metinler.toplamGir),
-            ),
-          ],
-          selected: <KalemGirisModu>{mod},
-          showSelectedIcon: false,
-          onSelectionChanged: (secim) => onDegisti(secim.first),
-        ),
-      ],
-    );
-  }
-}
-
-/// Hesaplanan karşı değeri gösterir: birim fiyat girildiyse tutar, toplam
-/// girildiyse birim fiyat.
-class _Onizleme extends StatelessWidget {
-  const _Onizleme({required this.kalem, required this.mod});
-
-  final IslemKalemi kalem;
-  final KalemGirisModu mod;
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    final hesaplanan = mod == KalemGirisModu.birimFiyat
-        ? '${Metinler.tutar}: ${kalem.tutar.bicimli}'
-        : '${Metinler.birimFiyat}: ${kalem.birimFiyat.bicimli}';
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: tema.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            '${miktarBicimle(kalem.miktar)} ${kalem.birim} × '
-            '${kalem.birimFiyat.bicimli}',
-            style: tema.textTheme.bodySmall,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            hesaplanan,
-            style: tema.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          if (kalem.birimFiyatYuvarlanmisMi) ...[
-            const SizedBox(height: 6),
-            Text(
-              Metinler.birimFiyatYaklasik,
-              style: tema.textTheme.bodySmall?.copyWith(
-                color: tema.colorScheme.tertiary,
-              ),
-            ),
-          ],
-        ],
-      ),
     );
   }
 }

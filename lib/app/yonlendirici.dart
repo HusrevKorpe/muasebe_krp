@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../data/kimlik/kimlik_repository.dart';
 import '../domain/islem/islem_tipi.dart';
+import '../domain/secenek/secenek_tipi.dart';
 import '../features/ayarlar/view/ayarlar_ekrani.dart';
 import '../features/cari/view/cari_detay_ekrani.dart';
 import '../features/cari/view/cari_duzenle_ekrani.dart';
@@ -14,9 +15,11 @@ import '../features/ekstre/view/ekstre_ekrani.dart';
 import '../features/giris/view/giris_ekrani.dart';
 import '../features/islem/view/fatura_form_ekrani.dart';
 import '../features/islem/view/islem_detay_ekrani.dart';
+import '../features/islem/view/islem_duzenle_ekrani.dart';
 import '../features/islem/view/tahsilat_form_ekrani.dart';
 import '../features/isletme/view/isletme_ekrani.dart';
 import '../features/ortak/view/acilis_ekrani.dart';
+import '../features/secenek/view/secenek_listesi_ekrani.dart';
 import '../features/urun/view/urun_duzenle_ekrani.dart';
 import '../features/urun/view/urun_form_ekrani.dart';
 import '../features/urun/view/urun_listesi_ekrani.dart';
@@ -160,6 +163,15 @@ final yonlendiriciSaglayici = Provider<GoRouter>((ref) {
           cariId: durum.pathParameters[Yollar.cariIdParametresi]!,
         ),
       ),
+      // Düzenleme yolu detay kalıbından uzun olduğu için onunla karışmaz;
+      // `yeni` yolunun ardında duruyor ki `/islem/yeni/:tip` gölgelenmesin.
+      GoRoute(
+        path: Yollar.islemDuzenle,
+        builder: (context, durum) => IslemDuzenleEkrani(
+          cariId: durum.pathParameters[Yollar.cariIdParametresi]!,
+          islemId: durum.pathParameters[Yollar.islemIdParametresi]!,
+        ),
+      ),
       GoRoute(
         path: Yollar.islemDetay,
         builder: (context, durum) => IslemDetayEkrani(
@@ -183,6 +195,19 @@ final yonlendiriciSaglayici = Provider<GoRouter>((ref) {
         path: Yollar.urunDuzenle,
         builder: (context, durum) => UrunDuzenleEkrani(
           urunId: durum.pathParameters[Yollar.urunIdParametresi]!,
+        ),
+      ),
+      // Tür / çeşit / anaç listeleri. Tanınmayan tip türe düşer: yol elle
+      // yazılmıyor, [Yollar.seceneklerYolu] üretiyor — buraya ancak eski bir
+      // sürümün ürettiği bağlantı gelebilir ve boş ekran göstermek anlamsız.
+      GoRoute(
+        path: Yollar.secenekler,
+        builder: (context, durum) => SecenekListesiEkrani(
+          tip:
+              SecenekTipi.anahtardan(
+                durum.pathParameters[Yollar.tipParametresi],
+              ) ??
+              SecenekTipi.tur,
         ),
       ),
     ],

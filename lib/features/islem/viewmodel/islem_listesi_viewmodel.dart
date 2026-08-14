@@ -1,35 +1,64 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../core/hata/hatalar.dart';
-import '../../../core/log/log.dart';
 import '../../../core/metin/metinler.dart';
-import '../../../data/islem/islem_kaydi.dart';
 import '../../../data/islem/islem_repository.dart';
+import '../../../data/islem/islem_sayfasi.dart';
+import '../../ortak/viewmodel/akis_listesi_viewmodel.dart';
+import '../../ortak/viewmodel/saglayici_onbellegi.dart';
 import 'islem_listesi_durumu.dart';
 
-/// Bir carinin işlem listesi — sayfalama.
+/// Bir carinin işlem listesi — canlı akış ve sayfalama.
+///
+/// Liste Firestore'u `snapshots()` ile dinler: kaydedilen işlem ağ beklemeden
+/// listede belirir, ortak defterin öteki telefonundan girilen kayıt da
+/// kendiliğinden düşer. Gerekçesi [AkisListesiViewModel]'de.
 ///
 /// Yürüyen bakiye burada hesaplanmaz; liste yalnızca kayıtları taşır. Bakiye
 /// kolonu `islemDokumuSaglayici` içinde, carinin önbelleklenmiş bakiyesiyle
 /// birleştirilerek üretilir. Bu ayrım sayesinde carinin adı değiştiğinde
-/// işlem listesi baştan çekilmez.
-class IslemListesiViewModel extends AsyncNotifier<IslemListesiDurumu> {
+/// işlem listesi baştan kurulmaz.
+class IslemListesiViewModel
+    extends AkisListesiViewModel<IslemListesiDurumu, IslemSayfasi> {
   IslemListesiViewModel(this.cariId);
 
   final String cariId;
 
   @override
-  Future<IslemListesiDurumu> build() => _ilkSayfa();
+  int get sayfaBoyu => IslemRepository.varsayilanSayfaBoyu;
 
-  Future<void> yenile() async {
-    state = const AsyncValue<IslemListesiDurumu>.loading();
-    state = await AsyncValue.guard(_ilkSayfa);
+  @override
+  Future<IslemListesiDurumu> build() {
+    // Cari detayına her girişte liste sıfırdan kurulmasın: kullanıcı listeyle
+    // işlem detayı arasında sürekli gidip geliyor.
+    birSureSakla(ref);
+    return ilkBaglanti();
   }
 
-  /// Sonraki (daha eski) sayfayı yükleyip listenin sonuna ekler.
+  @override
+  Stream<IslemSayfasi> akisKur(int sinir) => ref
+      .read(islemRepositorySaglayici)
+      .listeyiIzle(cariId: cariId, sinir: sinir);
+
+  @override
+  IslemListesiDurumu durumaCevir(IslemSayfasi sayfa) =>
+      IslemListesiDurumu(kayitlar: sayfa.kayitlar, dahaVar: sayfa.dahaVar);
+
+  @override
+  IslemListesiDurumu hataliDurum(IslemListesiDurumu mevcut, Object hata) =>
+      mevcut.kopyala(
+        dahaYukleniyor: false,
+        sayfaHatasi: Metinler.sonrakiIslemlerYuklenemedi,
+      );
+
+  /// Akışı baştan kurar — aşağı çekerek yenilemede çağrılır.
   ///
-  /// İlk yüklemeden farklı olarak durum `loading`'e düşmez: eldeki kayıtlar
-  /// ekranda kalır, altta yalnızca bir gösterge döner.
+  /// Canlı akışta tazelenecek bir şey yok; bu çağrının işi bağlantı takılıp
+  /// kalmışsa Firestore'u yeniden denemeye zorlamak. Liste ekrandan **silinmez**.
+  Future<void> yenile() => durumaYaz(bastanBagla);
+
+  /// Sonraki (daha eski) sayfayı da akışa dahil eder.
+  ///
+  /// Eldeki kayıtlar ekranda kalır, altta yalnızca bir gösterge döner.
   Future<void> dahaYukle() async {
     final mevcut = state.value;
     if (mevcut == null ||
@@ -42,43 +71,7 @@ class IslemListesiViewModel extends AsyncNotifier<IslemListesiDurumu> {
     state = AsyncValue<IslemListesiDurumu>.data(
       mevcut.kopyala(dahaYukleniyor: true, hatayiTemizle: true),
     );
-
-    try {
-      final sayfa = await ref
-          .read(islemRepositorySaglayici)
-          .listele(cariId: cariId, sonrasindan: mevcut.kayitlar.last);
-
-      state = AsyncValue<IslemListesiDurumu>.data(
-        mevcut.kopyala(
-          kayitlar: <IslemKaydi>[
-            ...mevcut.kayitlar,
-            ...sayfa.kayitlar,
-          ].toList(growable: false),
-          dahaVar: sayfa.dahaVar,
-          dahaYukleniyor: false,
-          hatayiTemizle: true,
-        ),
-      );
-    } on UygulamaHatasi catch (hata) {
-      Log.uyari('Sonraki işlem sayfası yüklenemedi: ${hata.mesaj}');
-      state = AsyncValue<IslemListesiDurumu>.data(
-        mevcut.kopyala(
-          dahaYukleniyor: false,
-          sayfaHatasi: Metinler.sonrakiIslemlerYuklenemedi,
-        ),
-      );
-    }
-  }
-
-  Future<IslemListesiDurumu> _ilkSayfa() async {
-    final sayfa = await ref
-        .read(islemRepositorySaglayici)
-        .listele(cariId: cariId);
-
-    return IslemListesiDurumu(
-      kayitlar: sayfa.kayitlar,
-      dahaVar: sayfa.dahaVar,
-    );
+    await durumaYaz(sayfaEkle);
   }
 }
 

@@ -34,4 +34,18 @@ abstract final class IslemBasligi {
     final gosterilen = adlar.take(_enCokKalem).join(_ayrac);
     return '$gosterilen +${adlar.length - _enCokKalem}';
   }
+
+  /// [baslik], [kalemler]'den türetilmiş olabilir mi?
+  ///
+  /// Düzenleme formu açıklama kutusunu buna bakarak dolduruyor: kullanıcı
+  /// açıklamayı hiç yazmadıysa kutu boş açılmalı ki bir satırı değiştirdiğinde
+  /// açıklama da kendiliğinden yenilensin. Kutuya `Elma Scarlet M9` yazılsaydı,
+  /// satır armuda çevrildiğinde ekstrede hâlâ elma yazardı.
+  ///
+  /// Kullanıcının elle yazdığı açıklama kalemlerin türetilmişine birebir eşitse
+  /// yazılmamış sayılır. Sonucu aynı olduğu için bu, kaydı bozmaz.
+  static bool turetilmisMi({
+    required String baslik,
+    required List<IslemKalemi> kalemler,
+  }) => baslik.trim() == uret(yazilan: '', kalemler: kalemler);
 }

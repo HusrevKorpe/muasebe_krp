@@ -1,4 +1,5 @@
 import '../../../data/cari/cari_kaydi.dart';
+import '../../../domain/cari/acik_hesap_ozeti.dart';
 
 /// Cari listesi ekranının durumu.
 class CariListesiDurumu {
@@ -27,6 +28,16 @@ class CariListesiDurumu {
   bool get bosMu => kayitlar.isEmpty;
 
   bool get aramaVarMi => arama.trim().isNotEmpty;
+
+  /// Elde tutulan kayıtların alacak/borç toplamı. Açık hesap sekmesinin
+  /// başlığında gösteriliyor.
+  ///
+  /// Toplam **yüklenmiş** kayıtları kapsar: [dahaVar] doğruysa listenin devamı
+  /// geldikçe büyür, o yüzden başlık bunu kullanıcıya söyler. Sunucuda toplama
+  /// yaptırmak (`aggregate`) çevrimdışı çalışmaz; uygulamanın tamamı önbellek
+  /// üzerinden yürüdüğü için toplam da elden hesaplanıyor.
+  AcikHesapOzeti get ozet =>
+      AcikHesapOzeti.hesapla(kayitlar.map((kayit) => kayit.cari.bakiye));
 
   CariListesiDurumu kopyala({
     List<CariKaydi>? kayitlar,

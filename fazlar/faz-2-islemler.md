@@ -45,6 +45,7 @@ ve **yürüyen bakiyeyi** doğru hesaplamak.
 | `iptal` | bool | |
 | `iptalNedeni` | string? | |
 | `olusturmaTarihi` | timestamp | `serverTimestamp()` — kayıt izi, **sıralamada kullanılmaz** |
+| `guncellemeTarihi` | timestamp? | Yalnızca sonradan düzenlenmiş kayıtta var; `serverTimestamp()` |
 
 > **Sıralama neden `olusturmaTarihi` değil:** `serverTimestamp()` sunucu onaylayana
 > kadar `null` okunur. Çevrimdışı girilen bir fatura, sıralama ona bakarsa listede
@@ -114,6 +115,25 @@ Kayıt silinmez. `iptal = true` işaretlenir, bakiyeye katkısı geri alınır, 
 listesinde üstü çizili görünür. Sebep: silinen bir tahsilat, sonrasındaki **tüm**
 yürüyen bakiyeleri kaydırır ve geri dönüşü olmaz.
 
+### Düzenleme
+
+Kayıtlı bir işlemin fiyatı, adedi, tarihi ve açıklaması **yerinde değiştirilebilir**
+(`IslemRepository.guncelle`). Aynı belge güncellenir: kimlik, oluşturma tarihi ve
+iptal alanları yerinde kalır, bakiyeye `yeni − eski` farkı `increment` ile yazılır.
+Değişiklik `guncellemeTarihi` ile sunucu saatinde işaretlenir ve işlem detayında
+"Son düzenleme" satırı olarak görünür.
+
+İptalli kayıt düzenlenmez; tip de değiştirilmez — satışı alışa çevirmek yeni bir
+kayıt girmekle aynı şeydir.
+
+**Bu, ilk kararın tersi.** Başta güncelleme yolu bilerek yazılmamıştı: yanlış giriş
+iptal edilip yeniden girilecekti. Kullanım bunu taşımadı — fidancılıkta fiyat satış
+sonrası pazarlıkla değişiyor ve kullanıcı geçmiş satışın rakamını düzeltmek
+istiyor. Her düzeltme için iptal + yeniden giriş, ekstreyi ölü satırlarla
+dolduruyordu. Kararın gerekçesi olan risk (bakiyenin sessizce kayması) iki şeyle
+karşılanıyor: bakiye farkı işlem yazmasıyla **aynı batch** içinde işleniyor ve
+düzenleme kayıtta iz bırakıyor. Silme hâlâ yok (KURALLAR.md §4.2).
+
 ---
 
 ## Görevler
@@ -133,21 +153,23 @@ zaten vardı. `IslemKalemi`'nin iki fabrikası bunları çağırıyor — araya 
 onları yeniden yayınlayan bir sınıf koymak katman eklerdi, kural değil.
 
 ### Data (`lib/data/`)
-- [x] `IslemRepository`: listele (tarih aralığı + sayfalı), ekle, iptal et
-- [x] Ekleme/iptal işlemleri tek atomik yazmada, cari bakiyesiyle birlikte
-      (batch + `increment` — yukarıdaki sapma notuna bakın)
+- [x] `IslemRepository`: listele (tarih aralığı + sayfalı), ekle, güncelle, iptal et
+- [x] Ekleme/güncelleme/iptal işlemleri tek atomik yazmada, cari bakiyesiyle
+      birlikte (batch + `increment` — yukarıdaki sapma notuna bakın)
 - [x] `bakiyeYenidenHesapla(cariId)` fonksiyonu
 - [x] Gerekli composite index'ler `firestore.indexes.json`'a eklendi
 
-İşlem **güncelleme** yolu bilerek yazılmadı: kaydedilmiş bir muhasebe kaydının
-tutarını yerinde değiştirmek, bakiyeyi ve geçmiş ekstreyi sessizce kaydırır.
-Yanlış giriş iptal edilip yeniden girilir (KURALLAR.md §4.2).
+İşlem **güncelleme** yolu sonradan eklendi; gerekçesi yukarıdaki "Düzenleme"
+başlığında. Silme yolu hâlâ yok.
 
 ### Features
 - [x] `cari_detay_ekrani` işlem listesiyle doldurulur — her satırda yürüyen bakiye
 - [x] `features/islem/view/fatura_form_ekrani.dart` — kalem ekle/çıkar, vade
 - [x] `features/islem/view/tahsilat_form_ekrani.dart` — tutar, tarih, açıklama
-- [x] `features/islem/view/islem_detay_ekrani.dart` — kalemler, iptal butonu
+- [x] `features/islem/view/islem_detay_ekrani.dart` — kalemler, düzenle ve iptal
+      düğmeleri, düzenlenmiş kayıtta "Son düzenleme" satırı
+- [x] `features/islem/view/islem_duzenle_ekrani.dart` — kaydı kimliğinden okur,
+      tipine göre fatura ya da tahsilat formunu `mevcut` ile açar
 - [x] Kalem girişinde **iki mod**: birim fiyat gir · toplam gir (birim fiyat hesaplansın)
 
 ### Kalem giriş modu — neden zorunlu
@@ -208,6 +230,8 @@ flutter test integration_test -d <simulator-id>
 | `bakiyeYenidenHesapla` == önbelleklenmiş bakiye | `integration_test/islem_repository_test.dart` | ✅ |
 | Eşzamanlı beş işlem — bakiye bozulmuyor | `integration_test/islem_repository_test.dart` | ✅ |
 | İptal: kayıt duruyor, bakiye geri alınıyor, ikinci iptal iki kez düşmüyor | `integration_test/islem_repository_test.dart` | ✅ |
+| Düzenleme: aynı belge güncelleniyor, bakiyeye yalnızca fark işleniyor, iptalli kayıt düzenlenmiyor | `integration_test/islem_repository_test.dart` | ✅ |
+| Düzenlemeden sonra yeniden hesaplanan bakiye önbelleklenmişle aynı | `integration_test/islem_repository_test.dart` | ✅ |
 | Sayfalama ve tarih aralığı süzgeci | `integration_test/islem_repository_test.dart` | ✅ |
 
 ---

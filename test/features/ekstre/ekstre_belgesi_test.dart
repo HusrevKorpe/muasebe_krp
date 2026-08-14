@@ -117,7 +117,7 @@ void main() {
             islemTarihi: DateTime(2025, 3, 8),
             kalemler: <IslemKalemi>[
               IslemKalemi.birimFiyattan(
-                ad: 'şeftali cılğa',
+                tur: 'şeftali cılğa',
                 miktar: 1200,
                 birimFiyat: Kurus.liradan(38, 50),
               ),
@@ -180,6 +180,39 @@ void main() {
         ekstreAciklamasi(tahsilatlar[0].kopyala(iptal: true)),
         'Müşteriden Tahsilat (İPTAL EDİLDİ)',
       );
+    });
+  });
+
+  // Kullanıcının isteği: "para aldığım ve fidan aldığım" satırlar tabloda
+  // ayrışsın. Ölçüt alacak kolonundaki tutar (bkz. [ekstreAlacakSatiriMi]).
+  group('Satır zemini', () {
+    test('tahsilat satırı zeminli basılır', () {
+      expect(ekstreAlacakSatiriMi(tahsilatlar[0]), isTrue);
+    });
+
+    test('alış faturası da zeminli basılır', () {
+      expect(ekstreAlacakSatiriMi(sertCekirdekliFaturasi), isTrue);
+    });
+
+    test('satış faturası beyaz kalır', () {
+      expect(ekstreAlacakSatiriMi(zeytinHurmaFaturasi), isFalse);
+    });
+
+    test('cariye ödeme beyaz kalır — borç tarafı', () {
+      final odeme = Islem.odeme(
+        id: '99',
+        tip: IslemTipi.odeme,
+        baslik: 'Cariye Ödeme',
+        islemTarihi: DateTime(2025, 2, 1),
+        tutar: Kurus.liradan(1000),
+      );
+
+      expect(ekstreAlacakSatiriMi(odeme), isFalse);
+    });
+
+    test('iptal edilmiş tahsilat zeminsiz kalır', () {
+      // Tutarları boş basılıyor; zemin "para girdi" derdi.
+      expect(ekstreAlacakSatiriMi(tahsilatlar[0].kopyala(iptal: true)), isFalse);
     });
   });
 

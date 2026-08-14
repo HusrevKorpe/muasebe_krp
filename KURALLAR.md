@@ -167,8 +167,14 @@ Bu kural Firestore'da saklanan alanları da kapsar — veritabanına da `int` ya
 
 ### 4.2 Veri bütünlüğü
 
-- **Muhasebe kaydı fiziksel olarak silinmez.** Yanlış giriş için iptal işaretlemesi
-  veya ters kayıt kullanılır. Silinen bir tahsilat, sonraki tüm bakiyeleri kaydırır.
+- **Muhasebe kaydı fiziksel olarak silinmez.** Karşılıksız bir kayıt için iptal
+  işaretlemesi veya ters kayıt kullanılır. Silinen bir tahsilat, sonraki tüm
+  bakiyeleri kaydırır.
+- **Düzeltme silme değildir.** Fiyatı ya da adedi yanlış girilmiş bir işlem
+  yerinde güncellenebilir (`IslemRepository.guncelle`): belge silinip yeniden
+  açılmaz, kimliği ve oluşturma tarihi korunur, bakiyeye `yeni − eski` farkı
+  işlem yazmasıyla **aynı batch** içinde `increment` ile yazılır ve değişiklik
+  `guncellemeTarihi` ile iz bırakır. İptal edilmiş kayıt düzenlenmez.
 - Tarih alanlarında `FieldValue.serverTimestamp()` kullanılır. Cihaz saati değiştirilebilir
   ve kaydın gerçekte ne zaman girildiğini bozar. **Sıralamada bu alana güvenilmez:**
   sunucu onaylayana kadar `null` okunur ve çevrimdışı girilen kayıt listede yerini
@@ -187,17 +193,37 @@ Bu kural Firestore'da saklanan alanları da kapsar — veritabanına da `int` ya
 
 ### 4.3 Maliyet ve performans
 
-- Liste ekranlarında **sayfalama zorunludur**. Koleksiyonun tamamı tek `get()` ile çekilmez —
-  Firestore okuma başına ücretlendirir.
+- Liste ekranları Firestore'u **`snapshots()` ile dinler, `get()` ile çekmez.**
+  `get()` varsayılan olarak sunucuya gider ve cevabını bekler; telefonun
+  önbelleğindeki veriyi ancak SDK "çevrimdışıyım" kararını verdikten sonra
+  kullanır. Bağlantı kopuk değil de **yavaşsa** o karar hiç verilmez ve ekran
+  dakikalarca döner. `snapshots()` önce önbellekten anında yayar, sunucu cevabı
+  gelince ikinci kez yayar.
+- Liste ekranlarında **sayfalama zorunludur**. Koleksiyonun tamamı tek seferde
+  çekilmez — Firestore okuma başına ücretlendirir. Canlı listede sayfalama
+  imleçle (`startAfter`) değil **sorgunun sınırı büyütülerek** yapılır: imleç
+  sabit bir belgeye bakar, akışta o belge yer değiştirir. Ortak taban:
+  `features/ortak/viewmodel/akis_listesi_viewmodel.dart`.
+- **Kaydetme yolu ağa bağlanmaz.** Kaydet düğmesine basıldığında ne yazma
+  future'ı beklenir ne de sunucuya bir sorgu atılır; kayıt öncesi kontroller
+  (ör. mükerrer ürün) yalnızca önbellekte koşar. Kaydedilen satır listeye
+  akıştan düşer, `invalidate` ile yeniden çekilmez.
 - Cari listesinde bakiye göstermek için o carinin işlemleri çekilmez; önbelleklenmiş
   bakiye alanı okunur.
 - Her sorgunun index'i `firestore.indexes.json` içinde tanımlıdır.
+- İstisna: **PDF ekstre** bilerek sunucuyu bekler (`get()`). Önbellek yalnızca
+  daha önce görülmüş belgeleri tutar; eksik geçmişle üretilen ekstrenin açılış
+  bakiyesi yanlış çıkar ve o belge müşteriye gider.
 
 ### 4.4 Çevrimdışı
 
 - Firestore offline persistence **açıktır**. Kullanıcı serada/tarlada internetsiz kalır.
 - UI, henüz sunucuya yazılmamış kayıtları ayırt edilebilir şekilde gösterir
   (`metadata.hasPendingWrites`).
+- Ekran hiçbir zaman sunucu onayını beklemez: yazma future'ı beklenmez, liste
+  yenilenirken `AsyncValue.loading()`'e düşürülmez (eldeki kayıtlar yerinde
+  kalır), sağlayıcılar ekrandan çıkınca hemen atılmaz
+  (`features/ortak/viewmodel/saglayici_onbellegi.dart`).
 
 ---
 

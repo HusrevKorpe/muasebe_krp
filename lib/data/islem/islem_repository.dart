@@ -66,35 +66,33 @@ class IslemRepository {
   CollectionReference<Map<String, dynamic>> _koleksiyon(String cariId) =>
       _cariBelgesi(cariId).collection(Islem.koleksiyon);
 
-  /// Carinin işlemlerini en yeniden en eskiye, sayfa sayfa döner.
+  /// Carinin en yeni [sinir] işlemini, en yeniden en eskiye **canlı** yayar.
+  ///
+  /// Akış önce yerel önbellekten yayar, sunucu cevabı gelince ikinci kez yayar;
+  /// yeni girilen işlem ağ beklemeden listede belirir. Sayfalama imleçle değil
+  /// [sinir] büyütülerek yapılır — gerekçesi `AkisListesiViewModel`'de.
   ///
   /// [baslangic] ve [bitis] verilirse yalnızca o tarih aralığındaki işlemler
-  /// gelir — Faz 4'teki ekstre bu süzgeci kullanacak.
-  Future<IslemSayfasi> listele({
+  /// gelir.
+  Stream<IslemSayfasi> listeyiIzle({
     required String cariId,
     DateTime? baslangic,
     DateTime? bitis,
-    IslemKaydi? sonrasindan,
-    int sayfaBoyu = varsayilanSayfaBoyu,
-  }) async {
-    try {
-      var sorgu = _sorguKur(cariId, baslangic: baslangic, bitis: bitis);
-      if (sonrasindan != null) {
-        sorgu = sorgu.startAfter(<Object?>[
-          Timestamp.fromDate(sonrasindan.islem.islemTarihi),
-          sonrasindan.islem.id,
-        ]);
-      }
-
-      final anlik = await sorgu.limit(sayfaBoyu).get();
-      return IslemSayfasi(
-        kayitlar: anlik.docs.map(_kayda).toList(growable: false),
-        dahaVar: anlik.docs.length == sayfaBoyu,
-      );
-    } on FirebaseException catch (hata, yigin) {
-      Log.hata('İşlem listesi okunamadı: ${hata.code}', hata, yigin);
-      throw _veriHatasi(hata);
-    }
+    int sinir = varsayilanSayfaBoyu,
+  }) {
+    return _sorguKur(cariId, baslangic: baslangic, bitis: bitis)
+        .limit(sinir)
+        .snapshots()
+        .map(
+          (anlik) => IslemSayfasi(
+            kayitlar: anlik.docs.map(_kayda).toList(growable: false),
+            dahaVar: anlik.docs.length == sinir,
+          ),
+        )
+        .handleError((Object hata, StackTrace yigin) {
+          Log.hata('İşlem listesi okunamadı: $cariId', hata, yigin);
+          throw _veriHatasi(hata);
+        }, test: (hata) => hata is FirebaseException);
   }
 
   /// Ekstre için carinin işlemlerini eskiden yeniye, **sayfalamadan** getirir.
@@ -107,6 +105,12 @@ class IslemRepository {
   ///
   /// [ekstreOkumaSiniri] kadar kayıt dönerse eksik veri ihtimali vardır ve
   /// hata fırlatılır; sessizce kesilen bir ekstre yanlış bakiye gösterirdi.
+  ///
+  /// Liste ekranlarının aksine burası akışa değil `get()`'e bağlı ve bilerek
+  /// sunucuyu bekler: önbellek yalnızca uygulamanın daha önce gördüğü belgeleri
+  /// tutar, eksik bir geçmişle üretilen ekstrenin açılış bakiyesi **yanlış**
+  /// çıkar. Müşteriye gönderilen belgede bir saniye erken ama hatalı rakam,
+  /// birkaç saniye geç ama doğru rakamdan kötüdür.
   Future<List<Islem>> ekstreIcinGetir({
     required String cariId,
     DateTime? bitis,
@@ -175,6 +179,56 @@ class IslemRepository {
 
     _yazmayiBaslat(toplu.commit(), 'İşlem eklenemedi: ${belge.id}');
     return belge.id;
+  }
+
+  /// Kayıtlı işlemi yerinde günceller ve bakiye **farkını** aynı batch içinde
+  /// işler.
+  ///
+  /// Yanlış girilmiş bir fiyat ya da adet için tek çare iptal edip yeniden
+  /// girmek değil: kullanıcı satışı düzeltebilmeli. Kayıt yine **silinmez**,
+  /// aynı belge güncellenir — kimliği, oluşturma tarihi ve iptal alanları
+  /// yerinde kalır (bkz. KURALLAR.md §4.2). Değişiklik iz bıraksın diye
+  /// [Islem.alanGuncellemeTarihi] `serverTimestamp()` ile yazılır.
+  ///
+  /// Bakiyeye mutlak değer değil `yeni − eski` farkı yazılır; gerekçesi sınıf
+  /// başındaki nottur. Fark [eski] kaydın elimizdeki hâlinden hesaplandığı için
+  /// iki cihaz **aynı** kaydı aynı anda düzenlerse bakiye kayabilir — bu, ortak
+  /// defterde ancak iki kişinin aynı saniyede aynı faturaya dokunmasıyla olur ve
+  /// [bakiyeYenidenHesapla] ile onarılır.
+  ///
+  /// İptalli kayıt düzenlenmez: bakiyeye katkısı olmayan bir kaydın tutarını
+  /// değiştirmek kullanıcıya bir şey kazandırmaz, ekstrede ise iptal edilmiş
+  /// satırın rakamını sessizce değiştirirdi.
+  Future<void> guncelle({
+    required String cariId,
+    required Islem eski,
+    required Islem yeni,
+  }) async {
+    if (eski.yeniMi) {
+      throw const VeriHatasi('Kaydedilmemiş işlem güncellenemez.');
+    }
+    if (yeni.id != eski.id) {
+      throw const VeriHatasi('Düzenlenen kayıt başka bir işlemle karıştı.');
+    }
+    if (eski.iptalMi) {
+      throw const VeriHatasi('İptal edilmiş kayıt düzenlenemez.');
+    }
+
+    final toplu = _firestore.batch();
+    toplu.update(_koleksiyon(cariId).doc(eski.id), <String, Object?>{
+      ...yeni.yazilabilirAlanlar(),
+      Islem.alanGuncellemeTarihi: FieldValue.serverTimestamp(),
+    });
+    toplu.update(
+      _cariBelgesi(cariId),
+      await _cariGuncellemesi(
+        cariId: cariId,
+        bakiyeFarki: yeni.bakiyeEtkisi - eski.bakiyeEtkisi,
+        islemTarihi: yeni.islemTarihi,
+      ),
+    );
+
+    _yazmayiBaslat(toplu.commit(), 'İşlem güncellenemedi: ${eski.id}');
   }
 
   /// İşlemi iptal işaretler ve bakiyeye katkısını geri alır.
@@ -324,7 +378,7 @@ class IslemRepository {
 
   VeriHatasi _veriHatasi(Object hata) {
     if (hata is FirebaseException && hata.code == 'permission-denied') {
-      return const VeriHatasi.oturumYok();
+      return const VeriHatasi.erisimReddedildi();
     }
     return const VeriHatasi.okunamadi();
   }

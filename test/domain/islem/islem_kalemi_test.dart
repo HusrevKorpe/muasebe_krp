@@ -6,7 +6,7 @@ void main() {
   group('IslemKalemi.birimFiyattan', () {
     test('tutar = miktar × birim fiyat, yuvarlama yok', () {
       final kalem = IslemKalemi.birimFiyattan(
-        ad: 'zeytin',
+        tur: 'zeytin',
         miktar: 7000,
         birimFiyat: Kurus.liradan(7),
       );
@@ -18,7 +18,7 @@ void main() {
 
     test('kuruşlu birim fiyat tam çarpılır', () {
       final kalem = IslemKalemi.birimFiyattan(
-        ad: 'fidan',
+        tur: 'fidan',
         miktar: 3,
         birimFiyat: Kurus.liradan(18, 79),
       );
@@ -30,7 +30,7 @@ void main() {
   group('IslemKalemi.toplamdan — birim fiyat geri hesabı', () {
     test('31.000 ₺ ÷ 1.650 adet → 18,79 ₺ gösterilir, toplam korunur', () {
       final kalem = IslemKalemi.toplamdan(
-        ad: 'Hurma',
+        tur: 'Hurma',
         miktar: 1650,
         toplam: Kurus.liradan(31000),
       );
@@ -42,7 +42,7 @@ void main() {
 
     test('tam bölünen toplamda yuvarlama izi kalmaz', () {
       final kalem = IslemKalemi.toplamdan(
-        ad: 'elma',
+        tur: 'elma',
         miktar: 600,
         toplam: Kurus.liradan(27000),
       );
@@ -54,7 +54,7 @@ void main() {
     test('yarım kuruş yukarı yuvarlanır', () {
       // 100 kuruş ÷ 8 = 12,5 kuruş → 13 kuruş.
       final kalem = IslemKalemi.toplamdan(
-        ad: 'fidan',
+        tur: 'fidan',
         miktar: 8,
         toplam: const Kurus(100),
       );
@@ -66,7 +66,7 @@ void main() {
     test('sıfır miktar reddedilir', () {
       expect(
         () => IslemKalemi.toplamdan(
-          ad: 'fidan',
+          tur: 'fidan',
           miktar: 0,
           toplam: Kurus.liradan(100),
         ),
@@ -75,10 +75,67 @@ void main() {
     });
   });
 
+  group('fidan kimliği', () {
+    test('ad üç parçadan türetilir', () {
+      final kalem = IslemKalemi.birimFiyattan(
+        tur: 'Elma',
+        cesit: 'Scarlet',
+        anac: 'M9',
+        miktar: 600,
+        birimFiyat: Kurus.liradan(45),
+      );
+
+      expect(kalem.ad, 'Elma Scarlet M9');
+    });
+
+    test('serbest kalemde yalnızca tür dolar', () {
+      final kalem = IslemKalemi.birimFiyattan(
+        tur: 'nakliye',
+        miktar: 1,
+        birimFiyat: Kurus.liradan(2500),
+      );
+
+      expect(kalem.ad, 'nakliye');
+      expect(kalem.cesit, '');
+      expect(kalem.anac, '');
+    });
+
+    test('parçalar belgeye ayrı ayrı yazılır', () {
+      final kalem = IslemKalemi.birimFiyattan(
+        tur: 'Elma',
+        cesit: 'Scarlet',
+        anac: 'M9',
+        miktar: 600,
+        birimFiyat: Kurus.liradan(45),
+      );
+
+      final veri = kalem.toMap();
+
+      expect(veri[IslemKalemi.alanTur], 'Elma');
+      expect(veri[IslemKalemi.alanCesit], 'Scarlet');
+      expect(veri[IslemKalemi.alanAnac], 'M9');
+      expect(veri[IslemKalemi.alanAd], 'Elma Scarlet M9');
+    });
+
+    test('anacı farklı iki kalem eşit değildir', () {
+      IslemKalemi kalem(String anac) => IslemKalemi.birimFiyattan(
+        tur: 'Elma',
+        cesit: 'Scarlet',
+        anac: anac,
+        miktar: 600,
+        birimFiyat: Kurus.liradan(45),
+      );
+
+      expect(kalem('M9'), isNot(kalem('MM106')));
+    });
+  });
+
   group('katalog bağı', () {
     test('katalogdan seçilen kalem fidanId taşır', () {
       final kalem = IslemKalemi.birimFiyattan(
-        ad: 'Elma / Scarlet / M9',
+        tur: 'Elma',
+        cesit: 'Scarlet',
+        anac: 'M9',
         miktar: 600,
         birimFiyat: Kurus.liradan(45),
         urunId: 'fidan-1',
@@ -91,7 +148,7 @@ void main() {
     test('serbest metin kalemde fidanId boş kalır', () {
       // "nakliye" katalogda yok; katalog zorunlu olmamalı (Faz 3 kriteri 5).
       final kalem = IslemKalemi.birimFiyattan(
-        ad: 'nakliye',
+        tur: 'nakliye',
         miktar: 1,
         birimFiyat: Kurus.liradan(2500),
       );
@@ -117,7 +174,8 @@ void main() {
   group('fromMap / toMap', () {
     test('gidiş-dönüşte alan kaybı olmaz', () {
       final kalem = IslemKalemi.toplamdan(
-        ad: 'Hurma',
+        tur: 'Hurma',
+        cesit: 'Karışık',
         miktar: 1650,
         toplam: Kurus.liradan(31000),
         urunId: 'fidan-1',
@@ -134,7 +192,7 @@ void main() {
 
     test('tutar ve birim fiyat ayrı ayrı saklanır', () {
       final kalem = IslemKalemi.toplamdan(
-        ad: 'Hurma',
+        tur: 'Hurma',
         miktar: 1650,
         toplam: Kurus.liradan(31000),
       );
@@ -166,6 +224,36 @@ void main() {
       });
 
       expect(kalem.tutar.deger, 3100000);
+    });
+  });
+
+  // Kalem üçe bölünmeden önce girilmiş faturalar yalnızca `ad` taşıyor. Geçmiş
+  // fatura yeniden yazılmıyor; okuma düşerse eski ekstreler adsız çıkar.
+  group('Bölünmeden önceki kalem uyumu', () {
+    test('tek adlı eski kalem olduğu gibi türe düşer', () {
+      final kalem = IslemKalemi.fromMap(const <String, Object?>{
+        IslemKalemi.alanAd: 'Elma Scarlet M9',
+        IslemKalemi.alanMiktar: 600,
+        IslemKalemi.alanTutarKurus: 2700000,
+      });
+
+      expect(kalem.tur, 'Elma Scarlet M9');
+      expect(kalem.cesit, '');
+      expect(kalem.anac, '');
+      expect(kalem.ad, 'Elma Scarlet M9');
+    });
+
+    test('parçalar varsa türetilmiş adın önüne geçer', () {
+      final kalem = IslemKalemi.fromMap(const <String, Object?>{
+        IslemKalemi.alanTur: 'Elma',
+        IslemKalemi.alanCesit: 'Scarlet',
+        IslemKalemi.alanAnac: 'M9',
+        IslemKalemi.alanAd: 'Elma Scarlet M9',
+        IslemKalemi.alanMiktar: 600,
+      });
+
+      expect(kalem.cesit, 'Scarlet');
+      expect(kalem.ad, 'Elma Scarlet M9');
     });
   });
 }

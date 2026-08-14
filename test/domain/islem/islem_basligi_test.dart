@@ -5,7 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   IslemKalemi kalem(String ad) => IslemKalemi.birimFiyattan(
-    ad: ad,
+    tur: ad,
     miktar: 1,
     birimFiyat: Kurus.liradan(10),
   );
@@ -88,6 +88,60 @@ void main() {
 
     test('kalem yoksa boş döner', () {
       expect(IslemBasligi.uret(yazilan: '', kalemler: kalemler(<String>[])), '');
+    });
+  });
+
+  // Düzenleme formu açıklama kutusunu buna bakarak dolduruyor: türetilmiş
+  // başlık kutuya yazılmaz ki satır değişince başlık da yenilensin.
+  group('turetilmisMi', () {
+    test('kalemlerden üretilen başlığı tanır', () {
+      expect(
+        IslemBasligi.turetilmisMi(
+          baslik: 'zeytin, Hurma',
+          kalemler: kalemler(<String>['zeytin', 'Hurma']),
+        ),
+        isTrue,
+      );
+    });
+
+    test('kullanıcının yazdığı başlığı türetilmiş saymaz', () {
+      expect(
+        IslemBasligi.turetilmisMi(
+          baslik: 'Zeytin-Hurma',
+          kalemler: kalemler(<String>['zeytin', 'Hurma']),
+        ),
+        isFalse,
+      );
+    });
+
+    test('özetlenmiş uzun başlık da türetilmiş sayılır', () {
+      expect(
+        IslemBasligi.turetilmisMi(
+          baslik: 'elma, armut, kiraz +2',
+          kalemler: kalemler(<String>[
+            'elma',
+            'armut',
+            'kiraz',
+            'ayva',
+            'asma',
+          ]),
+        ),
+        isTrue,
+      );
+    });
+
+    test('kalemsiz kayıtta yalnızca boş başlık türetilmiş sayılır', () {
+      expect(
+        IslemBasligi.turetilmisMi(baslik: '', kalemler: kalemler(<String>[])),
+        isTrue,
+      );
+      expect(
+        IslemBasligi.turetilmisMi(
+          baslik: 'Müşteriden Tahsilat',
+          kalemler: kalemler(<String>[]),
+        ),
+        isFalse,
+      );
     });
   });
 }

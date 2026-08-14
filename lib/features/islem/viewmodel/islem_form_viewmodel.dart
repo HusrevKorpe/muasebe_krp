@@ -4,9 +4,14 @@ import '../../../core/para/kurus.dart';
 import '../../../data/islem/islem_repository.dart';
 import '../../../domain/islem/islem.dart';
 import '../../ortak/viewmodel/islem_viewmodel.dart';
-import 'islem_listesi_viewmodel.dart';
 
-/// İşlem kaydetme, iptal etme ve bakiye onarımı.
+/// İşlem kaydetme, düzenleme, iptal etme ve bakiye onarımı.
+///
+/// Kaydettikten sonra liste **tazelenmez**: `IslemListesiViewModel` Firestore'u
+/// canlı dinliyor ve yerel yazmayı anında yayıyor — çevrimdışı girilen işlem de
+/// listede "Kaydedilmedi" işaretiyle hemen görünür. Eskiden buradaki
+/// `invalidate` çağrısı listeyi sunucudan yeniden çekiyordu; kayıt yerel
+/// önbelleğe milisaniyede düşse de ekran o ağ turunu bekliyordu.
 class IslemFormViewModel extends IslemViewModel {
   /// Yeni işlemi kaydeder ve cari bakiyesini aynı batch içinde günceller.
   Future<bool> kaydet({required String cariId, required Islem islem}) =>
@@ -14,8 +19,21 @@ class IslemFormViewModel extends IslemViewModel {
         await ref
             .read(islemRepositorySaglayici)
             .ekle(cariId: cariId, islem: islem);
-        _listeyiTazele(cariId);
       }, etiket: 'İşlem kaydı');
+
+  /// Kayıtlı işlemi günceller; bakiyeye yalnızca fark yazılır.
+  ///
+  /// [eski] kaydın düzenleme öncesi hâlidir ve bakiye farkı ondan hesaplanır —
+  /// formun okuduğu akıştan gelir (bkz. [IslemRepository.guncelle]).
+  Future<bool> guncelle({
+    required String cariId,
+    required Islem eski,
+    required Islem yeni,
+  }) => calistir(() async {
+    await ref
+        .read(islemRepositorySaglayici)
+        .guncelle(cariId: cariId, eski: eski, yeni: yeni);
+  }, etiket: 'İşlem güncelleme');
 
   /// İşlemi iptal işaretler; kayıt silinmez (bkz. KURALLAR.md §4.2).
   Future<bool> iptalEt({
@@ -26,7 +44,6 @@ class IslemFormViewModel extends IslemViewModel {
     await ref
         .read(islemRepositorySaglayici)
         .iptalEt(cariId: cariId, islem: islem, neden: neden);
-    _listeyiTazele(cariId);
   }, etiket: 'İşlem iptali');
 
   /// Bakiyeyi tüm işlemlerden baştan hesaplar ve cari kaydına yazar.
@@ -39,17 +56,8 @@ class IslemFormViewModel extends IslemViewModel {
       sonuc = await ref
           .read(islemRepositorySaglayici)
           .bakiyeYenidenHesapla(cariId);
-      _listeyiTazele(cariId);
     }, etiket: 'Bakiye onarımı');
     return sonuc;
-  }
-
-  /// İşlem listesi `get()` ile sayfalandığı için kendiliğinden tazelenmiyor.
-  ///
-  /// Firestore yerel yazmayı sorgu sonucuna karıştırdığından, çevrimdışı
-  /// girilen işlem de bu tazelemede listede görünür.
-  void _listeyiTazele(String cariId) {
-    ref.invalidate(islemListesiViewModelSaglayici(cariId));
   }
 }
 

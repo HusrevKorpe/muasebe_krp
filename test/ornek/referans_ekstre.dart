@@ -30,17 +30,17 @@ final Islem zeytinHurmaFaturasi = Islem.fatura(
   islemTarihi: DateTime(2021, 9, 17),
   kalemler: <IslemKalemi>[
     IslemKalemi.birimFiyattan(
-      ad: 'zeytin',
+      tur: 'zeytin',
       miktar: 7000,
       birimFiyat: Kurus.liradan(7),
     ),
     IslemKalemi.toplamdan(
-      ad: 'Hurma',
+      tur: 'Hurma',
       miktar: 1650,
       toplam: Kurus.liradan(31000),
     ),
     IslemKalemi.birimFiyattan(
-      ad: 'nakliye',
+      tur: 'nakliye',
       miktar: 1,
       birimFiyat: Kurus.liradan(14000),
     ),
@@ -55,17 +55,17 @@ final Islem hachiyaFaturasi = Islem.fatura(
   islemTarihi: DateTime(2024, 12, 5),
   kalemler: <IslemKalemi>[
     IslemKalemi.birimFiyattan(
-      ad: 'hachiya',
+      tur: 'hachiya',
       miktar: 3000,
       birimFiyat: Kurus.liradan(60),
     ),
     IslemKalemi.birimFiyattan(
-      ad: 'çam',
+      tur: 'çam',
       miktar: 250,
       birimFiyat: Kurus.liradan(60),
     ),
     IslemKalemi.birimFiyattan(
-      ad: 'zeytin gemlik 2 yaş',
+      tur: 'zeytin gemlik 2 yaş',
       miktar: 250,
       birimFiyat: Kurus.liradan(100),
     ),
@@ -89,17 +89,17 @@ final Islem sertCekirdekliFaturasi = Islem.fatura(
   kalemler: <IslemKalemi>[
     for (final ad in <String>['elma', 'armut', 'kiraz', 'ayva'])
       IslemKalemi.birimFiyattan(
-        ad: ad,
+        tur: ad,
         miktar: 600,
         birimFiyat: Kurus.liradan(45),
       ),
     IslemKalemi.birimFiyattan(
-      ad: 'asma anacı atasarısı',
+      tur: 'asma anacı atasarısı',
       miktar: 725,
       birimFiyat: Kurus.liradan(45),
     ),
     IslemKalemi.birimFiyattan(
-      ad: 'vergi',
+      tur: 'vergi',
       miktar: 1,
       birimFiyat: Kurus.liradan(1406, 25),
     ),

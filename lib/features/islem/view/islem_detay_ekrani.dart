@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
+import '../../../app/yollar.dart';
 import '../../../core/hata/hatalar.dart';
 import '../../../core/metin/metinler.dart';
 import '../../../core/para/para_bicimi.dart';
@@ -15,7 +17,10 @@ import 'widget/fatura_ozeti.dart';
 import 'widget/islem_tipi_gorunumu.dart';
 import 'widget/kalem_listesi.dart';
 
-/// Bir işlemin ayrıntısı: kalemler, tutar dökümü ve iptal düğmesi.
+/// Bir işlemin ayrıntısı: kalemler, tutar dökümü, düzenleme ve iptal düğmesi.
+///
+/// Düzenleme ve iptal yalnızca yürürlükteki kayıtta görünür; iptal edilmiş bir
+/// kaydın ne tutarı değiştirilir ne de ikinci kez iptal edilir.
 class IslemDetayEkrani extends ConsumerWidget {
   const IslemDetayEkrani({
     required this.cariId,
@@ -35,12 +40,18 @@ class IslemDetayEkrani extends ConsumerWidget {
       appBar: AppBar(
         title: Text(kayit.value?.islem.tip.ad ?? Metinler.islemDetayi),
         actions: [
-          if (kayit.value != null && !kayit.value!.islem.iptalMi)
+          if (kayit.value != null && !kayit.value!.islem.iptalMi) ...[
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: Metinler.islemiDuzenle,
+              onPressed: () => _duzenlemeyeGit(context),
+            ),
             IconButton(
               icon: const Icon(Icons.block_outlined),
               tooltip: Metinler.islemiIptalEt,
               onPressed: () => _iptalEt(context, ref, kayit.value!.islem),
             ),
+          ],
         ],
       ),
       body: kayit.when(
@@ -55,10 +66,20 @@ class IslemDetayEkrani extends ConsumerWidget {
                 baslik: Metinler.islemYokBaslik,
                 aciklama: Metinler.islemYokAciklama,
               )
-            : _Govde(kayit: deger),
+            : _Govde(
+                kayit: deger,
+                // Satıra dokununca da düzenleme açılır: kullanıcı fiyatı
+                // gördüğü yerden düzeltmek istiyor. İptalli kayıtta kapalı.
+                onDuzenle: deger.islem.iptalMi
+                    ? null
+                    : () => _duzenlemeyeGit(context),
+              ),
       ),
     );
   }
+
+  void _duzenlemeyeGit(BuildContext context) =>
+      context.push(Yollar.islemDuzenleYolu(cariId, islemId));
 
   /// İptal onaylanırsa kayıt silinmez; iptal işaretlenir ve bakiyeye katkısı
   /// geri alınır (bkz. KURALLAR.md §4.2).
@@ -110,9 +131,12 @@ class IslemDetayEkrani extends ConsumerWidget {
 }
 
 class _Govde extends StatelessWidget {
-  const _Govde({required this.kayit});
+  const _Govde({required this.kayit, this.onDuzenle});
 
   final IslemKaydi kayit;
+
+  /// Kalem satırına dokunulduğunda çağrılır. `null` ise satırlar salt okunur.
+  final VoidCallback? onDuzenle;
 
   @override
   Widget build(BuildContext context) {
@@ -133,7 +157,10 @@ class _Govde extends StatelessWidget {
             style: Theme.of(context).textTheme.titleMedium,
           ),
           const SizedBox(height: 8),
-          KalemListesi(kalemler: islem.kalemler),
+          KalemListesi(
+            kalemler: islem.kalemler,
+            onDuzenle: onDuzenle == null ? null : (_) => onDuzenle!(),
+          ),
         ],
         const SizedBox(height: 24),
         FaturaOzeti(toplam: islem.toplam),
@@ -179,6 +206,13 @@ class _OzetKarti extends StatelessWidget {
               etiket: Metinler.islemTarihi,
               deger: uzunTarih(islem.islemTarihi),
             ),
+            // Sonradan düzeltilmiş kayıt bunu göstermeli: müşterinin elindeki
+            // eski ekstre bu satırı başka tutarla basmış olabilir.
+            if (islem.guncellemeTarihi != null)
+              _BilgiSatiri(
+                etiket: Metinler.sonDuzenleme,
+                deger: uzunTarih(islem.guncellemeTarihi!),
+              ),
             if (islem.iptalNedeni != null)
               _BilgiSatiri(
                 etiket: Metinler.iptalNedeni,

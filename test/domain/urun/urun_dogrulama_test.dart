@@ -2,21 +2,22 @@ import 'package:fidancari/domain/urun/urun_dogrulama.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('UrunDogrulama.ad', () {
-    test('boş ad reddedilir', () {
-      expect(UrunDogrulama.ad(''), isNotNull);
-      expect(UrunDogrulama.ad('   '), isNotNull);
-      expect(UrunDogrulama.ad(null), isNotNull);
+  group('UrunDogrulama.tur', () {
+    test('boş tür reddedilir', () {
+      expect(UrunDogrulama.tur(''), isNotNull);
+      expect(UrunDogrulama.tur('   '), isNotNull);
+      expect(UrunDogrulama.tur(null), isNotNull);
     });
 
-    test('tek harflik ad reddedilir', () {
-      expect(UrunDogrulama.ad('E'), isNotNull);
+    test('tek harflik tür reddedilir', () {
+      expect(UrunDogrulama.tur('E'), isNotNull);
     });
 
-    test('geçerli ad kabul edilir', () {
-      expect(UrunDogrulama.ad('çam'), isNull);
-      expect(UrunDogrulama.ad('Elma Scarlet M9 2 yaş tüplü'), isNull);
-      expect(UrunDogrulama.ad('  nakliye  '), isNull);
+    test('geçerli tür kabul edilir', () {
+      expect(UrunDogrulama.tur('çam'), isNull);
+      expect(UrunDogrulama.tur('Elma'), isNull);
+      // Serbest kalemin tamamı türe yazılır; çeşit ve anaç boş kalır.
+      expect(UrunDogrulama.tur('  nakliye  '), isNull);
     });
   });
 

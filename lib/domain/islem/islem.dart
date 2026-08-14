@@ -9,8 +9,9 @@ import 'islem_tipi.dart';
 /// Tutarlar kaydedildiği hâliyle saklanır ve okunurken **yeniden hesaplanmaz**:
 /// bugün kalem listesinden türetilen toplam, yarın yuvarlama kuralı değişirse
 /// başka çıkabilir ve geçmiş ekstre bozulurdu (bkz. KURALLAR.md §3.2).
-/// Hesaplama yalnızca kayıt oluşturulurken, [Islem.fatura] ve [Islem.odeme]
-/// fabrikalarında yapılır.
+/// Hesaplama yalnızca kullanıcı kaydı kurarken — ekleme ya da düzenleme
+/// formunda — [Islem.fatura] ve [Islem.odeme] fabrikalarında yapılır. Düzenleme
+/// de kaydı bu fabrikalardan yeniden kurar; okuma yolu hiç hesap yapmaz.
 class Islem {
   const Islem({
     required this.id,
@@ -22,6 +23,7 @@ class Islem {
     this.iptal = false,
     this.iptalNedeni,
     this.olusturmaTarihi,
+    this.guncellemeTarihi,
   });
 
   /// Kalemlerinden toplamı hesaplanmış yeni fatura.
@@ -74,6 +76,7 @@ class Islem {
     iptal: haritaMantiksal(veri, alanIptal) || _eskisiIptalMi(veri),
     iptalNedeni: haritaMetinOpsiyonel(veri, alanIptalNedeni),
     olusturmaTarihi: haritaTarih(veri, alanOlusturmaTarihi),
+    guncellemeTarihi: haritaTarih(veri, alanGuncellemeTarihi),
   );
 
   /// Eski sürüm iptali `durum: 'iptal'` olarak yazıyordu, ayrı bir [alanIptal]
@@ -92,6 +95,7 @@ class Islem {
   static const String alanIptal = 'iptal';
   static const String alanIptalNedeni = 'iptalNedeni';
   static const String alanOlusturmaTarihi = 'olusturmaTarihi';
+  static const String alanGuncellemeTarihi = 'guncellemeTarihi';
 
   /// Artık yazılmayan, yalnızca okunan alan — bkz. [_eskisiIptalMi].
   static const String alanEskiDurum = 'durum';
@@ -122,7 +126,19 @@ class Islem {
   /// bu yüzden sıralamada kullanılmaz, yalnızca kayıt izidir.
   final DateTime? olusturmaTarihi;
 
+  /// Kayıt sonradan düzenlendiyse son düzenlemenin sunucu saati; hiç
+  /// düzenlenmediyse `null`.
+  ///
+  /// Geçmişe dönük değişiklik iz bırakmalı: tutarı değişmiş bir fatura,
+  /// müşterinin elindeki eski ekstreyle tutmaz ve kullanıcı "ben bunu ne zaman
+  /// düzelttim" diye sorabilmeli (bkz. KURALLAR.md §4.2). [olusturmaTarihi]
+  /// gibi `serverTimestamp()` ile yazılır ve sıralamada kullanılmaz.
+  final DateTime? guncellemeTarihi;
+
   bool get yeniMi => id.isEmpty;
+
+  /// Kaydedildikten sonra en az bir kez düzenlenmiş mi?
+  bool get duzenlenmisMi => guncellemeTarihi != null;
 
   /// İptal edilmiş kayıt bakiyeye katılmaz ve listede üstü çizili görünür.
   bool get iptalMi => iptal;
@@ -158,6 +174,7 @@ class Islem {
     alanIptal: iptal,
     alanIptalNedeni: iptalNedeni,
     alanOlusturmaTarihi: olusturmaTarihi,
+    alanGuncellemeTarihi: guncellemeTarihi,
   };
 
   Islem kopyala({
@@ -170,6 +187,7 @@ class Islem {
     bool? iptal,
     String? iptalNedeni,
     DateTime? olusturmaTarihi,
+    DateTime? guncellemeTarihi,
   }) => Islem(
     id: id ?? this.id,
     tip: tip ?? this.tip,
@@ -180,6 +198,7 @@ class Islem {
     iptal: iptal ?? this.iptal,
     iptalNedeni: iptalNedeni ?? this.iptalNedeni,
     olusturmaTarihi: olusturmaTarihi ?? this.olusturmaTarihi,
+    guncellemeTarihi: guncellemeTarihi ?? this.guncellemeTarihi,
   );
 
   @override

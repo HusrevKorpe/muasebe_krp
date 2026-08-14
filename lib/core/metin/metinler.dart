@@ -91,6 +91,27 @@ abstract final class Metinler {
   static const String kaydedilmediAciklama =
       'İnternet bağlantısı gelince gönderilecek.';
 
+  // ─── Açık hesaplar sekmesi ───────────────────────────────────────────────
+  //
+  // "Açık hesap" = bakiyesi sıfır olmayan kişi. İki yön de açık sayılır:
+  // sana borcu olan da, senin borçlu olduğun da bu listede.
+  static const String cariSekmeTumu = 'Tümü';
+  static const String cariSekmeAcikHesap = 'Açık Hesaplar';
+  static const String acikHesapYokBaslik = 'Açık hesap yok';
+  static const String acikHesapYokAciklama =
+      'Herkesle hesap kapalı — kimsede alacağın, kimseye borcun görünmüyor.';
+
+  /// Toplam satırındaki etiketler. İkinci tekil şahıs, listedeki bakiye
+  /// renkleriyle aynı anlamda: pozitif bakiye alacak, negatif bakiye borç.
+  static const String toplamAlacak = 'Alacağın';
+  static const String toplamBorc = 'Borcun';
+
+  /// Toplam yalnızca yüklenmiş kayıtları kapsıyorsa gösterilen uyarı.
+  static const String acikHesapKismiToplam =
+      'Toplam yüklenen kayıtları kapsıyor — kaydırdıkça artar.';
+
+  static String acikHesapAdedi(int adet) => '$adet açık hesap';
+
   // ─── Kişi formu ──────────────────────────────────────────────────────────
   static const String cariAdi = 'Adı';
   static const String cariAdiIpucu = 'Ahmet Koyuncu';
@@ -163,8 +184,6 @@ abstract final class Metinler {
   static const String kalemYok = 'Henüz satır yok.';
   static const String kalemYokAciklama =
       'Kaydetmek için en az bir satır ekle.';
-  static const String kalemAdi = 'Ne';
-  static const String kalemAdiIpucu = 'zeytin';
   static const String miktar = 'Miktar';
   static const String birimFiyat = 'Birim fiyat';
 
@@ -183,6 +202,16 @@ abstract final class Metinler {
   static const String genelToplam = 'Genel toplam';
 
   // ─── İşlem detayı ────────────────────────────────────────────────────────
+  static const String islemiDuzenle = 'Kaydı düzenle';
+  static const String islemDuzenle = 'Kaydı Düzenle';
+  static const String islemGuncellendi = 'Kayıt güncellendi.';
+
+  /// Düzenlenmiş kayıtta gösterilir: müşterinin elindeki eski ekstre ile bu
+  /// kaydın neden tutmadığı buradan anlaşılır.
+  static const String sonDuzenleme = 'Son düzenleme';
+  static const String islemDuzenlemeUyarisi =
+      'Değişiklik bakiyeye hemen yansır; daha önce paylaştığın ekstre bu kaydı '
+      'eski hâliyle gösteriyor olabilir.';
   static const String islemiIptalEt = 'Bu kaydı iptal et';
   static const String islemIptalOnay =
       'Bu kayıt iptal edilsin mi? Kayıt silinmez, listede üstü çizili kalır ve '
@@ -210,9 +239,65 @@ abstract final class Metinler {
       'gibi kalır.';
   static const String urunPasifeAlindi = 'Ürün listeden kaldırıldı.';
 
+  // ─── Fidan kimliği alanları ──────────────────────────────────────────────
+  //
+  // Aynı üç kutu iki yerde kullanılıyor: ürün katalogunda ve fatura satırında.
+  // Etiketler tek yerden geliyor ki iki ekran birbirinden ayrılmasın.
+  static const String tur = 'Tür';
+  static const String turIpucu = 'elma';
+  static const String cesit = 'Çeşit';
+  static const String cesitIpucu = 'scarlet';
+  static const String anac = 'Anaç';
+  static const String anacIpucu = 'M9';
+
+  /// Tür kutusunun altındaki açıklama: üç kutuyu da doldurmak zorunlu değil.
+  static const String turAciklama =
+      'Nakliye gibi satırlarda yalnızca burayı doldurun; çeşit ve anaç boş '
+      'kalabilir.';
+
+  // ─── Tür / çeşit / anaç listeleri ────────────────────────────────────────
+  //
+  // Üç kutunun her biri kendi listesinden besleniyor: kullanıcı anaçları bir
+  // kez giriyor, sonra her satışta kutuya yazmak yerine listeden seçiyor.
+  static const String secenekListeleri = 'Listeler';
+  static const String secenekListeleriAciklama =
+      'Tür, çeşit ve anaçları bir kez girin; satış girerken yazmak yerine '
+      'listeden seçin.';
+
+  static const String turler = 'Türler';
+  static const String cesitler = 'Çeşitler';
+  static const String anaclar = 'Anaçlar';
+
+  static const String turSec = 'Tür Seç';
+  static const String cesitSec = 'Çeşit Seç';
+  static const String anacSec = 'Anaç Seç';
+
+  /// Kimlik kutusunun sağındaki liste düğmesinin ipucu.
+  static const String listedenSec = 'Listeden seç';
+
+  static const String secenekAra = 'Listede ara';
+  static const String secenekEkle = 'Listeye Ekle';
+  static const String secenekDuzenle = 'Düzelt';
+  static const String secenekMukerrer = 'Bu kayıt listede zaten var.';
+  static const String secenekSil = 'Listeden sil';
+
+  /// Silme onayı. Burada gerçekten siliniyor — pasife alınmıyor — ama silinen
+  /// şey bir muhasebe kaydı değil; kullanıcı bunu bilerek onaylasın.
+  static const String secenekSilOnay =
+      'Listeden silinsin mi? Girilmiş satırlar ve ürünler olduğu gibi kalır; '
+      'yalnızca bu seçim listesinden çıkar.';
+  static const String secenekSilindi = 'Listeden silindi.';
+
+  static const String secenekYokBaslik = 'Liste boş';
+  static const String secenekYokAciklama =
+      'Aşağıdaki düğmeyle ilk kaydı ekleyin; satış girerken bu listeden '
+      'seçeceksiniz.';
+
   // ─── Ürün alanları ───────────────────────────────────────────────────────
-  static const String urunAdi = 'Ürün adı';
-  static const String urunAdiIpucu = 'Elma Scarlet M9 2 yaş tüplü';
+  /// Üç kutudan üretilen adın önüne yazılır: kullanıcı faturaya ne düşeceğini
+  /// kaydetmeden görsün.
+  static const String urunAdiOnizleme = 'Faturaya şöyle yazılır';
+
   static const String urunFiyati = 'Fiyat';
   static const String urunFiyatiAciklama =
       'İsteğe bağlı. Satış girerken ön dolgu gelir, orada değiştirebilirsiniz.';
@@ -226,9 +311,6 @@ abstract final class Metinler {
   static const String urundenSec = 'Üründen seç';
   static const String urunBagi = 'Ürün';
   static const String urunBaginiKaldir = 'Ürün bağını kaldır';
-  static const String urunSerbestMetinAciklama =
-      'Listeden seçmek zorunlu değil: "nakliye" gibi kalemleri elle '
-      'yazabilirsiniz.';
 
   // ─── Hesap dökümü ────────────────────────────────────────────────────────
   //
@@ -279,7 +361,7 @@ abstract final class Metinler {
 
   // ─── İşlem doğrulama ─────────────────────────────────────────────────────
   static const String kalemGerekli = 'En az bir satır ekle.';
-  static const String kalemAdiGerekli = 'Ne olduğunu yaz.';
+  static const String kalemTuruGerekli = 'Ne olduğunu yaz.';
   static const String miktarGerekli = 'Miktar gerekli.';
   static const String miktarGecersiz = 'Miktar sıfırdan büyük olmalı.';
   static const String tutarGerekli = 'Tutar gerekli.';

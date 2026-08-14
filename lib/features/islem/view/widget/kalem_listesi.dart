@@ -6,8 +6,10 @@ import '../../../../domain/islem/islem_kalemi.dart';
 
 /// Fatura kalemlerinin düzenlenebilir listesi.
 ///
-/// Salt okunur kullanımda [onDuzenle] ve [onSil] verilmez; işlem detayı
-/// ekranı listeyi böyle gösterir.
+/// [onSil] yalnızca giriş formunda verilir; satır çarpısı orada görünür. İşlem
+/// detayı silmeyi geçer ama [onDuzenle]'yi bağlar: satıra dokunmak kaydın
+/// düzenleme ekranını açar. İptalli kayıtta ikisi de verilmez, liste salt
+/// okunur kalır.
 class KalemListesi extends StatelessWidget {
   const KalemListesi({
     required this.kalemler,

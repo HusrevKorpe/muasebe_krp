@@ -28,6 +28,12 @@ const Duration _sunucuBeklemeSuresi = Duration(seconds: 10);
 const Duration _yoklamaAraligi = Duration(milliseconds: 100);
 
 /// Firebase'i başlatır ve emulator'e yönlendirir. Testte bir kez çağrılır.
+///
+/// Yerel önbellek de siliniyor: liste ekranları artık `snapshots()` dinliyor ve
+/// akışın ilk yayını önbellekten geliyor. [firestoreVerisiniSil] emulator'ü
+/// yönetici olarak boşaltır ama istemcinin diskteki kopyasından haberi olmaz;
+/// temizlenmezse önceki koşunun kayıtları bir kare boyunca ekranda görünür.
+/// Çağrı, istemci ilk okumasını yapmadan **önce** olmak zorunda.
 Future<void> emulatoreBaglan() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
@@ -35,6 +41,7 @@ Future<void> emulatoreBaglan() async {
     emulatorSunucusu,
     firestoreEmulatorKapisi,
   );
+  await FirebaseFirestore.instance.clearPersistence();
   await FirebaseAuth.instance.useAuthEmulator(
     emulatorSunucusu,
     kimlikEmulatorKapisi,
@@ -100,6 +107,22 @@ Future<void> _yonetici(String yontem, String yol) async {
   }
 }
 
+/// Canlı liste akışından, [kosul] sağlanan ilk sayfayı döner.
+///
+/// Akış önce yerel önbellekten yayar; testteki yazmalar `sunucudaBekle` ile
+/// onaylandığı için o ilk yayın da doludur. Yine de sayfa sayfa beklemek testi
+/// yayın sırasına bağımlı olmaktan kurtarır: kayıt sonradan düşse de sınama
+/// bunu görür, koşulsuz `first` ise erken yayını yakalayıp kırılırdı.
+Future<S> sayfayiBekle<S>(
+  Stream<S> akis, {
+  required bool Function(S sayfa) kosul,
+}) {
+  return akis.firstWhere(kosul).timeout(
+    _sunucuBeklemeSuresi,
+    onTimeout: () => fail('Akış beklenen sayfayı yaymadı.'),
+  );
+}
+
 /// Belge sunucuya yazılana kadar bekler.
 ///
 /// Repository yazma future'ını bilerek beklemiyor (çevrimdışı çalışabilmek
@@ -119,4 +142,22 @@ Future<DocumentSnapshot<Map<String, dynamic>>> sunucudaBekle(
   }
 
   fail('Belge beklenen durumda sunucuya yazılmadı: ${belge.path}');
+}
+
+/// Belge sunucudan silinene kadar bekler — [sunucudaBekle]'nin tersi.
+///
+/// Silme future'ı da beklenmiyor (KURALLAR.md §4.4); silmenin sunucuya
+/// ulaştığını sınayan testler bunu kullanır.
+Future<void> sunucudanSilinmeyiBekle(
+  DocumentReference<Map<String, dynamic>> belge,
+) async {
+  final biti = DateTime.now().add(_sunucuBeklemeSuresi);
+
+  while (DateTime.now().isBefore(biti)) {
+    final anlik = await belge.get(const GetOptions(source: Source.server));
+    if (!anlik.exists) return;
+    await Future<void>.delayed(_yoklamaAraligi);
+  }
+
+  fail('Belge sunucudan silinmedi: ${belge.path}');
 }
