@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/tema.dart';
+import '../../../../app/tasarim/renkler.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../domain/islem/islem_tipi.dart';
 
@@ -51,7 +51,12 @@ extension IslemTipiGorunumu on IslemTipi {
   /// Borç işlemleri bakiyeyi artırır ve borç rengiyle, alacak işlemleri
   /// azaltır ve alacak rengiyle gösterilir.
   Color renk(Brightness parlaklik) =>
-      borcMu ? Tema.borcRengi(parlaklik) : Tema.alacakRengi(parlaklik);
+      borcMu ? Renkler.borc(parlaklik) : Renkler.alacak(parlaklik);
+
+  /// [renk]'in soluk zemini — simgenin arkasındaki daire, giriş düğmeleri.
+  Color zemin(Brightness parlaklik) => borcMu
+      ? Renkler.borcZemini(parlaklik)
+      : Renkler.alacakZemini(parlaklik);
 
   /// Tutarın hangi kolona yazıldığını anlatan etiket.
   String get kolonEtiketi => borcMu ? Metinler.borc : Metinler.alacak;

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/tasarim/dugme.dart';
+import '../../../app/tasarim/olculer.dart';
 import '../../../core/hata/hatalar.dart';
 import '../../../core/metin/metinler.dart';
 import '../../../data/isletme/isletme_repository.dart';
@@ -97,14 +99,16 @@ class _ProfilFormuDurumu extends ConsumerState<_ProfilFormu> {
       context: context,
       builder: (context) => AlertDialog(
         content: const Text(Metinler.bankaHesabiSilOnay),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(Metinler.vazgec),
+        actions: <Widget>[
+          Dugme.sade(
+            metin: Metinler.vazgec,
+            kompakt: true,
+            onBasildi: () => Navigator.of(context).pop(false),
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(Metinler.sil),
+          Dugme.tehlikeli(
+            metin: Metinler.sil,
+            kompakt: true,
+            onBasildi: () => Navigator.of(context).pop(true),
           ),
         ],
       ),
@@ -132,39 +136,73 @@ class _ProfilFormuDurumu extends ConsumerState<_ProfilFormu> {
       child: Form(
         key: _formAnahtari,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: Text(
-                Metinler.isletmeFormAciklama,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ),
+          padding: const EdgeInsets.fromLTRB(
+            Olculer.sayfaKenari,
+            Olculer.bosluk20,
+            Olculer.sayfaKenari,
+            Olculer.bosluk32,
+          ),
+          children: <Widget>[
+            const _FormAciklamasi(),
+            const SizedBox(height: Olculer.bosluk20),
             IsletmeFormAlanlari(
               kontrolcular: _kontrolcular,
               etkin: !islemSuruyor,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: Olculer.bosluk8),
             BankaHesaplariBolumu(
               hesaplar: _hesaplar,
               onEkle: islemSuruyor ? null : _hesapEkle,
               onSil: islemSuruyor ? null : _hesapSil,
             ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: islemSuruyor ? null : _kaydet,
-              child: islemSuruyor
-                  ? const SizedBox.square(
-                      dimension: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text(Metinler.kaydet),
+            const SizedBox(height: Olculer.bosluk24),
+            Dugme.birincil(
+              metin: Metinler.kaydet,
+              onBasildi: _kaydet,
+              yukleniyor: islemSuruyor,
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Formun başındaki "tamamı isteğe bağlı" notu.
+///
+/// Kutunun içinde duruyor, düz metin olarak değil: kullanıcı forma girer
+/// girmez alanları doldurmaya başlıyor, üstteki gri satırı okumuyordu.
+class _FormAciklamasi extends StatelessWidget {
+  const _FormAciklamasi();
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(Olculer.bosluk16),
+      decoration: BoxDecoration(
+        color: tema.colorScheme.surfaceContainer,
+        borderRadius: Olculer.koseOrta,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Icon(
+            Icons.info_outline,
+            size: 20,
+            color: tema.colorScheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: Olculer.bosluk12),
+          Expanded(
+            child: Text(
+              Metinler.isletmeFormAciklama,
+              style: tema.textTheme.bodySmall?.copyWith(
+                color: tema.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

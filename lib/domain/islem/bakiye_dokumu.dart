@@ -4,7 +4,7 @@ import 'bakiye_satiri.dart';
 /// Bir işlem kümesinin bakiye dökümü: satırlar ve toplamlar.
 ///
 /// Referans ekstrenin son sayfasındaki üç rakam buradan gelir:
-/// `TOPLAM ALACAK`, `TOPLAM BORÇ`, `BAKİYE`.
+/// `TOPLAM ALINAN`, `TOPLAM BORÇ`, `BAKİYE`.
 class BakiyeDokumu {
   const BakiyeDokumu({
     required this.satirlar,

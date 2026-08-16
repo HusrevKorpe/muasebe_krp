@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/tasarim/yuzen_dugme.dart';
 import '../../../app/yollar.dart';
 import '../../../core/metin/metinler.dart';
 import '../../../domain/cari/cari_suzgeci.dart';
@@ -51,14 +52,14 @@ class _CariListesiEkraniDurumu extends State<CariListesiEkrani>
           CariListeGorunumu(suzgec: CariSuzgeci.acikHesap),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: YuzenDugme(
         // Alt sekmeler `IndexedStack` ile aynı anda ağaçta duruyor; iki sekmenin
         // yüzen düğmesi varsayılan hero etiketini paylaşırsa Flutter "multiple
         // heroes share the same tag" diye patlıyor.
-        heroTag: 'cariEkle',
-        onPressed: () => context.push(Yollar.cariYeni),
-        icon: const Icon(Icons.person_add_alt),
-        label: const Text(Metinler.cariEkle),
+        kimlik: 'cariEkle',
+        onBasildi: () => context.push(Yollar.cariYeni),
+        simge: Icons.person_add_alt,
+        metin: Metinler.cariEkle,
       ),
     );
   }

@@ -117,7 +117,7 @@ pw.Widget _etiketliDeger(String etiket, String deger, EkstreStili stil) {
   );
 }
 
-/// `TOPLAM ALACAK`, `TOPLAM BORÇ`, `BAKİYE` — her biri altı çizili.
+/// `TOPLAM ALINAN`, `TOPLAM BORÇ`, `BAKİYE` — her biri altı çizili.
 ///
 /// Sıra referans ekstredeki sıradır. Rakamlar tablodaki satırlarla tutar;
 /// tutmazsa PDF hiç üretilmez (bkz. `ekstre_belgesi.dart`).

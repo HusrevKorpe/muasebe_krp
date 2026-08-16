@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/tasarim/dugme.dart';
+import '../../../app/tasarim/olculer.dart';
 import '../../../core/metin/metinler.dart';
 import '../../../domain/isletme/banka_hesabi.dart';
 import '../../../domain/isletme/iban.dart';
@@ -67,7 +69,7 @@ class _BankaHesabiDialoguDurumu extends State<BankaHesabiDialogu> {
                   hintText: Metinler.bankaAdiIpucu,
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: Olculer.bosluk16),
               TextFormField(
                 controller: _ibanKontrolcu,
                 textCapitalization: TextCapitalization.characters,
@@ -77,7 +79,7 @@ class _BankaHesabiDialoguDurumu extends State<BankaHesabiDialogu> {
                   hintText: 'TR00 0000 0000 0000 0000 0000 00',
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: Olculer.bosluk16),
               TextFormField(
                 controller: _hesapNoKontrolcu,
                 keyboardType: TextInputType.number,
@@ -86,7 +88,7 @@ class _BankaHesabiDialoguDurumu extends State<BankaHesabiDialogu> {
                       '${Metinler.hesapNo} (${Metinler.istegeBagli})',
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: Olculer.bosluk16),
               DropdownButtonFormField<String>(
                 initialValue: _paraBirimi,
                 decoration: const InputDecoration(
@@ -103,12 +105,17 @@ class _BankaHesabiDialoguDurumu extends State<BankaHesabiDialogu> {
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text(Metinler.vazgec),
+      actions: <Widget>[
+        Dugme.sade(
+          metin: Metinler.vazgec,
+          kompakt: true,
+          onBasildi: () => Navigator.of(context).pop(),
         ),
-        FilledButton(onPressed: _kaydet, child: const Text(Metinler.ekle)),
+        Dugme.birincil(
+          metin: Metinler.ekle,
+          kompakt: true,
+          onBasildi: _kaydet,
+        ),
       ],
     );
   }

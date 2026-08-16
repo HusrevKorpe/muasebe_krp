@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/tasarim/olculer.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../domain/isletme/isletme_dogrulama.dart';
 import 'isletme_form_kontrolculeri.dart';
@@ -63,7 +64,7 @@ class IsletmeFormAlanlari extends StatelessWidget {
     int satirSayisi = 1,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: Olculer.bosluk16),
       child: TextFormField(
         controller: kontrolcu,
         enabled: etkin,

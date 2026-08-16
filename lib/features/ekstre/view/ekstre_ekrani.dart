@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
 
+import '../../../app/tasarim/olculer.dart';
 import '../../../core/metin/metinler.dart';
 import '../../ortak/view/hata_durumu.dart';
 import '../viewmodel/ekstre_saglayici.dart';
@@ -24,12 +25,17 @@ class EkstreEkrani extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text(Metinler.ekstre)),
       body: Column(
-        children: [
+        children: <Widget>[
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            padding: const EdgeInsets.fromLTRB(
+              Olculer.sayfaKenari,
+              Olculer.bosluk4,
+              Olculer.sayfaKenari,
+              Olculer.bosluk16,
+            ),
             child: AralikSecici(cariId: cariId),
           ),
-          const Divider(height: 1),
+          const Divider(),
           Expanded(child: _Onizleme(cariId: cariId)),
         ],
       ),
@@ -76,7 +82,7 @@ class _Belge extends ConsumerWidget {
       allowPrinting: true,
       allowSharing: true,
       loadingWidget: const _Yukleniyor(),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(Olculer.bosluk12),
     );
   }
 }
@@ -89,9 +95,9 @@ class _Yukleniyor extends StatelessWidget {
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        children: [
+        children: <Widget>[
           const CircularProgressIndicator(),
-          const SizedBox(height: 16),
+          const SizedBox(height: Olculer.bosluk16),
           Text(
             Metinler.ekstreUretiliyor,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(

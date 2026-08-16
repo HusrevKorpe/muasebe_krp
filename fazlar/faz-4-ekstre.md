@@ -124,6 +124,7 @@ satırın bakiyesine eşit olmalıdır.
 | IBAN | Bitişik | Dörtlü gruplu | Kullanıcı bankaya elle giriyor |
 | Sol üst logo | Görsel logo | İşletme adı yazı olarak | Logo yükleme özelliği yok — Faz 5'e kaldı |
 | Satır simgesi | Material simgeleri | Vektör çizim (sayfa / madenî para) | Simge fontu PDF'e gömülemiyor |
+| Alacak kolonunun başlığı | `ALACAK` / `TOPLAM ALACAK` | `ALINAN` / `TOPLAM ALINAN` | Döküm müşteriye gidiyor; kullanıcının isteği |
 
 ## Faz sırasında eklenen çekirdek yardımcılar
 

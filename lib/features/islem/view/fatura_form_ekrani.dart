@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/tasarim/bolum_basligi.dart';
+import '../../../app/tasarim/dugme.dart';
+import '../../../app/tasarim/olculer.dart';
 import '../../../core/hata/hatalar.dart';
 import '../../../core/metin/metinler.dart';
 import '../../../core/para/kurus.dart';
@@ -166,11 +169,16 @@ class _FaturaFormEkraniDurumu extends ConsumerState<FaturaFormEkrani> {
         child: Form(
           key: _formAnahtari,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            children: [
-              if (_duzenlemeMi) ...[
+            padding: const EdgeInsets.fromLTRB(
+              Olculer.sayfaKenari,
+              Olculer.bosluk20,
+              Olculer.sayfaKenari,
+              Olculer.bosluk32,
+            ),
+            children: <Widget>[
+              if (_duzenlemeMi) ...<Widget>[
                 const DuzenlemeUyarisi(),
-                const SizedBox(height: 16),
+                const SizedBox(height: Olculer.bosluk20),
               ],
               _BilgiBolumu(
                 baslik: _baslik,
@@ -178,7 +186,7 @@ class _FaturaFormEkraniDurumu extends ConsumerState<FaturaFormEkrani> {
                 etkin: !islemSuruyor,
                 onIslemTarihi: (tarih) => setState(() => _islemTarihi = tarih),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: Olculer.bosluk24),
               _KalemBolumu(
                 kalemler: _kalemler,
                 etkin: !islemSuruyor,
@@ -186,17 +194,13 @@ class _FaturaFormEkraniDurumu extends ConsumerState<FaturaFormEkrani> {
                 onDuzenle: _kalemDuzenle,
                 onSil: _kalemSil,
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: Olculer.bosluk20),
               FaturaOzeti(toplam: _toplam),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: islemSuruyor ? null : _kaydet,
-                child: islemSuruyor
-                    ? const SizedBox.square(
-                        dimension: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text(Metinler.kaydet),
+              const SizedBox(height: Olculer.bosluk24),
+              Dugme.birincil(
+                metin: Metinler.kaydet,
+                onBasildi: _kaydet,
+                yukleniyor: islemSuruyor,
               ),
             ],
           ),
@@ -236,7 +240,7 @@ class _BilgiBolumu extends StatelessWidget {
             helperMaxLines: 2,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: Olculer.bosluk16),
         TarihAlani(
           etiket: Metinler.islemTarihi,
           tarih: islemTarihi,
@@ -268,22 +272,16 @@ class _KalemBolumu extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              Metinler.kalemler,
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            TextButton.icon(
-              onPressed: etkin ? onEkle : null,
-              icon: const Icon(Icons.add),
-              label: const Text(Metinler.kalemEkle),
-            ),
-          ],
+      children: <Widget>[
+        BolumBasligi(
+          baslik: Metinler.kalemler,
+          eylem: Dugme.sade(
+            metin: Metinler.kalemEkle,
+            simge: Icons.add,
+            kompakt: true,
+            onBasildi: etkin ? onEkle : null,
+          ),
         ),
-        const SizedBox(height: 8),
         KalemListesi(
           kalemler: kalemler,
           onDuzenle: etkin ? onDuzenle : null,

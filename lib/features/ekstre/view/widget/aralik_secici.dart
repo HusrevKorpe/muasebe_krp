@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/tasarim/olculer.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../core/tarih/tarih_bicimi.dart';
 import '../../../../domain/ekstre/ekstre_araligi.dart';
@@ -25,9 +26,9 @@ class AralikSecici extends ConsumerWidget {
     final bugun = DateTime.now();
 
     return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
+      spacing: Olculer.bosluk8,
+      runSpacing: Olculer.bosluk8,
+      children: <Widget>[
         ChoiceChip(
           label: const Text(Metinler.aralikBuAy),
           selected: aralik.tip == EkstreAralikTipi.buAy,

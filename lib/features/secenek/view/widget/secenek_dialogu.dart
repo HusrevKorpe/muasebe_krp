@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/tasarim/dugme.dart';
+import '../../../../app/tasarim/olculer.dart';
 import '../../../../core/hata/hatalar.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../domain/secenek/secenek.dart';
@@ -95,14 +97,16 @@ class _SecenekDialoguDurumu extends ConsumerState<SecenekDialogu> {
       builder: (context) => AlertDialog(
         title: const Text(Metinler.secenekSil),
         content: const Text(Metinler.secenekSilOnay),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(Metinler.vazgec),
+        actions: <Widget>[
+          Dugme.sade(
+            metin: Metinler.vazgec,
+            kompakt: true,
+            onBasildi: () => Navigator.of(context).pop(false),
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(Metinler.sil),
+          Dugme.tehlikeli(
+            metin: Metinler.sil,
+            kompakt: true,
+            onBasildi: () => Navigator.of(context).pop(true),
           ),
         ],
       ),
@@ -153,7 +157,7 @@ class _SecenekDialoguDurumu extends ConsumerState<SecenekDialogu> {
               onFieldSubmitted: islemSuruyor ? null : (_) => _kaydet(),
             ),
             if (_hata != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: Olculer.bosluk12),
               Text(
                 _hata!,
                 style: tema.textTheme.bodySmall?.copyWith(
@@ -164,22 +168,22 @@ class _SecenekDialoguDurumu extends ConsumerState<SecenekDialogu> {
           ],
         ),
       ),
-      actions: [
+      actions: <Widget>[
         if (_duzenlemeMi)
-          TextButton(
-            onPressed: islemSuruyor ? null : _sil,
-            child: Text(
-              Metinler.sil,
-              style: TextStyle(color: tema.colorScheme.error),
-            ),
+          Dugme.tehlikeliSade(
+            metin: Metinler.sil,
+            kompakt: true,
+            onBasildi: islemSuruyor ? null : _sil,
           ),
-        TextButton(
-          onPressed: islemSuruyor ? null : () => Navigator.of(context).pop(),
-          child: const Text(Metinler.vazgec),
+        Dugme.sade(
+          metin: Metinler.vazgec,
+          kompakt: true,
+          onBasildi: islemSuruyor ? null : () => Navigator.of(context).pop(),
         ),
-        FilledButton(
-          onPressed: islemSuruyor ? null : _kaydet,
-          child: const Text(Metinler.kaydet),
+        Dugme.birincil(
+          metin: Metinler.kaydet,
+          kompakt: true,
+          onBasildi: islemSuruyor ? null : _kaydet,
         ),
       ],
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/tasarim/olculer.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../core/para/kurus.dart';
 import '../../../../core/para/para_bicimi.dart';
@@ -21,6 +22,8 @@ class IslemSatiri extends StatelessWidget {
     super.key,
   });
 
+  static const double _kareBoyu = 40;
+
   final Islem islem;
   final Kurus yuruyenBakiye;
   final VoidCallback onTap;
@@ -30,21 +33,34 @@ class IslemSatiri extends StatelessWidget {
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
     final iptalli = islem.iptalMi;
+    final renk = iptalli
+        ? tema.colorScheme.onSurfaceVariant
+        : islem.tip.renk(tema.brightness);
 
     return ListTile(
       onTap: onTap,
-      leading: Icon(
-        islem.tip.simge,
-        color: iptalli
-            ? tema.colorScheme.onSurfaceVariant
-            : islem.tip.renk(tema.brightness),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: Olculer.sayfaKenari,
+        vertical: Olculer.bosluk8,
+      ),
+      leading: Container(
+        width: _kareBoyu,
+        height: _kareBoyu,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: iptalli
+              ? tema.colorScheme.surfaceContainer
+              : islem.tip.zemin(tema.brightness),
+          borderRadius: Olculer.koseOrta,
+        ),
+        child: Icon(islem.tip.simge, size: 19, color: renk),
       ),
       title: Text(
         islem.baslik.isEmpty ? islem.tip.ad : islem.baslik,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: tema.textTheme.bodyLarge?.copyWith(
-          fontWeight: FontWeight.w500,
+          fontWeight: FontWeight.w600,
           decoration: iptalli ? TextDecoration.lineThrough : null,
           color: iptalli ? tema.colorScheme.onSurfaceVariant : null,
         ),
@@ -57,18 +73,16 @@ class IslemSatiri extends StatelessWidget {
       trailing: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
+        children: <Widget>[
           Text(
             _tutarMetni(),
-            style: tema.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
+            style: tema.textTheme.bodyLarge?.copyWith(
+              fontWeight: FontWeight.w700,
               decoration: iptalli ? TextDecoration.lineThrough : null,
-              color: iptalli
-                  ? tema.colorScheme.onSurfaceVariant
-                  : islem.tip.renk(tema.brightness),
+              color: renk,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: Olculer.bosluk4),
           BakiyeMetni(bakiye: yuruyenBakiye, stil: tema.textTheme.bodySmall),
         ],
       ),
@@ -104,17 +118,21 @@ class _AltSatir extends StatelessWidget {
     ];
 
     return Row(
-      children: [
+      children: <Widget>[
         Flexible(
           child: Text(
             parcalar.join(' · '),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: tema.textTheme.bodySmall,
+            style: tema.textTheme.bodySmall?.copyWith(
+              color: iptalli
+                  ? tema.colorScheme.error
+                  : tema.colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
-        if (beklemede) ...[
-          const SizedBox(width: 6),
+        if (beklemede) ...<Widget>[
+          const SizedBox(width: Olculer.bosluk8),
           Icon(
             Icons.cloud_upload_outlined,
             size: 14,

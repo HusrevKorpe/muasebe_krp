@@ -2,16 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/tasarim/bolum_basligi.dart';
+import '../../../app/tasarim/dugme.dart';
+import '../../../app/tasarim/olculer.dart';
 import '../../../app/yollar.dart';
 import '../../../core/metin/metinler.dart';
 import '../../../data/kimlik/kimlik_repository.dart';
 import '../../../domain/secenek/secenek_tipi.dart';
 import '../../giris/viewmodel/giris_viewmodel.dart';
 import '../../secenek/view/secenek_metinleri.dart';
+import 'widget/ayar_satiri.dart';
 
 /// Ayarlar sekmesi.
 ///
-/// Üç bölüm: işletme bilgileri, tür/çeşit/anaç listeleri ve açık hesap.
+/// Üç bölüm: işletme bilgileri, tür/çeşit/anaç listeleri ve hesap.
 /// İşletme satırının ayrı bir sekmede olmasının sebebi, önceden sağ üstteki üç
 /// nokta menüsünde saklı olmasıydı — hesap dökümünün başlığındaki bilgiyi
 /// düzeltmek isteyen kullanıcı onu bulamıyordu.
@@ -33,26 +37,40 @@ class AyarlarEkrani extends ConsumerWidget {
       appBar: AppBar(title: const Text(Metinler.ayarlar)),
       body: SafeArea(
         child: ListView(
+          padding: const EdgeInsets.fromLTRB(
+            Olculer.sayfaKenari,
+            Olculer.bosluk8,
+            Olculer.sayfaKenari,
+            Olculer.bosluk32,
+          ),
           children: <Widget>[
-            ListTile(
-              leading: const Icon(Icons.storefront_outlined),
-              title: const Text(Metinler.isletmeMenu),
-              subtitle: const Text(Metinler.isletmeAyarAciklama),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => context.push(Yollar.isletme),
+            BolumBasligi(baslik: Metinler.ayarIsletmeBolumu),
+            Card(
+              child: AyarSatiri(
+                simge: Icons.storefront_outlined,
+                baslik: Metinler.isletmeMenu,
+                aciklama: Metinler.isletmeAyarAciklama,
+                onBasildi: () => context.push(Yollar.isletme),
+              ),
             ),
-            const Divider(),
+            const SizedBox(height: Olculer.bosluk24),
             const _ListelerBolumu(),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.account_circle_outlined),
-              title: const Text(Metinler.hesap),
-              subtitle: Text(ePosta ?? ''),
+            const SizedBox(height: Olculer.bosluk24),
+            BolumBasligi(baslik: Metinler.hesap),
+            Card(
+              child: AyarSatiri(
+                simge: Icons.account_circle_outlined,
+                baslik: ePosta ?? Metinler.hesap,
+                aciklama: Metinler.hesapAciklama,
+                onBasildi: null,
+              ),
             ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text(Metinler.cikisYap),
-              onTap: () => _cikisYap(context, ref),
+            const SizedBox(height: Olculer.bosluk16),
+            Dugme.tehlikeliSade(
+              metin: Metinler.cikisYap,
+              simge: Icons.logout,
+              onBasildi: () => _cikisYap(context, ref),
+              genis: true,
             ),
           ],
         ),
@@ -66,15 +84,18 @@ class AyarlarEkrani extends ConsumerWidget {
     final onaylandi = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
+        title: const Text(Metinler.cikisYap),
         content: const Text(Metinler.cikisOnay),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(Metinler.vazgec),
+        actions: <Widget>[
+          Dugme.sade(
+            metin: Metinler.vazgec,
+            kompakt: true,
+            onBasildi: () => Navigator.of(context).pop(false),
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(Metinler.cikisYap),
+          Dugme.birincil(
+            metin: Metinler.cikisYap,
+            kompakt: true,
+            onBasildi: () => Navigator.of(context).pop(true),
           ),
         ],
       ),
@@ -97,19 +118,14 @@ class _ListelerBolumu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final tipler = SecenekTipi.values;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+      children: <Widget>[
+        BolumBasligi(baslik: Metinler.secenekListeleri),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-          child: Text(
-            Metinler.secenekListeleri,
-            style: tema.textTheme.titleSmall,
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+          padding: const EdgeInsets.only(bottom: Olculer.bosluk12),
           child: Text(
             Metinler.secenekListeleriAciklama,
             style: tema.textTheme.bodySmall?.copyWith(
@@ -117,13 +133,22 @@ class _ListelerBolumu extends StatelessWidget {
             ),
           ),
         ),
-        for (final tip in SecenekTipi.values)
-          ListTile(
-            leading: const Icon(Icons.list_alt_outlined),
-            title: Text(tip.listeBasligi),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => context.push(Yollar.seceneklerYolu(tip)),
+        Card(
+          child: Column(
+            children: <Widget>[
+              for (var sira = 0; sira < tipler.length; sira++) ...<Widget>[
+                AyarSatiri(
+                  simge: Icons.list_alt_outlined,
+                  baslik: tipler[sira].listeBasligi,
+                  onBasildi: () =>
+                      context.push(Yollar.seceneklerYolu(tipler[sira])),
+                ),
+                if (sira != tipler.length - 1)
+                  const Divider(indent: Olculer.bosluk16 + 40),
+              ],
+            ],
           ),
+        ),
       ],
     );
   }

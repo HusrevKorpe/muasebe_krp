@@ -18,28 +18,42 @@ class Kabuk extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final sema = Theme.of(context).colorScheme;
+
     return Scaffold(
       body: gezinme,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: gezinme.currentIndex,
-        onDestinationSelected: _sekmeyeGit,
-        destinations: const <NavigationDestination>[
-          NavigationDestination(
-            icon: Icon(Icons.people_outline),
-            selectedIcon: Icon(Icons.people),
-            label: Metinler.cariler,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.sell_outlined),
-            selectedIcon: Icon(Icons.sell),
-            label: Metinler.urunler,
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings),
-            label: Metinler.ayarlar,
-          ),
-        ],
+      // Çubuğun zemini kartlarla aynı beyaz; krem gövdeden ayrılması için üstüne
+      // saç teli kalınlığında bir çizgi çekiliyor. Gölge kullanılmadı: küçük
+      // ekranda bulanık gri bir hâleye dönüşüyor (bkz. `Tema`).
+      //
+      // Çizgi `foreground` katmanında: arka planda çizilseydi `NavigationBar`
+      // kendi zeminini onun üstüne basar ve çizgi hiç görünmezdi.
+      bottomNavigationBar: DecoratedBox(
+        position: DecorationPosition.foreground,
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: sema.outlineVariant)),
+        ),
+        child: NavigationBar(
+          selectedIndex: gezinme.currentIndex,
+          onDestinationSelected: _sekmeyeGit,
+          destinations: const <NavigationDestination>[
+            NavigationDestination(
+              icon: Icon(Icons.people_outline),
+              selectedIcon: Icon(Icons.people),
+              label: Metinler.cariler,
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.sell_outlined),
+              selectedIcon: Icon(Icons.sell),
+              label: Metinler.urunler,
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.settings_outlined),
+              selectedIcon: Icon(Icons.settings),
+              label: Metinler.ayarlar,
+            ),
+          ],
+        ),
       ),
     );
   }

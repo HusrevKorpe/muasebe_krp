@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../../../core/metin/metinler.dart';
+import '../../../app/tasarim/olculer.dart';
+import '../../../app/tasarim/uygulama_isareti.dart';
 
 /// Saklanan oturum yüklenene kadar gösterilen ekran.
 ///
@@ -13,24 +14,21 @@ class AcilisEkrani extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final renkSemasi = Theme.of(context).colorScheme;
-
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.park, size: 72, color: renkSemasi.primary),
-              const SizedBox(height: 16),
-              Text(
-                Metinler.uygulamaAdi,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
+            children: <Widget>[
+              const UygulamaIsareti(),
+              const SizedBox(height: Olculer.bosluk32),
+              SizedBox.square(
+                dimension: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.4,
+                  color: Theme.of(context).colorScheme.primary,
                 ),
               ),
-              const SizedBox(height: 32),
-              const CircularProgressIndicator(),
             ],
           ),
         ),

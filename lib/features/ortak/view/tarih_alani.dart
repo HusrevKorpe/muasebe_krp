@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/tasarim/olculer.dart';
 import '../../../core/tarih/tarih_bicimi.dart';
 
 /// Dokununca takvim açan tarih alanı.
@@ -33,14 +34,22 @@ class TarihAlani extends StatelessWidget {
 
     return InkWell(
       onTap: etkin ? () => _sec(context) : null,
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: Olculer.koseOrta,
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: etiket,
           prefixIcon: const Icon(Icons.event_outlined),
+          // Sağdaki ok kutunun dokunulabilir olduğunu söylüyor: alan metin
+          // kutularıyla aynı çerçeveyi taşıyor, yazılabilir sanılıyordu.
+          suffixIcon: const Icon(Icons.expand_more),
           enabled: etkin,
         ),
-        child: Text(uzunTarih(tarih), style: tema.textTheme.bodyLarge),
+        child: Text(
+          uzunTarih(tarih),
+          style: tema.textTheme.bodyLarge?.copyWith(
+            fontWeight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }

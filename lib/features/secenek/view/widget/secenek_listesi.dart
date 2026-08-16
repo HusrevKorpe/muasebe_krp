@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/tasarim/arama_alani.dart';
+import '../../../../app/tasarim/bekleme_satiri.dart';
+import '../../../../app/tasarim/olculer.dart';
+import '../../../../app/tasarim/simge_dugmesi.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../data/secenek/secenek_kaydi.dart';
 import '../../../../domain/secenek/secenek_tipi.dart';
@@ -89,13 +93,11 @@ class _SecenekListesiDurumu extends ConsumerState<SecenekListesi> {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: _AramaAlani(
-            kontrolcu: _aramaKontrolcu,
-            onDegisti: (metin) =>
-                ref.read(_saglayici.notifier).aramayiDegistir(metin),
-          ),
+        AramaAlani(
+          kontrolcu: _aramaKontrolcu,
+          ipucu: Metinler.secenekAra,
+          onDegisti: (metin) =>
+              ref.read(_saglayici.notifier).aramayiDegistir(metin),
         ),
         Expanded(
           child: durum.when(
@@ -121,7 +123,10 @@ class _SecenekListesiDurumu extends ConsumerState<SecenekListesi> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.only(bottom: widget.altBosluk),
         itemCount: veri.kayitlar.length + (ekSatir ? 1 : 0),
-        separatorBuilder: (context, sira) => const Divider(height: 1),
+        separatorBuilder: (context, sira) => const Divider(
+          indent: Olculer.sayfaKenari,
+          endIndent: Olculer.sayfaKenari,
+        ),
         itemBuilder: (context, sira) {
           if (sira >= veri.kayitlar.length) return _sayfaSonu(veri);
 
@@ -146,11 +151,11 @@ class _SecenekListesiDurumu extends ConsumerState<SecenekListesi> {
       );
     }
     return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 24),
+      padding: EdgeInsets.symmetric(vertical: Olculer.bosluk24),
       child: Center(
         child: SizedBox.square(
-          dimension: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
+          dimension: 22,
+          child: CircularProgressIndicator(strokeWidth: 2.4),
         ),
       ),
     );
@@ -186,87 +191,21 @@ class _SecenekSatiri extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-
     return ListTile(
       onTap: onTap,
       title: Text(
         kayit.secenek.ad,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w500),
       ),
-      subtitle: kayit.beklemede
-          ? _BeklemeRozeti(renkSemasi: tema.colorScheme)
-          : null,
+      subtitle: kayit.beklemede ? const BeklemeSatiri() : null,
       trailing: onDuzenle == null
           ? null
-          : IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: Metinler.secenekDuzenle,
-              onPressed: onDuzenle,
+          : SimgeDugmesi(
+              simge: Icons.edit_outlined,
+              ipucu: Metinler.secenekDuzenle,
+              onBasildi: onDuzenle,
             ),
-    );
-  }
-}
-
-/// Sunucuya henüz yazılmamış kayıtların göstergesi (bkz. KURALLAR.md §4.4).
-class _BeklemeRozeti extends StatelessWidget {
-  const _BeklemeRozeti({required this.renkSemasi});
-
-  final ColorScheme renkSemasi;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(Icons.cloud_upload_outlined, size: 14, color: renkSemasi.tertiary),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            Metinler.kaydedilmedi,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: renkSemasi.tertiary),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _AramaAlani extends StatelessWidget {
-  const _AramaAlani({required this.kontrolcu, required this.onDegisti});
-
-  final TextEditingController kontrolcu;
-  final ValueChanged<String> onDegisti;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: kontrolcu,
-      onChanged: onDegisti,
-      textInputAction: TextInputAction.search,
-      decoration: InputDecoration(
-        hintText: Metinler.secenekAra,
-        prefixIcon: const Icon(Icons.search),
-        isDense: true,
-        suffixIcon: ValueListenableBuilder<TextEditingValue>(
-          valueListenable: kontrolcu,
-          builder: (context, deger, _) => deger.text.isEmpty
-              ? const SizedBox.shrink()
-              : IconButton(
-                  icon: const Icon(Icons.clear),
-                  tooltip: Metinler.temizle,
-                  onPressed: () {
-                    kontrolcu.clear();
-                    onDegisti('');
-                  },
-                ),
-        ),
-      ),
     );
   }
 }

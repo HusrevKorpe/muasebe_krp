@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/tasarim/dugme.dart';
+import '../../../app/tasarim/olculer.dart';
 import '../../../core/hata/hatalar.dart';
 import '../../../core/metin/metinler.dart';
 
@@ -18,32 +20,50 @@ class HataDurumu extends StatelessWidget {
         yenidenDene: yenidenDene,
       );
 
+  static const double _kutuBoyu = 76;
+
   final String mesaj;
   final VoidCallback? yenidenDene;
 
   @override
   Widget build(BuildContext context) {
-    final renkSemasi = Theme.of(context).colorScheme;
+    final tema = Theme.of(context);
 
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(Olculer.bosluk32),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.cloud_off_outlined, size: 56, color: renkSemasi.error),
-            const SizedBox(height: 16),
-            Text(
-              mesaj,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
+          children: <Widget>[
+            Container(
+              width: _kutuBoyu,
+              height: _kutuBoyu,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: tema.colorScheme.errorContainer,
+                borderRadius: Olculer.koseBuyuk,
+              ),
+              child: Icon(
+                Icons.cloud_off_outlined,
+                size: 34,
+                color: tema.colorScheme.onErrorContainer,
+              ),
             ),
-            if (yenidenDene != null) ...[
-              const SizedBox(height: 24),
-              OutlinedButton.icon(
-                onPressed: yenidenDene,
-                icon: const Icon(Icons.refresh),
-                label: const Text(Metinler.yenidenDene),
+            const SizedBox(height: Olculer.bosluk20),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 320),
+              child: Text(
+                mesaj,
+                textAlign: TextAlign.center,
+                style: tema.textTheme.bodyLarge,
+              ),
+            ),
+            if (yenidenDene != null) ...<Widget>[
+              const SizedBox(height: Olculer.bosluk24),
+              Dugme.ikincil(
+                metin: Metinler.yenidenDene,
+                simge: Icons.refresh,
+                onBasildi: yenidenDene,
               ),
             ],
           ],

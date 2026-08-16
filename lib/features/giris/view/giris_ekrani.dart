@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/tasarim/dugme.dart';
+import '../../../app/tasarim/olculer.dart';
+import '../../../app/tasarim/simge_dugmesi.dart';
+import '../../../app/tasarim/uygulama_isareti.dart';
 import '../../../core/dogrulama/form_dogrulama.dart';
 import '../../../core/hata/hatalar.dart';
 import '../../../core/metin/metinler.dart';
@@ -48,7 +52,7 @@ class _GirisEkraniDurumu extends ConsumerState<GirisEkrani> {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(Olculer.bosluk24),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Form(
@@ -57,16 +61,8 @@ class _GirisEkraniDurumu extends ConsumerState<GirisEkrani> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    Icon(Icons.park, size: 72, color: tema.colorScheme.primary),
-                    const SizedBox(height: 16),
-                    Text(
-                      Metinler.uygulamaAdi,
-                      textAlign: TextAlign.center,
-                      style: tema.textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
+                    const UygulamaIsareti(aciklamaVar: false),
+                    const SizedBox(height: Olculer.bosluk8),
                     Text(
                       Metinler.girisAciklama,
                       textAlign: TextAlign.center,
@@ -74,7 +70,7 @@ class _GirisEkraniDurumu extends ConsumerState<GirisEkrani> {
                         color: tema.colorScheme.onSurfaceVariant,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: Olculer.bosluk32),
                     TextFormField(
                       controller: _ePostaKontrolcu,
                       decoration: const InputDecoration(
@@ -88,22 +84,20 @@ class _GirisEkraniDurumu extends ConsumerState<GirisEkrani> {
                       validator: FormDogrulama.ePosta,
                       enabled: !islemSuruyor,
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: Olculer.bosluk16),
                     TextFormField(
                       controller: _sifreKontrolcu,
                       decoration: InputDecoration(
                         labelText: Metinler.sifre,
                         prefixIcon: const Icon(Icons.lock_outline),
-                        suffixIcon: IconButton(
-                          icon: Icon(
-                            _sifreGizli
-                                ? Icons.visibility_outlined
-                                : Icons.visibility_off_outlined,
-                          ),
-                          tooltip: _sifreGizli
+                        suffixIcon: SimgeDugmesi(
+                          simge: _sifreGizli
+                              ? Icons.visibility_outlined
+                              : Icons.visibility_off_outlined,
+                          ipucu: _sifreGizli
                               ? Metinler.sifreyiGoster
                               : Metinler.sifreyiGizle,
-                          onPressed: () =>
+                          onBasildi: () =>
                               setState(() => _sifreGizli = !_sifreGizli),
                         ),
                       ),
@@ -114,28 +108,42 @@ class _GirisEkraniDurumu extends ConsumerState<GirisEkrani> {
                       enabled: !islemSuruyor,
                       onFieldSubmitted: (_) => _girisYap(),
                     ),
-                    const SizedBox(height: 24),
-                    FilledButton(
-                      onPressed: islemSuruyor ? null : _girisYap,
-                      child: islemSuruyor
-                          ? const SizedBox.square(
-                              dimension: 22,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text(Metinler.girisYap),
+                    const SizedBox(height: Olculer.bosluk24),
+                    Dugme.birincil(
+                      metin: Metinler.girisYap,
+                      onBasildi: _girisYap,
+                      yukleniyor: islemSuruyor,
                     ),
                     // Hata alanın altında kalıcı duruyor: SnackBar klavye
                     // açıkken görünmüyor ve "bir şey oldu ama ne" hissi
                     // bırakıyordu.
                     if (durum.hasError) ...<Widget>[
-                      const SizedBox(height: 24),
-                      Text(
-                        durum.error is UygulamaHatasi
-                            ? (durum.error! as UygulamaHatasi).mesaj
-                            : Metinler.beklenmeyenHata,
-                        textAlign: TextAlign.center,
-                        style: tema.textTheme.bodySmall?.copyWith(
-                          color: tema.colorScheme.error,
+                      const SizedBox(height: Olculer.bosluk20),
+                      Container(
+                        padding: const EdgeInsets.all(Olculer.bosluk12),
+                        decoration: BoxDecoration(
+                          color: tema.colorScheme.errorContainer,
+                          borderRadius: Olculer.koseOrta,
+                        ),
+                        child: Row(
+                          children: <Widget>[
+                            Icon(
+                              Icons.error_outline,
+                              size: 18,
+                              color: tema.colorScheme.onErrorContainer,
+                            ),
+                            const SizedBox(width: Olculer.bosluk8),
+                            Expanded(
+                              child: Text(
+                                durum.error is UygulamaHatasi
+                                    ? (durum.error! as UygulamaHatasi).mesaj
+                                    : Metinler.beklenmeyenHata,
+                                style: tema.textTheme.bodySmall?.copyWith(
+                                  color: tema.colorScheme.onErrorContainer,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

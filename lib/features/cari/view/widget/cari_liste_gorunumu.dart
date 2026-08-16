@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/tasarim/dugme.dart';
+import '../../../../app/tasarim/olculer.dart';
 import '../../../../app/yollar.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../domain/cari/cari_suzgeci.dart';
@@ -107,9 +109,12 @@ class _CariListeGorunumuDurumu extends ConsumerState<CariListeGorunumu> {
       child: ListView.separated(
         controller: _kaydirmaKontrolcu,
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.only(bottom: 88),
+        padding: const EdgeInsets.only(bottom: Olculer.yuzenDugmeBoslugu),
         itemCount: veri.kayitlar.length + (ekSatir ? 1 : 0),
-        separatorBuilder: (context, sira) => const Divider(height: 1),
+        // Çizgi baş harf karesinin altından değil, yazının hizasından başlıyor;
+        // tam genişlikte bir çizgi satırları kesip listeyi tabloya çeviriyordu.
+        separatorBuilder: (context, sira) =>
+            const Divider(indent: 78, endIndent: Olculer.sayfaKenari),
         itemBuilder: (context, sira) {
           if (sira >= veri.kayitlar.length) return _sayfaSonu(veri);
 
@@ -132,11 +137,11 @@ class _CariListeGorunumuDurumu extends ConsumerState<CariListeGorunumu> {
       );
     }
     return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 24),
+      padding: EdgeInsets.symmetric(vertical: Olculer.bosluk24),
       child: Center(
         child: SizedBox.square(
-          dimension: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
+          dimension: 22,
+          child: CircularProgressIndicator(strokeWidth: 2.4),
         ),
       ),
     );
@@ -161,10 +166,10 @@ class _CariListeGorunumuDurumu extends ConsumerState<CariListeGorunumu> {
       simge: Icons.people_outline,
       baslik: Metinler.cariYokBaslik,
       aciklama: Metinler.cariYokAciklama,
-      eylem: FilledButton.icon(
-        onPressed: () => context.push(Yollar.cariYeni),
-        icon: const Icon(Icons.person_add_alt),
-        label: const Text(Metinler.cariEkle),
+      eylem: Dugme.birincil(
+        metin: Metinler.cariEkle,
+        simge: Icons.person_add_alt,
+        onBasildi: () => context.push(Yollar.cariYeni),
       ),
     );
   }

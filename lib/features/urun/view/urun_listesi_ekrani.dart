@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/tasarim/olculer.dart';
+import '../../../app/tasarim/yuzen_dugme.dart';
 import '../../../app/yollar.dart';
 import '../../../core/metin/metinler.dart';
 import 'widget/urun_listesi.dart';
@@ -16,18 +18,18 @@ class UrunListesiEkrani extends StatelessWidget {
       body: SafeArea(
         child: UrunListesi(
           // Yüzen düğme son satırı örtmesin.
-          altBosluk: 88,
+          altBosluk: Olculer.yuzenDugmeBoslugu,
           onSecildi: (kayit) =>
               context.push(Yollar.urunDuzenleYolu(kayit.urun.id)),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: YuzenDugme(
         // Kişiler sekmesindeki düğmeyle aynı hero etiketini paylaşmamalı —
         // bkz. `cari_listesi_ekrani.dart`.
-        heroTag: 'urunEkle',
-        onPressed: () => context.push(Yollar.urunYeni),
-        icon: const Icon(Icons.add),
-        label: const Text(Metinler.urunEkle),
+        kimlik: 'urunEkle',
+        onBasildi: () => context.push(Yollar.urunYeni),
+        simge: Icons.add,
+        metin: Metinler.urunEkle,
       ),
     );
   }

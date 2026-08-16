@@ -35,7 +35,8 @@ Bağımlılık **yalnızca yukarıdan aşağıya** akar. Alt katman üst katman�
 
 ```
 lib/
-├── app/           # Uygulama girişi, router, tema
+├── app/           # Uygulama girişi, router
+│   └── tasarim/   # Tasarım sistemi: renk, ölçü, tema ve ortak bileşenler
 ├── core/          # Ortak yardımcılar: para, tarih, hata, uzantılar
 ├── domain/        # Model + iş kuralları — saf Dart
 ├── data/          # Repository implementasyonları, Firestore erişimi
@@ -73,6 +74,27 @@ lib/
 - `print()` kullanılmaz — merkezî logger üzerinden loglanır.
 - Ölü kod, yorum satırına alınmış kod ve kullanılmayan import bırakılmaz.
 - `// TODO` yazılacaksa faz numarası belirtilir: `// TODO(Faz 3): stok düşümü`.
+
+### 2.0 Tasarım sistemi
+
+Görünüme dair her ortak karar `lib/app/tasarim/` altındadır. Ekranlar bu
+katmandan besleniyor; kendi renklerini, ölçülerini ve düğmelerini kurmuyor.
+
+- **Ekranda `Color(0xFF...)` yazılmaz.** Renk ya `Theme.of(context).colorScheme`
+  üzerinden ya da anlam taşıyorsa `Renkler` üzerinden gelir (borç/alacak).
+- **Ekranda çıplak boşluk ve yarıçap sayısı yazılmaz** — `Olculer` kullanılır.
+  Bir kartın 12, yanındakinin 14 yarıçapta olması tek başına fark edilmiyor;
+  liste boyunca göz bunu düzensizlik olarak okuyor.
+- **Metinli düğme doğrudan `FilledButton` / `OutlinedButton` / `TextButton`
+  olarak yazılmaz** — `Dugme` bileşeni kullanılır, görünüm `DugmeTuru` ile
+  seçilir. Yükleniyor göstergesi, pasiflik ve dokunma yüksekliği bileşenin işi.
+  Aynı biçimde: simge düğmesi `SimgeDugmesi`, yüzen düğme `YuzenDugme`,
+  arama kutusu `AramaAlani`.
+- **Bir ekranda en fazla bir `DugmeTuru.birincil` bulunur.** İki dolu düğme yan
+  yana durduğunda hangisinin asıl eylem olduğu okunmuyor.
+- Renk şemaları `ColorScheme.fromSeed` ile **üretilmiyor**; iki şema da
+  `renk_semasi.dart` içinde elle yazılı. Tohumdan üretilen şema paletteki krem
+  tonlarını griye çeviriyor ve kartla zemin arasındaki farkı siliyordu.
 
 ### 2.1 İsimlendirme
 
@@ -150,6 +172,26 @@ Bu kural Firestore'da saklanan alanları da kapsar — veritabanına da `int` ya
 - **Güvenlik kuralları yazılmadan hiçbir koleksiyon canlıya çıkmaz.**
   Firebase'in test modu 30 gün sonra kapanır; o güne kadar veritabanı herkese açıktır.
 - `firestore.rules` ve `firestore.indexes.json` repoda versiyonlanır.
+- **Kural dosyasına dokunan, aynı iş bitmeden yayınlar. Commit yayın değildir.**
+  Firestore sunucudaki son `deploy`'u uygular, repodaki dosyayı değil; ikisi
+  ayrıştığında kod doğru, uygulama bozuktur.
+
+  ```bash
+  firebase deploy --only firestore:rules,firestore:indexes --project muasebe-takip
+  ```
+
+  Yayınlanmamış değişikliğin belirtisi, kodda hiçbir izi olmayan bir çalışma anı
+  hatasıdır. Bu iki hatayı görünce **önce deploy'u kontrol et**, kodu değil:
+
+  | Belirti | Yayınlanmamış dosya |
+  |---|---|
+  | `[cloud_firestore/permission-denied] Missing or insufficient permissions` — giriş başarılı, ama hiçbir liste dolmuyor | `firestore.rules` |
+  | `[cloud_firestore/failed-precondition] The query requires an index` | `firestore.indexes.json` |
+
+  Ama `permission-denied`'ı **tek başına** deploy'a yormak da hata: aynı belirtinin
+  ikinci bir sebebi var ve ayırt etmek kolay. Önce deploy'u çalıştır; çıktı
+  `already up to date, skipping upload` diyorsa kural zaten yayındaydı, sebep
+  başka — bkz. CLAUDE.md, "cihazdaki oturum geçersiz olabilir" maddesi.
 - **Giriş e-posta ve şifreyle yapılır; defter ortaktır.** Uygulamayı birkaç kişi
   kullanıyor ve hepsi aynı veriyi görüyor: tüm kayıtlar `isletmeler/ortak`
   altında (`Isletme.ortakId`). Bunun üç bağlayıcı sonucu var:
@@ -312,3 +354,5 @@ Kod göndermeden önce:
 - [ ] Yeni hesaplama eklendiyse testi yazıldı mı?
 - [ ] `flutter analyze` temiz mi?
 - [ ] Kullanıcıya görünen metin Türkçe, kod ASCII mi?
+- [ ] `firestore.rules` veya `firestore.indexes.json` değiştiyse **deploy edildi mi?**
+      (§4.1 — commit yayın değildir)

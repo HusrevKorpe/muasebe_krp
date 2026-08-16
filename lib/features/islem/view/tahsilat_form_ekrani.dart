@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/tasarim/dugme.dart';
+import '../../../app/tasarim/olculer.dart';
 import '../../../core/hata/hatalar.dart';
 import '../../../core/metin/metinler.dart';
 import '../../../core/para/para_bicimi.dart';
@@ -126,11 +128,16 @@ class _TahsilatFormEkraniDurumu extends ConsumerState<TahsilatFormEkrani> {
         child: Form(
           key: _formAnahtari,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            children: [
-              if (_duzenlemeMi) ...[
+            padding: const EdgeInsets.fromLTRB(
+              Olculer.sayfaKenari,
+              Olculer.bosluk20,
+              Olculer.sayfaKenari,
+              Olculer.bosluk32,
+            ),
+            children: <Widget>[
+              if (_duzenlemeMi) ...<Widget>[
                 const DuzenlemeUyarisi(),
-                const SizedBox(height: 16),
+                const SizedBox(height: Olculer.bosluk20),
               ],
               TextFormField(
                 controller: _tutar,
@@ -142,6 +149,8 @@ class _TahsilatFormEkraniDurumu extends ConsumerState<TahsilatFormEkrani> {
                 inputFormatters: <TextInputFormatter>[
                   FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]')),
                 ],
+                // Tutar ekranın asıl girdisi; başlık boyunda yazılıyor ki
+                // kullanıcı yazdığı rakamı klavyenin üstünden okuyabilsin.
                 style: Theme.of(context).textTheme.headlineSmall,
                 decoration: const InputDecoration(
                   labelText: Metinler.tutar,
@@ -150,33 +159,28 @@ class _TahsilatFormEkraniDurumu extends ConsumerState<TahsilatFormEkrani> {
                 ),
                 validator: _tutarDogrula,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: Olculer.bosluk16),
               TarihAlani(
                 etiket: Metinler.islemTarihi,
                 tarih: _islemTarihi,
                 etkin: !islemSuruyor,
                 onSecildi: (tarih) => setState(() => _islemTarihi = tarih),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: Olculer.bosluk16),
               TextFormField(
                 controller: _baslik,
                 enabled: !islemSuruyor,
                 textCapitalization: TextCapitalization.sentences,
                 decoration: const InputDecoration(
-                  labelText:
-                      '${Metinler.aciklama} (${Metinler.istegeBagli})',
+                  labelText: '${Metinler.aciklama} (${Metinler.istegeBagli})',
                   prefixIcon: Icon(Icons.description_outlined),
                 ),
               ),
-              const SizedBox(height: 32),
-              FilledButton(
-                onPressed: islemSuruyor ? null : _kaydet,
-                child: islemSuruyor
-                    ? const SizedBox.square(
-                        dimension: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text(Metinler.kaydet),
+              const SizedBox(height: Olculer.bosluk32),
+              Dugme.birincil(
+                metin: Metinler.kaydet,
+                onBasildi: _kaydet,
+                yukleniyor: islemSuruyor,
               ),
             ],
           ),

@@ -19,6 +19,10 @@ abstract final class Metinler {
   static const String sil = 'Sil';
   static const String yenidenDene = 'Yeniden dene';
   static const String temizle = 'Temizle';
+
+  /// Üç nokta menüsünün ipucu — ekran okuyucu bunu okuyor.
+  static const String digerIslemler = 'Diğer işlemler';
+
   static const String beklenmeyenHata = 'Beklenmeyen bir hata oluştu.';
   static const String kaydedildi = 'Kaydedildi.';
 
@@ -37,9 +41,15 @@ abstract final class Metinler {
 
   // ─── Ayarlar ─────────────────────────────────────────────────────────────
   static const String ayarlar = 'Ayarlar';
+
+  /// Ayarlardaki bölüm başlığı. Satırın adı "İşletme bilgileri" olduğu için
+  /// başlık kısa tutuldu; ikisi de aynı sözcükle başlarsa bölüm görünmüyor.
+  static const String ayarIsletmeBolumu = 'İşletme';
+
   static const String isletmeAyarAciklama =
       'Hesap dökümünün başlığında görünen ad, adres ve banka hesapları.';
   static const String hesap = 'Hesap';
+  static const String hesapAciklama = 'Bu cihazda açık olan oturum.';
 
   // ─── İşletme ─────────────────────────────────────────────────────────────
   static const String isletmeBaslik = 'İşletme Bilgileri';
@@ -344,11 +354,13 @@ abstract final class Metinler {
   static const String ekstreKolonIslemTarihi = 'İŞLEM TARİHİ';
   static const String ekstreKolonAciklama = 'AÇIKLAMA';
   static const String ekstreKolonBorc = 'BORÇ';
-  static const String ekstreKolonAlacak = 'ALACAK';
+  /// Alacak kolonu müşteriye "ALINAN" diye görünüyor: hesap dökümünü okuyan
+  /// kişi için o kolon "benden alınan" demek. Kullanıcının isteği.
+  static const String ekstreKolonAlacak = 'ALINAN';
   static const String ekstreKolonBakiye = 'BAKİYE ₺';
   static const String ekstreDevreden = 'Devreden bakiye';
   static const String ekstreToplamBorc = 'TOPLAM BORÇ';
-  static const String ekstreToplamAlacak = 'TOPLAM ALACAK';
+  static const String ekstreToplamAlacak = 'TOPLAM ALINAN';
   static const String ekstreBakiye = 'BAKİYE';
   static const String ekstreBankaBilgileri = 'Banka Hesap Bilgileri';
   static const String ekstreHesapNo = 'HESAP NO';

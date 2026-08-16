@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/tasarim/bekleme_satiri.dart';
+import '../../../../app/tasarim/olculer.dart';
+import '../../../../app/tasarim/rozet.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../core/para/para_bicimi.dart';
 import '../../../../data/urun/urun_kaydi.dart';
@@ -11,6 +14,8 @@ import '../../../../data/urun/urun_kaydi.dart';
 class UrunSatiri extends StatelessWidget {
   const UrunSatiri({required this.kayit, required this.onTap, super.key});
 
+  static const double _kareBoyu = 40;
+
   final UrunKaydi kayit;
   final VoidCallback onTap;
 
@@ -21,15 +26,28 @@ class UrunSatiri extends StatelessWidget {
 
     return ListTile(
       onTap: onTap,
-      title: Text(
-        urun.ad,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
-        style: const TextStyle(fontWeight: FontWeight.w500),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: Olculer.sayfaKenari,
+        vertical: Olculer.bosluk8,
       ),
-      subtitle: kayit.beklemede
-          ? _BeklemeRozeti(renkSemasi: tema.colorScheme)
-          : null,
+      leading: Container(
+        width: _kareBoyu,
+        height: _kareBoyu,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: tema.colorScheme.secondaryContainer,
+          borderRadius: Olculer.koseOrta,
+        ),
+        child: Icon(
+          Icons.local_florist_outlined,
+          size: 20,
+          color: tema.colorScheme.onSecondaryContainer,
+        ),
+      ),
+      title: Text(urun.ad, maxLines: 2, overflow: TextOverflow.ellipsis),
+      subtitle: kayit.beklemede ? const BeklemeSatiri() : null,
+      // Fiyatı olmayan ürün rozetsiz kalıyor: "Fiyat girilmedi" bir tutar değil,
+      // bir eksiklik — hap biçiminde basılırsa tutar gibi okunuyor.
       trailing: urun.fiyat.sifirMi
           ? Text(
               Metinler.fiyatYok,
@@ -37,39 +55,12 @@ class UrunSatiri extends StatelessWidget {
                 color: tema.colorScheme.onSurfaceVariant,
               ),
             )
-          : Text(
-              urun.fiyat.bicimli,
-              style: tema.textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+          : Rozet(
+              metin: urun.fiyat.bicimli,
+              renk: tema.colorScheme.onSurface,
+              zemin: tema.colorScheme.surfaceContainer,
+              stil: tema.textTheme.titleSmall,
             ),
-    );
-  }
-}
-
-/// Sunucuya henüz yazılmamış kayıtların göstergesi (bkz. KURALLAR.md §4.4).
-class _BeklemeRozeti extends StatelessWidget {
-  const _BeklemeRozeti({required this.renkSemasi});
-
-  final ColorScheme renkSemasi;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(Icons.cloud_upload_outlined, size: 14, color: renkSemasi.tertiary),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            Metinler.kaydedilmedi,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: renkSemasi.tertiary),
-          ),
-        ),
-      ],
     );
   }
 }

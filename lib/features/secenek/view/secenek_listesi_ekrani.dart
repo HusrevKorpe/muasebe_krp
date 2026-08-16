@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../app/tasarim/olculer.dart';
+import '../../../app/tasarim/yuzen_dugme.dart';
 import '../../../core/metin/metinler.dart';
 import '../../../domain/secenek/secenek.dart';
 import '../../../domain/secenek/secenek_tipi.dart';
@@ -47,7 +49,7 @@ class SecenekListesiEkrani extends StatelessWidget {
         child: SecenekListesi(
           tip: tip,
           // Yüzen düğme son satırı örtmesin.
-          altBosluk: 88,
+          altBosluk: Olculer.yuzenDugmeBoslugu,
           onSecildi: (kayit) {
             if (secimMi) {
               Navigator.of(context).pop(kayit.secenek.ad);
@@ -60,13 +62,13 @@ class SecenekListesiEkrani extends StatelessWidget {
               : null,
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: YuzenDugme(
         // Kişiler ve ürünler sekmesindeki düğmelerle aynı hero etiketini
         // paylaşmamalı — bkz. `urun_listesi_ekrani.dart`.
-        heroTag: 'secenekEkle',
-        onPressed: () => _ekle(context),
-        icon: const Icon(Icons.add),
-        label: const Text(Metinler.secenekEkle),
+        kimlik: 'secenekEkle',
+        onBasildi: () => _ekle(context),
+        simge: Icons.add,
+        metin: Metinler.secenekEkle,
       ),
     );
   }

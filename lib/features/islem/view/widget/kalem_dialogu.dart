@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/tasarim/dugme.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../core/para/para_bicimi.dart';
 import '../../../../core/para/para_girisi.dart';
@@ -203,14 +204,16 @@ class _KalemDialoguDurumu extends State<KalemDialogu> {
           ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text(Metinler.vazgec),
+      actions: <Widget>[
+        Dugme.sade(
+          metin: Metinler.vazgec,
+          kompakt: true,
+          onBasildi: () => Navigator.of(context).pop(),
         ),
-        FilledButton(
-          onPressed: _kaydet,
-          child: Text(_duzenlemeMi ? Metinler.kaydet : Metinler.ekle),
+        Dugme.birincil(
+          metin: _duzenlemeMi ? Metinler.kaydet : Metinler.ekle,
+          kompakt: true,
+          onBasildi: _kaydet,
         ),
       ],
     );

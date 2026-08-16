@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/tasarim/dugme.dart';
+import '../../../app/tasarim/olculer.dart';
+import '../../../app/tasarim/simge_dugmesi.dart';
 import '../../../core/hata/hatalar.dart';
 import '../../../core/metin/metinler.dart';
 import '../../../core/para/kurus.dart';
@@ -103,14 +106,16 @@ class _CariFormEkraniDurumu extends ConsumerState<CariFormEkrani> {
       builder: (context) => AlertDialog(
         title: Text(baslik),
         content: Text(mesaj),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(Metinler.vazgec),
+        actions: <Widget>[
+          Dugme.sade(
+            metin: Metinler.vazgec,
+            kompakt: true,
+            onBasildi: () => Navigator.of(context).pop(false),
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(Metinler.tamam),
+          Dugme.tehlikeli(
+            metin: Metinler.tamam,
+            kompakt: true,
+            onBasildi: () => Navigator.of(context).pop(true),
           ),
         ],
       ),
@@ -138,12 +143,13 @@ class _CariFormEkraniDurumu extends ConsumerState<CariFormEkrani> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_duzenlemeMi ? Metinler.cariDuzenle : Metinler.cariEkle),
-        actions: [
+        actions: <Widget>[
           if (_duzenlemeMi)
-            IconButton(
-              icon: const Icon(Icons.person_off_outlined),
-              tooltip: Metinler.cariPasifeAl,
-              onPressed: islemSuruyor ? null : _pasifeAl,
+            SimgeDugmesi(
+              simge: Icons.person_off_outlined,
+              ipucu: Metinler.cariPasifeAl,
+              tehlikeli: true,
+              onBasildi: islemSuruyor ? null : _pasifeAl,
             ),
         ],
       ),
@@ -151,25 +157,26 @@ class _CariFormEkraniDurumu extends ConsumerState<CariFormEkrani> {
         child: Form(
           key: _formAnahtari,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            children: [
-              for (final alan in _Alan.values) ...[
+            padding: const EdgeInsets.fromLTRB(
+              Olculer.sayfaKenari,
+              Olculer.bosluk20,
+              Olculer.sayfaKenari,
+              Olculer.bosluk32,
+            ),
+            children: <Widget>[
+              for (final alan in _Alan.values) ...<Widget>[
                 _AlanKutusu(
                   alan: alan,
                   kontrolcu: _kontrolcular[alan]!,
                   etkin: !islemSuruyor,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: Olculer.bosluk16),
               ],
-              const SizedBox(height: 8),
-              FilledButton(
-                onPressed: islemSuruyor ? null : _kaydet,
-                child: islemSuruyor
-                    ? const SizedBox.square(
-                        dimension: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text(Metinler.kaydet),
+              const SizedBox(height: Olculer.bosluk8),
+              Dugme.birincil(
+                metin: Metinler.kaydet,
+                onBasildi: _kaydet,
+                yukleniyor: islemSuruyor,
               ),
             ],
           ),

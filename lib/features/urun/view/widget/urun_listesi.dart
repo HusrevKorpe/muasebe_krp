@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../app/tasarim/arama_alani.dart';
+import '../../../../app/tasarim/olculer.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../data/urun/urun_kaydi.dart';
 import '../../../ortak/view/bos_durum.dart';
@@ -75,14 +77,12 @@ class _UrunListesiDurumu extends ConsumerState<UrunListesi> {
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: _AramaAlani(
-            kontrolcu: _aramaKontrolcu,
-            onDegisti: (metin) => ref
-                .read(urunListesiViewModelSaglayici.notifier)
-                .aramayiDegistir(metin),
-          ),
+        AramaAlani(
+          kontrolcu: _aramaKontrolcu,
+          ipucu: Metinler.urunAra,
+          onDegisti: (metin) => ref
+              .read(urunListesiViewModelSaglayici.notifier)
+              .aramayiDegistir(metin),
         ),
         Expanded(
           child: durum.when(
@@ -108,7 +108,8 @@ class _UrunListesiDurumu extends ConsumerState<UrunListesi> {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.only(bottom: widget.altBosluk),
         itemCount: veri.kayitlar.length + (ekSatir ? 1 : 0),
-        separatorBuilder: (context, sira) => const Divider(height: 1),
+        separatorBuilder: (context, sira) =>
+            const Divider(indent: 72, endIndent: Olculer.sayfaKenari),
         itemBuilder: (context, sira) {
           if (sira >= veri.kayitlar.length) return _sayfaSonu(veri);
 
@@ -131,11 +132,11 @@ class _UrunListesiDurumu extends ConsumerState<UrunListesi> {
       );
     }
     return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 24),
+      padding: EdgeInsets.symmetric(vertical: Olculer.bosluk24),
       child: Center(
         child: SizedBox.square(
-          dimension: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
+          dimension: 22,
+          child: CircularProgressIndicator(strokeWidth: 2.4),
         ),
       ),
     );
@@ -153,40 +154,6 @@ class _UrunListesiDurumu extends ConsumerState<UrunListesi> {
       simge: Icons.sell_outlined,
       baslik: Metinler.urunYokBaslik,
       aciklama: Metinler.urunYokAciklama,
-    );
-  }
-}
-
-class _AramaAlani extends StatelessWidget {
-  const _AramaAlani({required this.kontrolcu, required this.onDegisti});
-
-  final TextEditingController kontrolcu;
-  final ValueChanged<String> onDegisti;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: kontrolcu,
-      onChanged: onDegisti,
-      textInputAction: TextInputAction.search,
-      decoration: InputDecoration(
-        hintText: Metinler.urunAra,
-        prefixIcon: const Icon(Icons.search),
-        isDense: true,
-        suffixIcon: ValueListenableBuilder<TextEditingValue>(
-          valueListenable: kontrolcu,
-          builder: (context, deger, _) => deger.text.isEmpty
-              ? const SizedBox.shrink()
-              : IconButton(
-                  icon: const Icon(Icons.clear),
-                  tooltip: Metinler.temizle,
-                  onPressed: () {
-                    kontrolcu.clear();
-                    onDegisti('');
-                  },
-                ),
-        ),
-      ),
     );
   }
 }

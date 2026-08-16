@@ -12,6 +12,10 @@ tarih aralığına göre PDF ekstre üretip paylaşır.
 - **Dosya başına 500 satır** sınırı, bir dosyada bir public sınıf.
 - **Katman akışı:** View → ViewModel → Repository → Firestore.
   `cloud_firestore` importu **sadece** `lib/data/` altında geçebilir.
+- **`firestore.rules` değiştiyse deploy et — commit yayın değildir.**
+  Firestore sunucudaki son deploy'u uygular. Atlanırsa uygulama
+  `permission-denied` verir ve hata kodda aranır, oysa kod doğrudur.
+  Bkz. [KURALLAR.md §4.1](KURALLAR.md#41-güvenlik).
 - `lib/domain/` **saf Dart** — Flutter importu yok.
 - ViewModel'de `BuildContext` yok.
 - **Muhasebe kaydı silinmez** — iptal işaretlenir veya ters kayıt atılır.
@@ -50,7 +54,9 @@ flutter run                            # cihazda çalıştır
 flutter build ipa                      # TestFlight'a giden derleme
 
 firebase emulators:start --only firestore,auth   # repository testleri burada koşar
-firebase deploy --only firestore:rules,firestore:indexes   # kural ve index yayını
+# Kural/index yayını — dosyayı DEĞİŞTİREN İŞİN PARÇASI, ayrı bir adım değil.
+# Commit etmek yayınlamaz; atlanırsa uygulama permission-denied verir.
+firebase deploy --only firestore:rules,firestore:indexes --project muasebe-takip
 
 # Emulator'e bağlı testler (emulator ayakta olmalı, cihaz/simülatör gerekir)
 flutter test integration_test -d <simulator-id>
@@ -89,7 +95,8 @@ deposu eskiyse `pod install --repo-update` gerekir.
 
 ```
 lib/
-├── app/           # Giriş, router, tema
+├── app/           # Giriş, router
+│   └── tasarim/   # Tasarım sistemi: renk, ölçü, tema, ortak bileşenler
 ├── core/          # Para, tarih, arama normalizasyonu, logger, hata
 ├── domain/        # Model + iş kuralları — saf Dart, testi zorunlu
 ├── data/          # Repository'ler, Firestore erişimi
@@ -107,6 +114,14 @@ tool/              # Varlık üreticileri (uygulama ikonu)
 
 - **Referans ekstre:** `~/Desktop/Favori_Fidancılık_Ekstresi.pdf` — üreteceğimiz PDF'in
   hedefi bu. Kolonlar: İşlem Tarihi · Açıklama · Vade Tarihi · Borç · Alacak · Bakiye.
+- **Görünüm kararları `lib/app/tasarim/` altında toplanır** (bkz.
+  [KURALLAR.md §2.0](KURALLAR.md#20-tasarım-sistemi)). Palet "Toprak Yeşili +
+  Krem": ekran zemini krem, kartlar beyaz, ayrım gölgeyle değil ince kenarla
+  yapılıyor; iki renk şeması da elle yazılı, `fromSeed` kullanılmıyor. Ekranlar
+  ham `FilledButton`/`TextButton` yazmaz — `Dugme`, `SimgeDugmesi`, `YuzenDugme`
+  ve `AramaAlani` bileşenleri kullanılır. Borç kırmızı / alacak yeşil ayrımı
+  paletin dışında, `Renkler.borc` ve `Renkler.alacak` üzerinden gelir: o bir
+  marka tercihi değil, muhasebe anlamı.
 - **Vergi hesabı yok.** Fatura toplamı kalem tutarlarının toplamıdır. Referans
   ekstredeki bir faturada %1 vergi görünüyor; öyle bir satır gerekirse "nakliye"
   gibi serbest metin kalemi olarak girilir.
@@ -188,6 +203,23 @@ tool/              # Varlık üreticileri (uygulama ikonu)
   diğerleri kapalı; Settings → User actions → "Enable create (sign-up)" **kapalı**
   (açık kalırsa dışarıdan hesap açılıp deftere girilebilir); Users → Add user
   ile kullanacak kişilerin hesapları.
+- **`permission-denied` görülünce koda bakma — iki sebebi var, ikisi de kodun
+  dışında.** Sırayla ele:
+  1. **Kural yayınlanmamış olabilir.** `firebase deploy --only firestore:rules`
+     çalıştır. Çıktı `already up to date, skipping upload` diyorsa kural zaten
+     yayındaydı ve sebep bu değil; 2. maddeye geç. Aynı tuzağın index hâli
+     `failed-precondition: The query requires an index` diye görünür.
+  2. **Cihazdaki oturum geçersiz olabilir — ama uygulama "girişli" görünür.**
+     Firebase Auth kullanıcıyı cihazda saklar ve açılışta **ağa hiç sormadan**
+     yayar. `oturumSaglayici` dolu bir `User` verir, yönlendirici kullanıcıyı
+     içeri alır, ama Firestore'a giden istekte geçerli jeton yoktur: sunucu
+     `request.auth`'u boş görür ve kural haklı olarak reddeder. Giriş ekranı
+     görünmediği için sorun veri katmanında sanılır. **Çözüm: çıkış yapıp
+     yeniden giriş.** Bu projede özellikle muhtemel, çünkü `6df15da` girişi
+     Google'dan e-posta/şifreye çevirdi ve Google sağlayıcısının kapatılmasını
+     şart koştu; o commit'ten önce açılmış bir Google oturumu cihazda kalmışsa
+     jetonu artık tazelenemez.
+  Kural ve teşhis tablosu: [KURALLAR.md §4.1](KURALLAR.md#41-güvenlik).
 - **İşletme profili zorunlu değil.** Eskiden ilk açılışta doldurulması gereken
   bir kurulum ekranı vardı; kaldırıldı. Profil yalnızca PDF ekstre başlığını
   besliyor, boşsa başlık sade çıkar. Ayarlar → İşletme bilgileri'nden istendiği

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/tasarim/dugme.dart';
+import '../../../app/tasarim/olculer.dart';
+import '../../../app/tasarim/simge_dugmesi.dart';
 import '../../../core/hata/hatalar.dart';
 import '../../../core/metin/metinler.dart';
 import '../../../core/para/kurus.dart';
@@ -129,14 +132,16 @@ class _UrunFormEkraniDurumu extends ConsumerState<UrunFormEkrani> {
       builder: (context) => AlertDialog(
         title: const Text(Metinler.urunPasifeAl),
         content: const Text(Metinler.urunPasifeAlOnay),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(Metinler.vazgec),
+        actions: <Widget>[
+          Dugme.sade(
+            metin: Metinler.vazgec,
+            kompakt: true,
+            onBasildi: () => Navigator.of(context).pop(false),
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(Metinler.tamam),
+          Dugme.tehlikeli(
+            metin: Metinler.tamam,
+            kompakt: true,
+            onBasildi: () => Navigator.of(context).pop(true),
           ),
         ],
       ),
@@ -164,12 +169,13 @@ class _UrunFormEkraniDurumu extends ConsumerState<UrunFormEkrani> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_duzenlemeMi ? Metinler.urunDuzenle : Metinler.urunEkle),
-        actions: [
+        actions: <Widget>[
           if (_duzenlemeMi)
-            IconButton(
-              icon: const Icon(Icons.remove_circle_outline),
-              tooltip: Metinler.urunPasifeAl,
-              onPressed: islemSuruyor ? null : _listedenKaldir,
+            SimgeDugmesi(
+              simge: Icons.remove_circle_outline,
+              ipucu: Metinler.urunPasifeAl,
+              tehlikeli: true,
+              onBasildi: islemSuruyor ? null : _listedenKaldir,
             ),
         ],
       ),
@@ -177,8 +183,13 @@ class _UrunFormEkraniDurumu extends ConsumerState<UrunFormEkrani> {
         child: Form(
           key: _formAnahtari,
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-            children: [
+            padding: const EdgeInsets.fromLTRB(
+              Olculer.sayfaKenari,
+              Olculer.bosluk20,
+              Olculer.sayfaKenari,
+              Olculer.bosluk32,
+            ),
+            children: <Widget>[
               _KimlikAlani(
                 kontrolcu: _tur,
                 etiket: Metinler.tur,
@@ -229,15 +240,11 @@ class _UrunFormEkraniDurumu extends ConsumerState<UrunFormEkrani> {
                   helperMaxLines: 2,
                 ),
               ),
-              const SizedBox(height: 32),
-              FilledButton(
-                onPressed: islemSuruyor ? null : _kaydet,
-                child: islemSuruyor
-                    ? const SizedBox.square(
-                        dimension: 22,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text(Metinler.kaydet),
+              const SizedBox(height: Olculer.bosluk32),
+              Dugme.birincil(
+                metin: Metinler.kaydet,
+                onBasildi: _kaydet,
+                yukleniyor: islemSuruyor,
               ),
             ],
           ),
@@ -288,10 +295,11 @@ class _KimlikAlani extends StatelessWidget {
         labelText: etiket,
         hintText: ipucu,
         prefixIcon: Icon(simge),
-        suffixIcon: IconButton(
-          icon: const Icon(Icons.list_alt_outlined),
-          tooltip: Metinler.listedenSec,
-          onPressed: enabled ? onListe : null,
+        suffixIcon: SimgeDugmesi(
+          simge: Icons.list_alt_outlined,
+          ipucu: Metinler.listedenSec,
+          vurgulu: true,
+          onBasildi: enabled ? onListe : null,
         ),
         helperText: aciklama,
         helperMaxLines: 2,
@@ -332,25 +340,27 @@ class _AdOnizlemesi extends StatelessWidget {
 
         return Container(
           width: double.infinity,
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(Olculer.bosluk16),
           decoration: BoxDecoration(
-            color: tema.colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(8),
+            color: tema.colorScheme.primaryContainer,
+            borderRadius: Olculer.koseOrta,
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+            children: <Widget>[
               Text(
                 Metinler.urunAdiOnizleme,
                 style: tema.textTheme.bodySmall?.copyWith(
-                  color: tema.colorScheme.onSurfaceVariant,
+                  color: tema.colorScheme.onPrimaryContainer.withValues(
+                    alpha: 0.75,
+                  ),
                 ),
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: Olculer.bosluk4),
               Text(
                 ad,
-                style: tema.textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w600,
+                style: tema.textTheme.titleMedium?.copyWith(
+                  color: tema.colorScheme.onPrimaryContainer,
                 ),
               ),
             ],

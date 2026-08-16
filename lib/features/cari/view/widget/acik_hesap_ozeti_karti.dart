@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
 
-import '../../../../app/tema.dart';
+import '../../../../app/tasarim/olculer.dart';
+import '../../../../app/tasarim/renkler.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../core/para/kurus.dart';
 import '../../../../core/para/para_bicimi.dart';
 import '../../../../domain/cari/acik_hesap_ozeti.dart';
 
-/// Açık hesaplar sekmesinin başındaki toplam satırı.
+/// Açık hesaplar sekmesinin başındaki toplam kartı.
 ///
 /// Renkler listedeki bakiye renkleriyle aynı: alacak kırmızı, borç yeşil
 /// (`BakiyeMetni`). Aynı tutarın iki yerde iki renkte görünmemesi için ölçüt
 /// tek — bakiyenin işareti.
+///
+/// Şerit değil kart: sekmenin en üstünde tam genişlikte bir renk bloğu, altında
+/// gelen liste satırlarıyla aynı hizada durunca başlık mı satır mı belli
+/// olmuyordu. Kart, kenar boşluğuyla listeden ayrılıyor.
 class AcikHesapOzetiKarti extends StatelessWidget {
   const AcikHesapOzetiKarti({
     required this.ozet,
@@ -27,52 +32,74 @@ class AcikHesapOzetiKarti extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
+    final borcVar = !ozet.borc.sifirMi;
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      color: tema.colorScheme.surfaceContainerHighest,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            Metinler.acikHesapAdedi(ozet.adet),
-            style: tema.textTheme.labelLarge?.copyWith(
-              color: tema.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _Toplam(
-                  baslik: Metinler.toplamAlacak,
-                  tutar: ozet.alacak,
-                  renk: Tema.borcRengi(tema.brightness),
-                ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        Olculer.sayfaKenari,
+        Olculer.bosluk12,
+        Olculer.sayfaKenari,
+        Olculer.bosluk8,
+      ),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(Olculer.bosluk16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Row(
+                children: <Widget>[
+                  Icon(
+                    Icons.account_balance_wallet_outlined,
+                    size: 16,
+                    color: tema.colorScheme.onSurfaceVariant,
+                  ),
+                  const SizedBox(width: Olculer.bosluk8),
+                  Text(
+                    Metinler.acikHesapAdedi(ozet.adet),
+                    style: tema.textTheme.labelLarge?.copyWith(
+                      color: tema.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
               ),
-              // Borç kalemi yalnızca varsa yer kaplar; her satırda "0,00 ₺"
-              // görmek gereksiz gürültü.
-              if (!ozet.borc.sifirMi)
-                Expanded(
-                  child: _Toplam(
-                    baslik: Metinler.toplamBorc,
-                    tutar: ozet.borc,
-                    renk: Tema.alacakRengi(tema.brightness),
+              const SizedBox(height: Olculer.bosluk16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  Expanded(
+                    child: _Toplam(
+                      baslik: Metinler.toplamAlacak,
+                      tutar: ozet.alacak,
+                      renk: Renkler.borc(tema.brightness),
+                    ),
+                  ),
+                  // Borç kalemi yalnızca varsa yer kaplar; her satırda "0,00 ₺"
+                  // görmek gereksiz gürültü.
+                  if (borcVar) ...<Widget>[
+                    const _DikeyCizgi(),
+                    Expanded(
+                      child: _Toplam(
+                        baslik: Metinler.toplamBorc,
+                        tutar: ozet.borc,
+                        renk: Renkler.alacak(tema.brightness),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              if (eksikVar) ...<Widget>[
+                const SizedBox(height: Olculer.bosluk12),
+                Text(
+                  Metinler.acikHesapKismiToplam,
+                  style: tema.textTheme.bodySmall?.copyWith(
+                    color: tema.colorScheme.onSurfaceVariant,
                   ),
                 ),
+              ],
             ],
           ),
-          if (eksikVar) ...[
-            const SizedBox(height: 8),
-            Text(
-              Metinler.acikHesapKismiToplam,
-              style: tema.textTheme.bodySmall?.copyWith(
-                color: tema.colorScheme.onSurfaceVariant,
-              ),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
@@ -96,23 +123,35 @@ class _Toplam extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: <Widget>[
         Text(
           baslik,
           style: tema.textTheme.bodySmall?.copyWith(
             color: tema.colorScheme.onSurfaceVariant,
           ),
         ),
+        const SizedBox(height: Olculer.bosluk4),
         Text(
           tutar.bicimli,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: tema.textTheme.titleMedium?.copyWith(
-            color: renk,
-            fontWeight: FontWeight.w600,
-          ),
+          style: tema.textTheme.titleLarge?.copyWith(color: renk),
         ),
       ],
+    );
+  }
+}
+
+/// İki toplamı ayıran ince çizgi.
+class _DikeyCizgi extends StatelessWidget {
+  const _DikeyCizgi();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      margin: const EdgeInsets.symmetric(horizontal: Olculer.bosluk16),
+      color: Theme.of(context).colorScheme.outlineVariant,
     );
   }
 }

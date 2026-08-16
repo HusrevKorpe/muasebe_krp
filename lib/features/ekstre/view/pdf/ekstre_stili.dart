@@ -49,7 +49,7 @@ class EkstreStili {
   /// görünüyor.
   static const double tarihKolonu = 72;
 
-  /// BORÇ ve ALACAK kolonlarının ortak genişliği.
+  /// BORÇ ve ALINAN kolonlarının ortak genişliği.
   ///
   /// `142.031,25 ₺` rahat sığacak kadar geniş tutuldu: para kolonu taşarsa
   /// rakam yan kolona sarkar ve hangi tarafa yazıldığı okunamaz hâle gelir.

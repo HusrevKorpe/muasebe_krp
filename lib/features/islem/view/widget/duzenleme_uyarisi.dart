@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/tasarim/olculer.dart';
 import '../../../../core/metin/metinler.dart';
 
 /// Kayıtlı bir işlem düzenlenirken formun başında duran not.
@@ -7,6 +8,10 @@ import '../../../../core/metin/metinler.dart';
 /// Değişiklik bakiyeye anında yansıyor ve müşteriye daha önce gönderilmiş PDF
 /// ekstre bu kaydı eski hâliyle gösteriyor olabilir. Kullanıcı düzeltmeyi
 /// yaparken bunu bilmeli — uyarı engellemez, hatırlatır.
+///
+/// Rengi kiremit (`tertiary`), kırmızı değil: bu bir hata değil, dikkat
+/// çekilmesi gereken bir bilgi. Hata rengi kullanılırsa kullanıcı düzeltmekten
+/// vazgeçiyor.
 class DuzenlemeUyarisi extends StatelessWidget {
   const DuzenlemeUyarisi({super.key});
 
@@ -15,25 +20,25 @@ class DuzenlemeUyarisi extends StatelessWidget {
     final tema = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(Olculer.bosluk16),
       decoration: BoxDecoration(
-        color: tema.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
+        color: tema.colorScheme.tertiaryContainer,
+        borderRadius: Olculer.koseOrta,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Icon(
             Icons.info_outline,
             size: 20,
-            color: tema.colorScheme.onSurfaceVariant,
+            color: tema.colorScheme.onTertiaryContainer,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: Olculer.bosluk12),
           Expanded(
             child: Text(
               Metinler.islemDuzenlemeUyarisi,
               style: tema.textTheme.bodySmall?.copyWith(
-                color: tema.colorScheme.onSurfaceVariant,
+                color: tema.colorScheme.onTertiaryContainer,
               ),
             ),
           ),

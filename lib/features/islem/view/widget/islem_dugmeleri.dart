@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/tasarim/olculer.dart';
 import '../../../../domain/islem/islem_tipi.dart';
 import 'islem_tipi_gorunumu.dart';
 
@@ -11,6 +12,10 @@ import 'islem_tipi_gorunumu.dart';
 ///
 /// Dört tip birlikte sunulur: bir cari hem müşteri hem tedarikçi olabilir, bu
 /// yüzden aynı kişiye hem satış hem alış girilebilmeli (bkz. KURALLAR.md §3.4).
+///
+/// Simgeler renkli bir karenin içinde: dört düğme yan yana dururken yalnızca
+/// renkli simge ve yazıdan oluşan hâlleri, dokunulabilir olduklarını
+/// söylemiyordu — çubuk bir açıklama satırı gibi okunuyordu.
 class IslemDugmeleri extends StatelessWidget {
   const IslemDugmeleri({required this.onSecildi, super.key});
 
@@ -18,21 +23,27 @@ class IslemDugmeleri extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tema = Theme.of(context);
+    final sema = Theme.of(context).colorScheme;
 
+    // `Material`, `DecoratedBox` değil: dokunma dalgası en yakın `Material`'ın
+    // üstüne çiziliyor. Zemin bir kutuyla boyansaydı dalga onun *altında*
+    // kalırdı ve düğmeler dokunmaya cevap vermiyor gibi görünürdü.
     return Material(
-      color: tema.colorScheme.surface,
-      elevation: 3,
+      color: sema.surfaceContainerLowest,
+      shape: Border(top: BorderSide(color: sema.outlineVariant)),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+          padding: const EdgeInsets.fromLTRB(
+            Olculer.bosluk8,
+            Olculer.bosluk12,
+            Olculer.bosluk8,
+            Olculer.bosluk8,
+          ),
           child: Row(
             children: <Widget>[
-              for (final tip in IslemTipi.values) ...<Widget>[
+              for (final tip in IslemTipi.values)
                 Expanded(child: _Dugme(tip: tip, onBasildi: onSecildi)),
-                if (tip != IslemTipi.values.last) const SizedBox(width: 8),
-              ],
             ],
           ),
         ),
@@ -44,6 +55,8 @@ class IslemDugmeleri extends StatelessWidget {
 class _Dugme extends StatelessWidget {
   const _Dugme({required this.tip, required this.onBasildi});
 
+  static const double _kareBoyu = 42;
+
   final IslemTipi tip;
   final ValueChanged<IslemTipi> onBasildi;
 
@@ -54,19 +67,31 @@ class _Dugme extends StatelessWidget {
 
     return InkWell(
       onTap: () => onBasildi(tip),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: Olculer.koseOrta,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: Olculer.bosluk8),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            Icon(tip.simge, color: renk),
-            const SizedBox(height: 6),
+            Container(
+              width: _kareBoyu,
+              height: _kareBoyu,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: tip.zemin(tema.brightness),
+                borderRadius: Olculer.koseOrta,
+              ),
+              child: Icon(tip.simge, size: 21, color: renk),
+            ),
+            const SizedBox(height: Olculer.bosluk8),
             Text(
               tip.ad,
               textAlign: TextAlign.center,
               maxLines: 2,
-              style: tema.textTheme.labelMedium?.copyWith(color: renk),
+              style: tema.textTheme.labelMedium?.copyWith(
+                color: tema.colorScheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),

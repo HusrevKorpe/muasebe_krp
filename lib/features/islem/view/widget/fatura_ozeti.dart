@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/tasarim/olculer.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../core/para/kurus.dart';
 import '../../../../core/para/para_bicimi.dart';
@@ -8,6 +9,9 @@ import '../../../../core/para/para_bicimi.dart';
 ///
 /// Hesabı kendisi yapmaz; toplam domain katmanında `FaturaHesaplayici` ile
 /// üretilir (bkz. KURALLAR.md §1.3).
+///
+/// Beyaz karttan ayrılıyor: satırların altındaki toplam, kalem listesiyle aynı
+/// zeminde durduğunda bir kalem satırı gibi okunuyordu.
 class FaturaOzeti extends StatelessWidget {
   const FaturaOzeti({required this.toplam, super.key});
 
@@ -15,21 +19,39 @@ class FaturaOzeti extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final stil = Theme.of(
-      context,
-    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700);
+    final tema = Theme.of(context);
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(Metinler.genelToplam, style: stil),
-            Text(toplam.bicimli, style: stil),
-          ],
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: Olculer.bosluk20,
+        vertical: Olculer.bosluk16,
+      ),
+      decoration: BoxDecoration(
+        color: tema.colorScheme.primaryContainer,
+        borderRadius: Olculer.koseBuyuk,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: <Widget>[
+          Text(
+            Metinler.genelToplam,
+            style: tema.textTheme.titleSmall?.copyWith(
+              color: tema.colorScheme.onPrimaryContainer,
+            ),
+          ),
+          const SizedBox(width: Olculer.bosluk12),
+          Flexible(
+            child: Text(
+              toplam.bicimli,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style: tema.textTheme.titleLarge?.copyWith(
+                color: tema.colorScheme.onPrimaryContainer,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

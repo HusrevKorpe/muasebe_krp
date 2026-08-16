@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../app/tasarim/olculer.dart';
 import '../../../../app/yollar.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../domain/islem/bakiye_satiri.dart';
@@ -83,7 +84,10 @@ class _Liste extends ConsumerWidget {
 
     return SliverList.separated(
       itemCount: satirlar.length + (ekSatir ? 1 : 0),
-      separatorBuilder: (context, sira) => const Divider(height: 1),
+      // Çizgi simge karesinin altından değil, yazının hizasından başlıyor —
+      // kişi listesindeki ayıraçla aynı düzen.
+      separatorBuilder: (context, sira) =>
+          const Divider(indent: 72, endIndent: Olculer.sayfaKenari),
       itemBuilder: (context, sira) {
         if (sira >= satirlar.length) {
           return _SayfaSonu(cariId: cariId, veri: veri);
@@ -122,11 +126,11 @@ class _SayfaSonu extends ConsumerWidget {
     }
 
     return const Padding(
-      padding: EdgeInsets.symmetric(vertical: 24),
+      padding: EdgeInsets.symmetric(vertical: Olculer.bosluk24),
       child: Center(
         child: SizedBox.square(
-          dimension: 24,
-          child: CircularProgressIndicator(strokeWidth: 2),
+          dimension: 22,
+          child: CircularProgressIndicator(strokeWidth: 2.4),
         ),
       ),
     );

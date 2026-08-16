@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'tema.dart';
+import 'tasarim/tema.dart';
 import 'yonlendirici.dart';
 
 class FidanCariUygulamasi extends ConsumerWidget {

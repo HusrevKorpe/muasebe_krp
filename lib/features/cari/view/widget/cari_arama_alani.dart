@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/tasarim/arama_alani.dart';
 import '../../../../core/metin/metinler.dart';
 
 /// Kişi listesinin arama kutusu.
@@ -20,31 +21,10 @@ class CariAramaAlani extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: TextField(
-        controller: kontrolcu,
-        onChanged: onDegisti,
-        textInputAction: TextInputAction.search,
-        decoration: InputDecoration(
-          hintText: Metinler.cariAra,
-          prefixIcon: const Icon(Icons.search),
-          isDense: true,
-          suffixIcon: ValueListenableBuilder<TextEditingValue>(
-            valueListenable: kontrolcu,
-            builder: (context, deger, _) => deger.text.isEmpty
-                ? const SizedBox.shrink()
-                : IconButton(
-                    icon: const Icon(Icons.clear),
-                    tooltip: Metinler.temizle,
-                    onPressed: () {
-                      kontrolcu.clear();
-                      onDegisti('');
-                    },
-                  ),
-          ),
-        ),
-      ),
+    return AramaAlani(
+      kontrolcu: kontrolcu,
+      ipucu: Metinler.cariAra,
+      onDegisti: onDegisti,
     );
   }
 }

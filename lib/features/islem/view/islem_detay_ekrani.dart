@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../app/tasarim/bolum_basligi.dart';
+import '../../../app/tasarim/dugme.dart';
+import '../../../app/tasarim/olculer.dart';
+import '../../../app/tasarim/simge_dugmesi.dart';
 import '../../../app/yollar.dart';
 import '../../../core/hata/hatalar.dart';
 import '../../../core/metin/metinler.dart';
-import '../../../core/para/para_bicimi.dart';
-import '../../../core/tarih/tarih_bicimi.dart';
 import '../../../data/islem/islem_kaydi.dart';
 import '../../../domain/islem/islem.dart';
 import '../../ortak/view/bos_durum.dart';
@@ -14,6 +16,7 @@ import '../../ortak/view/hata_durumu.dart';
 import '../viewmodel/islem_form_viewmodel.dart';
 import '../viewmodel/islem_saglayici.dart';
 import 'widget/fatura_ozeti.dart';
+import 'widget/islem_ozet_karti.dart';
 import 'widget/islem_tipi_gorunumu.dart';
 import 'widget/kalem_listesi.dart';
 
@@ -39,17 +42,18 @@ class IslemDetayEkrani extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text(kayit.value?.islem.tip.ad ?? Metinler.islemDetayi),
-        actions: [
-          if (kayit.value != null && !kayit.value!.islem.iptalMi) ...[
-            IconButton(
-              icon: const Icon(Icons.edit_outlined),
-              tooltip: Metinler.islemiDuzenle,
-              onPressed: () => _duzenlemeyeGit(context),
+        actions: <Widget>[
+          if (kayit.value != null && !kayit.value!.islem.iptalMi) ...<Widget>[
+            SimgeDugmesi(
+              simge: Icons.edit_outlined,
+              ipucu: Metinler.islemiDuzenle,
+              onBasildi: () => _duzenlemeyeGit(context),
             ),
-            IconButton(
-              icon: const Icon(Icons.block_outlined),
-              tooltip: Metinler.islemiIptalEt,
-              onPressed: () => _iptalEt(context, ref, kayit.value!.islem),
+            SimgeDugmesi(
+              simge: Icons.block_outlined,
+              ipucu: Metinler.islemiIptalEt,
+              tehlikeli: true,
+              onBasildi: () => _iptalEt(context, ref, kayit.value!.islem),
             ),
           ],
         ],
@@ -93,14 +97,16 @@ class IslemDetayEkrani extends ConsumerWidget {
       builder: (context) => AlertDialog(
         title: const Text(Metinler.islemiIptalEt),
         content: const Text(Metinler.islemIptalOnay),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text(Metinler.vazgec),
+        actions: <Widget>[
+          Dugme.sade(
+            metin: Metinler.vazgec,
+            kompakt: true,
+            onBasildi: () => Navigator.of(context).pop(false),
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text(Metinler.tamam),
+          Dugme.tehlikeli(
+            metin: Metinler.tamam,
+            kompakt: true,
+            onBasildi: () => Navigator.of(context).pop(true),
           ),
         ],
       ),
@@ -143,105 +149,29 @@ class _Govde extends StatelessWidget {
     final islem = kayit.islem;
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
-      children: [
-        if (islem.iptalMi) ...[
+      padding: const EdgeInsets.fromLTRB(
+        Olculer.sayfaKenari,
+        Olculer.bosluk20,
+        Olculer.sayfaKenari,
+        Olculer.bosluk32,
+      ),
+      children: <Widget>[
+        if (islem.iptalMi) ...<Widget>[
           const _IptalUyarisi(),
-          const SizedBox(height: 16),
+          const SizedBox(height: Olculer.bosluk16),
         ],
-        _OzetKarti(kayit: kayit),
-        if (islem.kalemler.isNotEmpty) ...[
-          const SizedBox(height: 24),
-          Text(
-            Metinler.kalemler,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
+        IslemOzetKarti(kayit: kayit),
+        if (islem.kalemler.isNotEmpty) ...<Widget>[
+          const SizedBox(height: Olculer.bosluk24),
+          BolumBasligi(baslik: Metinler.kalemler),
           KalemListesi(
             kalemler: islem.kalemler,
             onDuzenle: onDuzenle == null ? null : (_) => onDuzenle!(),
           ),
         ],
-        const SizedBox(height: 24),
+        const SizedBox(height: Olculer.bosluk20),
         FaturaOzeti(toplam: islem.toplam),
       ],
-    );
-  }
-}
-
-class _OzetKarti extends StatelessWidget {
-  const _OzetKarti({required this.kayit});
-
-  final IslemKaydi kayit;
-
-  @override
-  Widget build(BuildContext context) {
-    final islem = kayit.islem;
-    final tema = Theme.of(context);
-
-    return Card(
-      margin: EdgeInsets.zero,
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(islem.tip.simge, color: islem.tip.renk(tema.brightness)),
-                const SizedBox(width: 8),
-                Text(islem.tip.ad, style: tema.textTheme.titleSmall),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(islem.baslik, style: tema.textTheme.headlineSmall),
-            const Divider(height: 32),
-            _BilgiSatiri(
-              etiket: islem.tip.kolonEtiketi,
-              deger: islem.toplam.bicimli,
-              vurgulu: true,
-              renk: islem.iptalMi ? null : islem.tip.renk(tema.brightness),
-            ),
-            _BilgiSatiri(
-              etiket: Metinler.islemTarihi,
-              deger: uzunTarih(islem.islemTarihi),
-            ),
-            // Sonradan düzeltilmiş kayıt bunu göstermeli: müşterinin elindeki
-            // eski ekstre bu satırı başka tutarla basmış olabilir.
-            if (islem.guncellemeTarihi != null)
-              _BilgiSatiri(
-                etiket: Metinler.sonDuzenleme,
-                deger: uzunTarih(islem.guncellemeTarihi!),
-              ),
-            if (islem.iptalNedeni != null)
-              _BilgiSatiri(
-                etiket: Metinler.iptalNedeni,
-                deger: islem.iptalNedeni!,
-              ),
-            if (kayit.beklemede) ...[
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Icon(
-                    Icons.cloud_upload_outlined,
-                    size: 16,
-                    color: tema.colorScheme.tertiary,
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      Metinler.kaydedilmediAciklama,
-                      style: tema.textTheme.bodySmall?.copyWith(
-                        color: tema.colorScheme.tertiary,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ],
-        ),
-      ),
     );
   }
 }
@@ -254,15 +184,19 @@ class _IptalUyarisi extends StatelessWidget {
     final tema = Theme.of(context);
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(Olculer.bosluk16),
       decoration: BoxDecoration(
         color: tema.colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: Olculer.koseOrta,
       ),
       child: Row(
-        children: [
-          Icon(Icons.block_outlined, color: tema.colorScheme.onErrorContainer),
-          const SizedBox(width: 8),
+        children: <Widget>[
+          Icon(
+            Icons.block_outlined,
+            size: 20,
+            color: tema.colorScheme.onErrorContainer,
+          ),
+          const SizedBox(width: Olculer.bosluk12),
           Expanded(
             child: Text(
               Metinler.iptalliIslemUyarisi,
@@ -271,47 +205,6 @@ class _IptalUyarisi extends StatelessWidget {
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _BilgiSatiri extends StatelessWidget {
-  const _BilgiSatiri({
-    required this.etiket,
-    required this.deger,
-    this.vurgulu = false,
-    this.renk,
-  });
-
-  final String etiket;
-  final String deger;
-  final bool vurgulu;
-  final Color? renk;
-
-  @override
-  Widget build(BuildContext context) {
-    final tema = Theme.of(context);
-    final stil = vurgulu
-        ? tema.textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: renk,
-          )
-        : tema.textTheme.bodyMedium;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            etiket,
-            style: tema.textTheme.bodyMedium?.copyWith(
-              color: tema.colorScheme.onSurfaceVariant,
-            ),
-          ),
-          Flexible(child: Text(deger, style: stil, textAlign: TextAlign.end)),
         ],
       ),
     );

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../../../../app/tasarim/dugme.dart';
+import '../../../../app/tasarim/olculer.dart';
+import '../../../../app/tasarim/simge_dugmesi.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../core/para/para_bicimi.dart';
 import '../../../../core/para/para_girisi.dart';
@@ -75,7 +78,7 @@ class KalemAlanlari extends StatelessWidget {
           onSec: onUrunSec,
           onBagiKaldir: onBagiKaldir,
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: Olculer.bosluk12),
         _KimlikAlani(
           kontrolcu: tur,
           etiket: Metinler.tur,
@@ -87,7 +90,7 @@ class KalemAlanlari extends StatelessWidget {
           onDegisti: onDegisti,
           onListe: () => onSecenekSec(SecenekTipi.tur),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: Olculer.bosluk12),
         _KimlikAlani(
           kontrolcu: cesit,
           etiket: Metinler.cesit,
@@ -95,7 +98,7 @@ class KalemAlanlari extends StatelessWidget {
           onDegisti: onDegisti,
           onListe: () => onSecenekSec(SecenekTipi.cesit),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: Olculer.bosluk12),
         _KimlikAlani(
           kontrolcu: anac,
           etiket: Metinler.anac,
@@ -103,7 +106,7 @@ class KalemAlanlari extends StatelessWidget {
           onDegisti: onDegisti,
           onListe: () => onSecenekSec(SecenekTipi.anac),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: Olculer.bosluk16),
         TextFormField(
           controller: miktar,
           keyboardType: TextInputType.number,
@@ -117,9 +120,9 @@ class KalemAlanlari extends StatelessWidget {
           validator: _miktarDogrula,
           onChanged: (_) => onDegisti(),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: Olculer.bosluk16),
         _ModSecici(mod: mod, onDegisti: onModDegisti),
-        const SizedBox(height: 12),
+        const SizedBox(height: Olculer.bosluk12),
         TextFormField(
           controller: deger,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -140,7 +143,7 @@ class KalemAlanlari extends StatelessWidget {
           onChanged: (_) => onDegisti(),
         ),
         if (onizleme != null) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: Olculer.bosluk16),
           _Onizleme(kalem: onizleme!, mod: mod),
         ],
       ],
@@ -200,10 +203,11 @@ class _KimlikAlani extends StatelessWidget {
         hintText: ipucu,
         helperText: aciklama,
         helperMaxLines: 2,
-        suffixIcon: IconButton(
-          icon: const Icon(Icons.list_alt_outlined),
-          tooltip: Metinler.listedenSec,
-          onPressed: onListe,
+        suffixIcon: SimgeDugmesi(
+          simge: Icons.list_alt_outlined,
+          ipucu: Metinler.listedenSec,
+          vurgulu: true,
+          onBasildi: onListe,
         ),
       ),
       validator: validator,
@@ -230,16 +234,16 @@ class _UrunSatiri extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: [
+      children: <Widget>[
         Expanded(
-          child: OutlinedButton.icon(
-            onPressed: onSec,
-            icon: const Icon(Icons.sell_outlined),
-            label: const Text(Metinler.urundenSec),
+          child: Dugme.ikincil(
+            metin: Metinler.urundenSec,
+            simge: Icons.sell_outlined,
+            onBasildi: onSec,
           ),
         ),
-        if (bagliMi) ...[
-          const SizedBox(width: 8),
+        if (bagliMi) ...<Widget>[
+          const SizedBox(width: Olculer.bosluk8),
           InputChip(
             label: const Text(Metinler.urunBagi),
             onDeleted: onBagiKaldir,
@@ -263,8 +267,13 @@ class _ModSecici extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(Metinler.girisModu, style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: 6),
+        Text(
+          Metinler.girisModu,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: Olculer.bosluk8),
         SegmentedButton<KalemGirisModu>(
           segments: const <ButtonSegment<KalemGirisModu>>[
             ButtonSegment<KalemGirisModu>(
@@ -303,39 +312,45 @@ class _Onizleme extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(Olculer.bosluk16),
       decoration: BoxDecoration(
-        color: tema.colorScheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
+        color: tema.colorScheme.primaryContainer,
+        borderRadius: Olculer.koseOrta,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        children: <Widget>[
           Text(
             kalem.ad,
-            style: tema.textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
+            style: tema.textTheme.titleSmall?.copyWith(
+              color: tema.colorScheme.onPrimaryContainer,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: Olculer.bosluk4),
           Text(
             '${miktarBicimle(kalem.miktar)} ${kalem.birim} × '
             '${kalem.birimFiyat.bicimli}',
-            style: tema.textTheme.bodySmall,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            hesaplanan,
-            style: tema.textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w600,
+            style: tema.textTheme.bodySmall?.copyWith(
+              color: tema.colorScheme.onPrimaryContainer.withValues(
+                alpha: 0.75,
+              ),
             ),
           ),
-          if (kalem.birimFiyatYuvarlanmisMi) ...[
-            const SizedBox(height: 6),
+          const SizedBox(height: Olculer.bosluk8),
+          Text(
+            hesaplanan,
+            style: tema.textTheme.titleMedium?.copyWith(
+              color: tema.colorScheme.onPrimaryContainer,
+            ),
+          ),
+          if (kalem.birimFiyatYuvarlanmisMi) ...<Widget>[
+            const SizedBox(height: Olculer.bosluk8),
             Text(
               Metinler.birimFiyatYaklasik,
               style: tema.textTheme.bodySmall?.copyWith(
-                color: tema.colorScheme.tertiary,
+                color: tema.colorScheme.onPrimaryContainer.withValues(
+                  alpha: 0.75,
+                ),
               ),
             ),
           ],

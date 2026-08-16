@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../../../../app/tasarim/bolum_basligi.dart';
+import '../../../../app/tasarim/dugme.dart';
+import '../../../../app/tasarim/olculer.dart';
+import '../../../../app/tasarim/simge_dugmesi.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../domain/isletme/banka_hesabi.dart';
 
 /// Banka hesabı listesi ve ekleme düğmesi.
 ///
-/// Hesaplar Faz 4'te ekstrenin alt bilgisine basılacak; burada yalnızca
-/// toplanıyorlar.
+/// Hesaplar ekstrenin alt bilgisine basılıyor; burada yalnızca toplanıyorlar.
 class BankaHesaplariBolumu extends StatelessWidget {
   const BankaHesaplariBolumu({
     required this.hesaplar,
@@ -25,14 +28,23 @@ class BankaHesaplariBolumu extends StatelessWidget {
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(Metinler.bankaHesaplari, style: tema.textTheme.titleMedium),
-        const SizedBox(height: 8),
+      children: <Widget>[
+        BolumBasligi(baslik: Metinler.bankaHesaplari),
         if (hesaplar.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              vertical: Olculer.bosluk20,
+              horizontal: Olculer.bosluk16,
+            ),
+            decoration: BoxDecoration(
+              color: tema.colorScheme.surfaceContainer,
+              borderRadius: Olculer.koseBuyuk,
+              border: Border.all(color: tema.colorScheme.outlineVariant),
+            ),
             child: Text(
               Metinler.bankaHesabiYok,
+              textAlign: TextAlign.center,
               style: tema.textTheme.bodyMedium?.copyWith(
                 color: tema.colorScheme.onSurfaceVariant,
               ),
@@ -40,32 +52,93 @@ class BankaHesaplariBolumu extends StatelessWidget {
           )
         else
           Card(
-            margin: EdgeInsets.zero,
             child: Column(
-              children: [
-                for (var sira = 0; sira < hesaplar.length; sira++)
-                  ListTile(
-                    leading: const Icon(Icons.account_balance_outlined),
-                    title: Text(
-                      '${hesaplar[sira].banka} · ${hesaplar[sira].paraBirimi}',
-                    ),
-                    subtitle: Text(hesaplar[sira].ibanBicimli),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      tooltip: Metinler.sil,
-                      onPressed: onSil == null ? null : () => onSil!(sira),
-                    ),
+              children: <Widget>[
+                for (var sira = 0; sira < hesaplar.length; sira++) ...<Widget>[
+                  _HesapSatiri(
+                    hesap: hesaplar[sira],
+                    onSil: onSil == null ? null : () => onSil!(sira),
                   ),
+                  if (sira != hesaplar.length - 1)
+                    const Divider(indent: Olculer.bosluk16 + 40),
+                ],
               ],
             ),
           ),
-        const SizedBox(height: 8),
-        OutlinedButton.icon(
-          onPressed: onEkle,
-          icon: const Icon(Icons.add),
-          label: const Text(Metinler.bankaHesabiEkle),
+        const SizedBox(height: Olculer.bosluk12),
+        Dugme.ikincil(
+          metin: Metinler.bankaHesabiEkle,
+          simge: Icons.add,
+          genis: true,
+          onBasildi: onEkle,
         ),
       ],
+    );
+  }
+}
+
+class _HesapSatiri extends StatelessWidget {
+  const _HesapSatiri({required this.hesap, required this.onSil});
+
+  static const double _kareBoyu = 40;
+
+  final BankaHesabi hesap;
+  final VoidCallback? onSil;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        Olculer.bosluk16,
+        Olculer.bosluk12,
+        Olculer.bosluk4,
+        Olculer.bosluk12,
+      ),
+      child: Row(
+        children: <Widget>[
+          Container(
+            width: _kareBoyu,
+            height: _kareBoyu,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: tema.colorScheme.surfaceContainer,
+              borderRadius: Olculer.koseOrta,
+            ),
+            child: Icon(
+              Icons.account_balance_outlined,
+              size: 20,
+              color: tema.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(width: Olculer.bosluk16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  '${hesap.banka} · ${hesap.paraBirimi}',
+                  style: tema.textTheme.titleSmall,
+                ),
+                const SizedBox(height: Olculer.bosluk4),
+                Text(
+                  hesap.ibanBicimli,
+                  style: tema.textTheme.bodySmall?.copyWith(
+                    color: tema.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SimgeDugmesi(
+            simge: Icons.delete_outline,
+            ipucu: Metinler.sil,
+            tehlikeli: true,
+            onBasildi: onSil,
+          ),
+        ],
+      ),
     );
   }
 }
