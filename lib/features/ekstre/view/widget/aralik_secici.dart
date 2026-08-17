@@ -9,8 +9,13 @@ import '../../viewmodel/ekstre_araligi_viewmodel.dart';
 
 /// Ekstrenin tarih aralığını seçen çip sırası.
 ///
-/// Hazır aralıklar tek dokunuşla seçilir; "özel aralık" çipi takvimi açar ve
-/// seçim yapıldıktan sonra çipin üstünde tarihleri gösterir.
+/// Hazır aralıklar tek dokunuşla seçilir; "Özel" çipi takvimi açar ve seçim
+/// yapıldıktan sonra çipin üstünde tarihleri gösterir.
+///
+/// Çipler uygulamanın standart dokunma yüksekliğinden bilerek küçük ([_Cip]):
+/// sıra dört çip taşıyor ve tam boyda ikinci satıra taşıp önizlemenin yerini
+/// yiyordu. Burası ekranın konusu değil, süzgeci — seçilen aralık PDF'in
+/// başlığında da yazıyor.
 class AralikSecici extends ConsumerWidget {
   const AralikSecici({required this.cariId, super.key});
 
@@ -29,26 +34,26 @@ class AralikSecici extends ConsumerWidget {
       spacing: Olculer.bosluk8,
       runSpacing: Olculer.bosluk8,
       children: <Widget>[
-        ChoiceChip(
-          label: const Text(Metinler.aralikBuAy),
-          selected: aralik.tip == EkstreAralikTipi.buAy,
-          onSelected: (_) => viewModel.buAy(bugun),
+        _Cip(
+          etiket: Metinler.aralikBuAy,
+          secili: aralik.tip == EkstreAralikTipi.buAy,
+          onSecildi: () => viewModel.buAy(bugun),
         ),
-        ChoiceChip(
-          label: const Text(Metinler.aralikBuYil),
-          selected: aralik.tip == EkstreAralikTipi.buYil,
-          onSelected: (_) => viewModel.buYil(bugun),
+        _Cip(
+          etiket: Metinler.aralikBuYil,
+          secili: aralik.tip == EkstreAralikTipi.buYil,
+          onSecildi: () => viewModel.buYil(bugun),
         ),
-        ChoiceChip(
-          label: const Text(Metinler.aralikTumu),
-          selected: aralik.tumuMu,
-          onSelected: (_) => viewModel.tumu(),
+        _Cip(
+          etiket: Metinler.aralikTumu,
+          secili: aralik.tumuMu,
+          onSecildi: viewModel.tumu,
         ),
-        ChoiceChip(
-          label: Text(_ozelEtiket(aralik)),
-          avatar: const Icon(Icons.date_range_outlined, size: 18),
-          selected: aralik.tip == EkstreAralikTipi.ozel,
-          onSelected: (_) => _ozelSec(context, viewModel, aralik, bugun),
+        _Cip(
+          etiket: _ozelEtiket(aralik),
+          simge: Icons.date_range_outlined,
+          secili: aralik.tip == EkstreAralikTipi.ozel,
+          onSecildi: () => _ozelSec(context, viewModel, aralik, bugun),
         ),
       ],
     );
@@ -77,5 +82,42 @@ class AralikSecici extends ConsumerWidget {
 
     if (secilen == null) return;
     viewModel.ozel(baslangic: secilen.start, bitis: secilen.end);
+  }
+}
+
+/// Sıraya sığsın diye derlenip toplanmış [ChoiceChip].
+class _Cip extends StatelessWidget {
+  const _Cip({
+    required this.etiket,
+    required this.secili,
+    required this.onSecildi,
+    this.simge,
+  });
+
+  final String etiket;
+  final bool secili;
+  final VoidCallback onSecildi;
+
+  /// Çipin bir sayfa açtığını söyleyen simge — yalnızca "Özel" çipinde var.
+  final IconData? simge;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChoiceChip(
+      label: Text(etiket),
+      avatar: simge == null ? null : Icon(simge, size: 16),
+      selected: secili,
+      onSelected: (_) => onSecildi(),
+      // Onay işareti kapalı: seçili çip zaten zeminiyle ayrılıyor, işaret
+      // yalnızca çipi genişletip sırayı ikinci satıra itiyordu.
+      showCheckmark: false,
+      visualDensity: VisualDensity.compact,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      padding: const EdgeInsets.symmetric(
+        horizontal: Olculer.bosluk8,
+        vertical: Olculer.bosluk8,
+      ),
+      labelPadding: const EdgeInsets.symmetric(horizontal: Olculer.bosluk4),
+    );
   }
 }

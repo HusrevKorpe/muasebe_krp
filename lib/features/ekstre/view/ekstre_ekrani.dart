@@ -29,9 +29,9 @@ class EkstreEkrani extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.fromLTRB(
               Olculer.sayfaKenari,
-              Olculer.bosluk4,
+              Olculer.bosluk8,
               Olculer.sayfaKenari,
-              Olculer.bosluk16,
+              Olculer.bosluk12,
             ),
             child: AralikSecici(cariId: cariId),
           ),
@@ -72,6 +72,7 @@ class _Belge extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ekstre = ref.watch(ekstreSaglayici(cariId)).value;
+    final sema = Theme.of(context).colorScheme;
 
     return PdfPreview(
       build: (format) => baytlar,
@@ -83,6 +84,17 @@ class _Belge extends ConsumerWidget {
       allowSharing: true,
       loadingWidget: const _Yukleniyor(),
       padding: const EdgeInsets.all(Olculer.bosluk12),
+      // `printing` bu iki yüzeyi temadan okumaz: alt çubuğu `primaryColor` ile
+      // (bizde koyu yeşil), önizleme zeminini de sabit gri geçişle boyar.
+      // Üstelik çubuğun simge rengi `IconTheme` üzerinden geliyor ve bizim
+      // `iconButtonTheme`'imiz onu `onSurfaceVariant` ile eziyor — koyu gri
+      // simge koyu yeşil zeminde kayboluyordu. İkisi de şemaya bağlandı.
+      actionBarTheme: PdfActionBarTheme(
+        backgroundColor: sema.surfaceContainerLowest,
+        iconColor: sema.onSurfaceVariant,
+        elevation: 0,
+      ),
+      scrollViewDecoration: BoxDecoration(color: sema.surfaceContainer),
     );
   }
 }

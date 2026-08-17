@@ -352,7 +352,9 @@ abstract final class Metinler {
   static const String aralikBuAy = 'Bu ay';
   static const String aralikBuYil = 'Bu yıl';
   static const String aralikTumu = 'Tümü';
-  static const String aralikOzel = 'Özel aralık';
+  /// Takvimi açan çipin etiketi. Kısa: yanındaki takvim simgesi eksiği
+  /// tamamlıyor ve dört çipin tek satıra sığması buna bakıyor.
+  static const String aralikOzel = 'Özel';
   static const String aralikBaslangic = 'Başlangıç';
   static const String aralikBitis = 'Bitiş';
 
