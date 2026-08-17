@@ -64,29 +64,44 @@ class AcikHesapOzetiKarti extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: Olculer.bosluk16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  Expanded(
-                    child: _Toplam(
-                      baslik: Metinler.toplamAlacak,
-                      tutar: ozet.alacak,
-                      renk: Renkler.borc(tema.brightness),
-                    ),
-                  ),
-                  // Borç kalemi yalnızca varsa yer kaplar; her satırda "0,00 ₺"
-                  // görmek gereksiz gürültü.
-                  if (borcVar) ...<Widget>[
-                    const _DikeyCizgi(),
+              // `IntrinsicHeight` şart: satır `CrossAxisAlignment.stretch`
+              // kullanıyor ve bu, çocuklara satırın kendi yüksekliğini **kesin**
+              // kısıt olarak dayatıyor. Kart yukarıda bir `Column`un içinde
+              // duruyor, yani satıra gelen yükseklik sınırsız; stretch onu
+              // olduğu gibi aşağı geçirince layout "BoxConstraints forces an
+              // infinite height" ile patlıyordu. Ardından alt ağaç boyutsuz
+              // kalıyor ve her karede `!semantics.parentDataDirty` assertion'ı
+              // atılıyordu — asıl hata orada değil, burada.
+              //
+              // `IntrinsicHeight` satırın yüksekliğini iki toplam kutusunun
+              // yükseği kadar sabitliyor: hem kısıt sonlu oluyor hem de
+              // `_DikeyCizgi` iki kutu boyunca uzuyor. Ağaç iki sığ `Column`dan
+              // ibaret olduğu için ölçüm maliyeti önemsiz.
+              IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
                     Expanded(
                       child: _Toplam(
-                        baslik: Metinler.toplamBorc,
-                        tutar: ozet.borc,
-                        renk: Renkler.alacak(tema.brightness),
+                        baslik: Metinler.toplamAlacak,
+                        tutar: ozet.alacak,
+                        renk: Renkler.borc(tema.brightness),
                       ),
                     ),
+                    // Borç kalemi yalnızca varsa yer kaplar; her satırda
+                    // "0,00 ₺" görmek gereksiz gürültü.
+                    if (borcVar) ...<Widget>[
+                      const _DikeyCizgi(),
+                      Expanded(
+                        child: _Toplam(
+                          baslik: Metinler.toplamBorc,
+                          tutar: ozet.borc,
+                          renk: Renkler.alacak(tema.brightness),
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
               if (eksikVar) ...<Widget>[
                 const SizedBox(height: Olculer.bosluk12),

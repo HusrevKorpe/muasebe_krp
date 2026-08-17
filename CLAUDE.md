@@ -122,6 +122,17 @@ tool/              # Varlık üreticileri (uygulama ikonu)
   ve `AramaAlani` bileşenleri kullanılır. Borç kırmızı / alacak yeşil ayrımı
   paletin dışında, `Renkler.borc` ve `Renkler.alacak` üzerinden gelir: o bir
   marka tercihi değil, muhasebe anlamı.
+- **`!semantics.parentDataDirty` görülünce erişilebilirlik katmanına bakma —
+  o hata artçı.** Konsolda binlerce kere tekrar ettiği için asıl hata gibi
+  duruyor; oysa zincir şöyle: bir yerde `performLayout` patlıyor → alt ağaç
+  boyutsuz kalıyor (`hasSize` hataları) → boyutlanmamış düğümlerin parent
+  data'sı temizlenemediği için `flushSemantics` her karede bu assertion'ı
+  atıyor. **Konsolu yukarı kaydırıp ilk exception'ı bul**, düzeltilecek olan o.
+  Bu projede görülen hâli: `Row(crossAxisAlignment: CrossAxisAlignment.stretch)`
+  yüksekliği sınırsız bir bağlamdaydı (`Column`un esnek olmayan çocuğu) ve
+  "BoxConstraints forces an infinite height" veriyordu — çare `IntrinsicHeight`
+  (bkz. `AcikHesapOzetiKarti`). `Column` içindeki stretch güvenli, `Row`
+  içindeki değil: birinin ekseni yatay ve sınırlı, ötekinin dikey ve sınırsız.
 - **Vergi hesabı yok.** Fatura toplamı kalem tutarlarının toplamıdır. Referans
   ekstredeki bir faturada %1 vergi görünüyor; öyle bir satır gerekirse "nakliye"
   gibi serbest metin kalemi olarak girilir.
