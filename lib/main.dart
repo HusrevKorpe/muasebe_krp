@@ -3,9 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app/uygulama.dart';
 import 'core/log/log.dart';
+import 'data/tercih/tema_repository.dart';
 import 'firebase_options.dart';
 
 /// Uygulamayı yerel Firebase emulator'üne bağlar.
@@ -47,5 +49,18 @@ Future<void> main() async {
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
-  runApp(const ProviderScope(child: FidanCariUygulamasi()));
+  // Tema tercihi cihazda duruyor ve ilk kare çizilmeden önce elde olmalı;
+  // sonradan okunsaydı uygulama açık temayla açılıp bir kare sonra kararırdı.
+  final tercihler = await SharedPreferences.getInstance();
+
+  runApp(
+    ProviderScope(
+      // Liste tipi yazılmıyor: riverpod `Override` sınıfını dışa aktarmıyor,
+      // adı yazılamaz. Bağlamdan çıkarılıyor.
+      overrides: [
+        temaRepositorySaglayici.overrideWithValue(TemaRepository(tercihler)),
+      ],
+      child: const FidanCariUygulamasi(),
+    ),
+  );
 }

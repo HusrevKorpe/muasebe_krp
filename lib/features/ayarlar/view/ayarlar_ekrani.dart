@@ -12,10 +12,11 @@ import '../../../domain/secenek/secenek_tipi.dart';
 import '../../giris/viewmodel/giris_viewmodel.dart';
 import '../../secenek/view/secenek_metinleri.dart';
 import 'widget/ayar_satiri.dart';
+import 'widget/tema_satiri.dart';
 
 /// Ayarlar sekmesi.
 ///
-/// Üç bölüm: işletme bilgileri, tür/çeşit/anaç listeleri ve hesap.
+/// Dört bölüm: işletme bilgileri, tür/çeşit/anaç listeleri, görünüm ve hesap.
 /// İşletme satırının ayrı bir sekmede olmasının sebebi, önceden sağ üstteki üç
 /// nokta menüsünde saklı olmasıydı — hesap dökümünün başlığındaki bilgiyi
 /// düzeltmek isteyen kullanıcı onu bulamıyordu.
@@ -23,6 +24,9 @@ import 'widget/ayar_satiri.dart';
 /// Listeler de burada: satış girerken kullanılıyorlar ama düzenlemeleri seyrek
 /// bir iş. Ayrı bir sekme açmak, günde bir kez bakılmayan bir şeye alt çubukta
 /// yer vermek olurdu.
+///
+/// Görünüm bölümündeki tek anahtar temayı açık ve koyu arasında çeviriyor;
+/// seçim cihaza yazılıyor, ortak deftere değil (bkz. `TemaRepository`).
 ///
 /// Çıkış da burada: uygulamayı iki kişi kullanıyor ve cihazı devreden kişinin
 /// hesabından çıkabilmesi gerekiyor.
@@ -55,6 +59,9 @@ class AyarlarEkrani extends ConsumerWidget {
             ),
             const SizedBox(height: Olculer.bosluk24),
             const _ListelerBolumu(),
+            const SizedBox(height: Olculer.bosluk24),
+            BolumBasligi(baslik: Metinler.ayarGorunumBolumu),
+            const Card(child: TemaSatiri()),
             const SizedBox(height: Olculer.bosluk24),
             BolumBasligi(baslik: Metinler.hesap),
             Card(

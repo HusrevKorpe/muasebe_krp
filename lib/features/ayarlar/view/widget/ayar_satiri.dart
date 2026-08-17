@@ -7,12 +7,16 @@ import '../../../../app/tasarim/olculer.dart';
 ///
 /// [onBasildi] `null` ise satır bilgi satırıdır — ok çizilmez, dokunma dalgası
 /// olmaz. Oturum e-postası böyle: gösterilir ama gidilecek bir yer yoktur.
+///
+/// [sonEk] verilirse okun yerini alır: satır bir yere gitmiyor, yerinde bir
+/// şey değiştiriyor demektir (tema anahtarı böyle).
 class AyarSatiri extends StatelessWidget {
   const AyarSatiri({
     required this.simge,
     required this.baslik,
     required this.onBasildi,
     this.aciklama,
+    this.sonEk,
     super.key,
   });
 
@@ -22,6 +26,7 @@ class AyarSatiri extends StatelessWidget {
   final String baslik;
   final String? aciklama;
   final VoidCallback? onBasildi;
+  final Widget? sonEk;
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +71,10 @@ class AyarSatiri extends StatelessWidget {
                 ],
               ),
             ),
-            if (onBasildi != null) ...<Widget>[
+            if (sonEk != null) ...<Widget>[
+              const SizedBox(width: Olculer.bosluk8),
+              sonEk!,
+            ] else if (onBasildi != null) ...<Widget>[
               const SizedBox(width: Olculer.bosluk8),
               Icon(
                 Icons.chevron_right,

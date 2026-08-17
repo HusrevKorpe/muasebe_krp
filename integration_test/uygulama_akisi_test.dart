@@ -1,10 +1,8 @@
-import 'package:fidancari/app/uygulama.dart';
 import 'package:fidancari/core/metin/metinler.dart';
 import 'package:fidancari/domain/islem/islem_tipi.dart';
 import 'package:fidancari/features/islem/view/widget/islem_tipi_gorunumu.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
@@ -41,9 +39,7 @@ void main() {
     await FirebaseAuth.instance.signOut();
     await yeniKullaniciAc(FirebaseAuth.instance);
 
-    await tester.pumpWidget(
-      const ProviderScope(child: FidanCariUygulamasi()),
-    );
+    await tester.pumpWidget(await uygulamayiKur());
     await _dinlen(tester);
 
     // ── Açılışta doğrudan kişiler sekmesi ─────────────────────────────────

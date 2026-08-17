@@ -4,8 +4,13 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:fidancari/app/uygulama.dart';
+import 'package:fidancari/data/tercih/tema_repository.dart';
 import 'package:fidancari/firebase_options.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Emulator'e bağlı testler için ortak kurulum.
 ///
@@ -45,6 +50,27 @@ Future<void> emulatoreBaglan() async {
   await FirebaseAuth.instance.useAuthEmulator(
     emulatorSunucusu,
     kimlikEmulatorKapisi,
+  );
+}
+
+/// Uygulamayı `pumpWidget`'e verilecek hâliyle kurar.
+///
+/// `main()` tema deposunu açıp `temaRepositorySaglayici` üzerine enjekte
+/// ediyor; testte `main()` çalışmadığı için aynı kurulum burada yapılır.
+/// Depo boş açılıyor: her koşu varsayılan (açık) temayla başlasın, önceki
+/// koşuda seçilmiş bir tema testi değiştirmesin.
+///
+/// Değişiklik listesini değil kurulmuş widget'ı döndürüyor: riverpod `Override`
+/// sınıfını dışa aktarmıyor, o yüzden `List<Override>` bir imzada yazılamıyor.
+Future<Widget> uygulamayiKur() async {
+  SharedPreferences.setMockInitialValues(<String, Object>{});
+  final tercihler = await SharedPreferences.getInstance();
+
+  return ProviderScope(
+    overrides: [
+      temaRepositorySaglayici.overrideWithValue(TemaRepository(tercihler)),
+    ],
+    child: const FidanCariUygulamasi(),
   );
 }
 

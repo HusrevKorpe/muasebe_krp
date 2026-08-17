@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:fidancari/app/uygulama.dart';
 import 'package:fidancari/core/metin/metinler.dart';
 import 'package:fidancari/core/para/kurus.dart';
 import 'package:fidancari/data/cari/cari_repository.dart';
@@ -13,7 +12,6 @@ import 'package:fidancari/domain/isletme/banka_hesabi.dart';
 import 'package:fidancari/domain/isletme/isletme.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:printing/printing.dart';
@@ -109,9 +107,7 @@ void main() {
       ),
     );
 
-    await tester.pumpWidget(
-      const ProviderScope(child: FidanCariUygulamasi()),
-    );
+    await tester.pumpWidget(await uygulamayiKur());
     await _dinlen(tester);
 
     // ── Cari detayı ───────────────────────────────────────────────────────

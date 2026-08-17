@@ -235,6 +235,17 @@ tool/              # Varlık üreticileri (uygulama ikonu)
   bir kurulum ekranı vardı; kaldırıldı. Profil yalnızca PDF ekstre başlığını
   besliyor, boşsa başlık sade çıkar. Ayarlar → İşletme bilgileri'nden istendiği
   zaman doldurulur.
+- **Tema kullanıcının seçimi; `ThemeMode.system` kullanılmıyor.** Ayarlar →
+  Görünüm'deki anahtar açık ve koyu arasında geçiyor, üçüncü bir "sisteme uy"
+  seçeneği yok — kullanıcı temayı sabitlemek istedi, tek anahtar da o yüzden
+  yetiyor (`TemaTercihi`). Seçim **cihaza** yazılıyor (`shared_preferences`,
+  `data/tercih/tema_repository.dart`), ortak deftere değil: defteri iki kişi
+  paylaşıyor ama telefonu paylaşmıyorlar. Tercih ilk kare çizilmeden önce
+  gerektiği için `main()` depoyu açıp `temaRepositorySaglayici`'yı override
+  ediyor; sağlayıcının kendisi override edilmezse hata atar. Bu yüzden
+  uygulamayı `main()` olmadan kuran her test aynı override'ı vermek zorunda —
+  `integration_test/emulator_yardimcilari.dart` içindeki
+  `uygulamaDegisiklikleri()` bunun içindir.
 - **Çevrimdışı yazma:** Repository'ler `set`/`update` future'ını **beklemez**.
   Firestore çevrimdışıyken bu future yalnızca sunucu onayında tamamlanır;
   beklenirse uçak modunda ekran kilitlenir. Yerel yazma anında görünür, kayıt

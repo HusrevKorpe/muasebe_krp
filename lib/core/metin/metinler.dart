@@ -51,6 +51,14 @@ abstract final class Metinler {
   static const String hesap = 'Hesap';
   static const String hesapAciklama = 'Bu cihazda açık olan oturum.';
 
+  static const String ayarGorunumBolumu = 'Görünüm';
+  static const String koyuTema = 'Koyu tema';
+
+  /// Tercihin cihaza yazıldığı söyleniyor: defter ortak, tema değil — öteki
+  /// telefonun teması bundan etkilenmiyor.
+  static const String koyuTemaAciklama =
+      'Ekranı koyu renklere çevirir. Seçim yalnızca bu cihazda geçerlidir.';
+
   // ─── İşletme ─────────────────────────────────────────────────────────────
   static const String isletmeBaslik = 'İşletme Bilgileri';
   static const String isletmeMenu = 'İşletme bilgileri';
