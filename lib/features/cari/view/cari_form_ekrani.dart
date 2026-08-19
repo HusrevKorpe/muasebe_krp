@@ -9,6 +9,7 @@ import '../../../core/metin/metinler.dart';
 import '../../../core/para/kurus.dart';
 import '../../../domain/cari/cari.dart';
 import '../../../domain/cari/cari_dogrulama.dart';
+import '../../../domain/cari/cari_grubu.dart';
 import '../viewmodel/cari_form_viewmodel.dart';
 
 /// Cari ekleme ve düzenleme formu.
@@ -16,9 +17,17 @@ import '../viewmodel/cari_form_viewmodel.dart';
 /// [mevcut] `null` ise yeni kayıt açılır. Ekleme ve düzenleme aynı ekranda:
 /// alanlar birebir aynı, tek fark başlık ve kaydetme yolu.
 class CariFormEkrani extends ConsumerStatefulWidget {
-  const CariFormEkrani({this.mevcut, super.key});
+  const CariFormEkrani({
+    this.mevcut,
+    this.baslangicGrubu = CariGrubu.varsayilan,
+    super.key,
+  });
 
   final Cari? mevcut;
+
+  /// Yeni kayıtta seçili gelen grup. Düzenlemede yok sayılır — orada grup
+  /// kayıttan okunur. Hangi sekmeden açıldığına göre veriliyor.
+  final CariGrubu baslangicGrubu;
 
   @override
   ConsumerState<CariFormEkrani> createState() => _CariFormEkraniDurumu();
@@ -31,6 +40,10 @@ class _CariFormEkraniDurumu extends ConsumerState<CariFormEkrani> {
     for (final alan in _Alan.values)
       alan: TextEditingController(text: alan.mevcuttanOku(widget.mevcut)),
   };
+
+  /// Kişinin hangi sekmede listeleneceği. Yeni kayıtta form nereden açıldıysa
+  /// oradan gelir; varsayılanı müşteridir.
+  late CariGrubu _grup = widget.mevcut?.grup ?? widget.baslangicGrubu;
 
   bool get _duzenlemeMi => widget.mevcut != null;
 
@@ -57,6 +70,7 @@ class _CariFormEkraniDurumu extends ConsumerState<CariFormEkrani> {
       telefon: _metin(_Alan.telefon),
       adres: _metin(_Alan.adres),
       notlar: _metin(_Alan.notlar),
+      grup: _grup,
       // Bakiye ve tarihler formdan gelmez; repository bu alanlara dokunmuyor.
       bakiye: mevcut?.bakiye ?? Kurus.sifir,
       sonIslemTarihi: mevcut?.sonIslemTarihi,
@@ -164,6 +178,12 @@ class _CariFormEkraniDurumu extends ConsumerState<CariFormEkrani> {
               Olculer.bosluk32,
             ),
             children: <Widget>[
+              _GrupSecimi(
+                grup: _grup,
+                etkin: !islemSuruyor,
+                onDegisti: (secim) => setState(() => _grup = secim),
+              ),
+              const SizedBox(height: Olculer.bosluk20),
               for (final alan in _Alan.values) ...<Widget>[
                 _AlanKutusu(
                   alan: alan,
@@ -246,6 +266,63 @@ enum _Alan {
       _Alan.adres => cari.adres ?? '',
       _Alan.notlar => cari.notlar ?? '',
     };
+  }
+}
+
+/// Formun en üstündeki müşteri/fidancı anahtarı.
+///
+/// Kaydettikten sonra kişinin hangi sekmede duracağını belirleyen tek alan bu;
+/// o yüzden ad kutusundan bile önce geliyor — kullanıcı "kaydettim ama listede
+/// yok" durumuna düşmesin.
+class _GrupSecimi extends StatelessWidget {
+  const _GrupSecimi({
+    required this.grup,
+    required this.etkin,
+    required this.onDegisti,
+  });
+
+  final CariGrubu grup;
+  final bool etkin;
+  final ValueChanged<CariGrubu> onDegisti;
+
+  @override
+  Widget build(BuildContext context) {
+    final tema = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: <Widget>[
+        Text(
+          Metinler.cariGrubu,
+          style: tema.textTheme.bodySmall?.copyWith(
+            color: tema.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: Olculer.bosluk8),
+        SegmentedButton<CariGrubu>(
+          segments: const <ButtonSegment<CariGrubu>>[
+            ButtonSegment<CariGrubu>(
+              value: CariGrubu.musteri,
+              label: Text(Metinler.cariGrubuMusteri),
+            ),
+            ButtonSegment<CariGrubu>(
+              value: CariGrubu.fidanci,
+              label: Text(Metinler.cariGrubuFidanci),
+            ),
+          ],
+          selected: <CariGrubu>{grup},
+          showSelectedIcon: false,
+          onSelectionChanged: etkin ? (secim) => onDegisti(secim.first) : null,
+        ),
+        const SizedBox(height: Olculer.bosluk8),
+        Text(
+          Metinler.cariGrubuAciklamasi,
+          style: tema.textTheme.bodySmall?.copyWith(
+            color: tema.colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ],
+    );
   }
 }
 

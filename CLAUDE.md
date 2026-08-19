@@ -137,6 +137,30 @@ tool/              # Varlık üreticileri (uygulama ikonu)
   ekstredeki bir faturada %1 vergi görünüyor; öyle bir satır gerekirse "nakliye"
   gibi serbest metin kalemi olarak girilir.
 - **Bir cari hem müşteri hem tedarikçi olabilir.** Fidancılıkta alım-satım aynı kişiyle yapılır.
+- **Kişiler müşteri/fidancı diye ikiye ayrılıyor — ama yalnızca listede.**
+  `Cari.grup` (`CariGrubu`) tek bir alandır; fatura, tahsilat, bakiye ve ekstre
+  iki grupta birebir aynı işler. Sebep kullanıcının kendi tarifi: fidancı
+  meslektaşlarla sürekli karşılıklı alışveriş var, sıradan müşteriyle bir
+  kerelik satış; ikisi tek listede karışınca sürekli çalıştığı 15 kişi
+  yüzlerce müşterinin arasında aranıyordu. Bir kişi tek gruba ait — hem müşteri
+  hem fidancı olmaz.
+  - **Eski kayıtlarda `grup` alanı yok ve göç scripti yazılmadı.** Okurken eksik
+    alan `musteri` sayılıyor, ama `grup == 'musteri'` **sorgusu yazılamaz**:
+    Firestore'un eşitlik süzgeci alanı olmayan belgeyi eşleştirmez ve o sorgu
+    bu özellikten önce kaydedilmiş herkesi listeden düşürürdü. Bu yüzden
+    sunucuda yalnızca fidancı listesi süzülüyor (`aktif + grup + aramaAnahtari`
+    index'i), müşteri listesi elde ayıklanıyor (`CariSuzgeci.kayitGirerMi`).
+    Elde ayıklanan sayfa ekranı doldurmayabildiği için liste kaydırılamaz
+    kalırsa sonraki sayfa kendiliğinden isteniyor.
+- **"Hesap görme" bakiyeyi kapatan bir işlem tipidir, tahsilat değil.**
+  Kullanıcının tarifi: *"adamın bana 105.000 borcu var, 100.000'e düzlüyor;
+  100.000 aldıktan sonra hesap kapandı."* Tahsilat normal yoldan girilir, kalan
+  fark kişi sayfasının menüsündeki "Hesabı gör" ile kapanır. Tutar formdan
+  gelmez, o anki bakiyeden türetilir (`Islem.hesapGorme`). İki tip var
+  (`hesapGorulduAlacak` / `hesapGorulduBorc`) çünkü `IslemTipi.borcMu` tipin
+  sabiti, yön ise bakiyenin işaretine bağlı; kullanıcıya ikisi de "Hesap
+  görüldü" görünür. Kayıt **düzenlenmez** — tutarı elle değişirse bakiye sıfırda
+  kalmaz; geri alma yolu iptaldir.
 - **Kayıtlı işlem düzenlenebilir, ama silinemez.** Fiyat satışın ardından
   pazarlıkla değişiyor; geçmiş satışın fiyatı, adedi, tarihi ve açıklaması
   işlem detayındaki kalem düğmesinden düzeltilir (`IslemRepository.guncelle`).
@@ -261,13 +285,15 @@ tool/              # Varlık üreticileri (uygulama ikonu)
 - **Ekran sağlayıcıları çıkışta hemen atılmaz.** `birSureSakla` (5 dakika)
   listeyle detay arasındaki gidiş gelişi spinner'sız yapar; süre sonunda
   Firestore dinleyicisi kapanır.
-- **Kişiler ekranı iki sekme: "Tümü" ve "Açık Hesaplar".** Açık hesap ölçütü
-  `bakiyeKurus != 0` — yön ayrımı yok, hem bize borçlu olan hem borçlu olduğumuz
-  cari listeye girer (`CariSuzgeci`). Sıralama bakiyeye göre azalan: Firestore
-  aralık süzgeci uygulanan alanı ilk sıralama ölçütü olmaya zorluyor, en borçlu
+- **Kişiler ekranı üç sekme: "Müşteriler", "Fidancılar" ve "Açık Hesaplar".**
+  İlk ikisi kişileri grubuna göre ayırır (yukarıdaki maddeye bkz.).
+  Açık hesap ölçütü `bakiyeKurus != 0` — yön ayrımı yok, hem bize borçlu olan hem borçlu olduğumuz
+  cari listeye girer ve iki grup birlikte gelir (`CariSuzgeci`); fidancı
+  satırları orada küçük bir rozetle ayrışır. Sıralama bakiyeye göre azalan:
+  Firestore aralık süzgeci uygulanan alanı ilk sıralama ölçütü olmaya zorluyor, en borçlu
   zaten başta olmalı. **Aynı sebeple o sekmede arama kutusu yok** — ikinci bir
   aralık süzgeci (`aramaAnahtari`) aynı sorguda sıralanamaz; aranan kişinin
-  bakiyesi "Tümü" listesindeki satırında zaten yazıyor. Yeni index gerekmedi,
+  bakiyesi kendi grup sekmesindeki satırında zaten yazıyor. Yeni index gerekmedi,
   sorgu mevcut `aktif + bakiyeKurus DESC` index'ine oturuyor.
   Sekmenin başındaki alacak/borç toplamı **yüklenmiş kayıtlardan** hesaplanır
   (`AcikHesapOzeti`); sunucuda toplama (`aggregate`) çevrimdışı çalışmadığı için

@@ -81,6 +81,7 @@ ve **yürüyen bakiyeyi** doğru hesaplamak.
 | Tahsilat | **Alacak** — cari borcunu öder |
 | Alış faturası | **Alacak** — biz cariye borçlanırız |
 | Ödeme | **Borç** — biz cariye öderiz |
+| Hesap görüldü | Kalan bakiyeyi kapatır; yönü bakiyenin işaretinden gelir |
 
 `bakiye = toplamBorç − toplamAlacak`. Pozitif bakiye cari bize borçlu demektir.
 Negatif bakiye ekranda ayırt edilir.
@@ -108,6 +109,27 @@ geriye tarihli bir işlem girildiğinde alan geri kaymasın diye.
 Ayrıca **"bakiyeyi işlemlerden yeniden hesapla"** fonksiyonu bulunur. Bu, hem
 tutarsızlık onarımı hem de testin doğruluk ölçütüdür. Ekranda cari detayının
 üst menüsünden çağrılır.
+
+### Hesap görme
+
+19 Ağustos 2026 eklemesi, kullanıcı isteği: *"adamın bana 105.000 borcu var,
+100.000 TL'ye düzlüyor adam; 100.000 aldıktan sonra hesap kapandı yapabilir
+miyiz, 5.000 almadan."* Pazarlıkla silinen bakiye tahsilat değildir — para el
+değiştirmez — ve kayıt silinmediği için ekstrede "Hesap görüldü" satırı olarak
+durur.
+
+Akış iki adım: 100.000 normal tahsilat olarak girilir, kalan 5.000 kişi
+sayfasının menüsündeki **Hesabı gör** ile kapatılır. Tutar formdan gelmez,
+o anki bakiyeden türetilir (`Islem.hesapGorme`); soru tek onaydan ibarettir.
+
+İki işlem tipi var çünkü `IslemTipi.borcMu` tipin sabiti ve yön bakiyenin
+işaretine bağlı: `hesapGorulduAlacak` alacağımızdan vazgeçtiğimizde,
+`hesapGorulduBorc` borcumuz silindiğinde yazılır. Kullanıcıya ikisi de
+"Hesap görüldü" görünür.
+
+Kayıt **düzenlenmez** (`IslemTipi.duzenlenebilirMi`): tutarı elle değiştirilirse
+bakiye sıfırda kalmazdı. Yanlışlıkla kapatılan hesabın geri alma yolu iptaldir —
+iptal bakiyeyi olduğu gibi geri getirir.
 
 ### İptal
 
@@ -230,9 +252,13 @@ flutter test integration_test -d <simulator-id>
 | `bakiyeYenidenHesapla` == önbelleklenmiş bakiye | `integration_test/islem_repository_test.dart` | ✅ |
 | Eşzamanlı beş işlem — bakiye bozulmuyor | `integration_test/islem_repository_test.dart` | ✅ |
 | İptal: kayıt duruyor, bakiye geri alınıyor, ikinci iptal iki kez düşmüyor | `integration_test/islem_repository_test.dart` | ✅ |
+| Hesap görme: iki yönde de bakiye sıfırlanıyor, iptal edilince geri geliyor | `integration_test/islem_repository_test.dart` | ⏳ |
 | Düzenleme: aynı belge güncelleniyor, bakiyeye yalnızca fark işleniyor, iptalli kayıt düzenlenmiyor | `integration_test/islem_repository_test.dart` | ✅ |
 | Düzenlemeden sonra yeniden hesaplanan bakiye önbelleklenmişle aynı | `integration_test/islem_repository_test.dart` | ✅ |
 | Sayfalama ve tarih aralığı süzgeci | `integration_test/islem_repository_test.dart` | ✅ |
+
+⏳ = test yazıldı, `flutter analyze` ile derleniyor ama emulator'de henüz
+koşturulmadı (Firestore emulator + simülatör gerekiyor).
 
 ---
 

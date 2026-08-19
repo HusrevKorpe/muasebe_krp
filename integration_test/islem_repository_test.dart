@@ -512,6 +512,82 @@ void main() {
     });
   });
 
+  group('hesap görme', () {
+    /// Kalan bakiyeyi kapatan kaydı yazar ve kaydın kimliğini döner.
+    Future<String> hesabiGor(int kalanKurus) => repository.ekle(
+      cariId: cariId,
+      islem: Islem.hesapGorme(
+        bakiye: Kurus(kalanKurus),
+        baslik: 'Hesap görüldü',
+        islemTarihi: DateTime(2026, 8, 19),
+      ),
+    );
+
+    test('kalan alacak kapanınca bakiye sıfırlanır', () async {
+      // Kullanıcının anlattığı akış: 1.050 borç, 1.000 tahsilat, kalan 50
+      // "hesap görüldü" ile kapanıyor.
+      await faturaEkle(lira: 1050);
+      await tahsilatEkle(lira: 1000);
+      await bakiyeyiBekle(5000);
+
+      await hesabiGor(5000);
+
+      expect(await bakiyeyiBekle(0), 0);
+    });
+
+    test('kalan borç kapanınca bakiye sıfırlanır', () async {
+      // Ters yön: biz cariye borçluyuz, kalandan o vazgeçiyor.
+      await faturaEkle(tip: IslemTipi.alisFaturasi, lira: 1050);
+      await faturaEkle(lira: 1000);
+      await bakiyeyiBekle(-5000);
+
+      await hesabiGor(-5000);
+
+      expect(await bakiyeyiBekle(0), 0);
+    });
+
+    test('kayıt tipiyle ve tutarıyla sunucuda durur', () async {
+      await faturaEkle(lira: 50);
+      await bakiyeyiBekle(5000);
+
+      final islemId = await hesabiGor(5000);
+      final veri = (await sunucudaBekle(islemler().doc(islemId))).data()!;
+
+      expect(veri[Islem.alanTip], IslemTipi.hesapGorulduAlacak.anahtar);
+      expect(veri[Islem.alanToplamKurus], 5000, reason: 'tutar işaretsiz');
+      expect(veri[Islem.alanBaslik], 'Hesap görüldü');
+      expect(veri[Islem.alanIptal], isFalse);
+    });
+
+    test('iptal edilince kapatılan bakiye geri gelir', () async {
+      // Kullanıcının şartı: "geri alınabilsin". Kayıt silinmiyor, iptal
+      // ediliyor ve bakiye kapatılmadan önceki hâline dönüyor.
+      await faturaEkle(lira: 50);
+      await bakiyeyiBekle(5000);
+
+      final islemId = await hesabiGor(5000);
+      await bakiyeyiBekle(0);
+
+      final kayit = await repository
+          .izle(cariId: cariId, islemId: islemId)
+          .firstWhere((kayit) => kayit != null);
+      await repository.iptalEt(cariId: cariId, islem: kayit!.islem);
+
+      expect(await bakiyeyiBekle(5000), 5000);
+    });
+
+    test('bakiye yeniden hesaplanınca da sıfır çıkar', () async {
+      // Kapanış kaydı sıradan bir işlem: onarım fonksiyonu onu da toplamalı.
+      await faturaEkle(lira: 1050);
+      await tahsilatEkle(lira: 1000);
+      await bakiyeyiBekle(5000);
+      await hesabiGor(5000);
+      await bakiyeyiBekle(0);
+
+      expect(await repository.bakiyeYenidenHesapla(cariId), Kurus.sifir);
+    });
+  });
+
   group('bakiyeYenidenHesapla', () {
     test('sonuç önbelleklenmiş bakiyeyle aynı çıkar', () async {
       await faturaEkle(lira: 1000);

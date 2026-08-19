@@ -13,6 +13,10 @@ import 'islem_tipi_gorunumu.dart';
 /// Dört tip birlikte sunulur: bir cari hem müşteri hem tedarikçi olabilir, bu
 /// yüzden aynı kişiye hem satış hem alış girilebilmeli (bkz. KURALLAR.md §3.4).
 ///
+/// Liste `IslemTipi.values` değil [IslemTipi.girisTipleri]: hesap görme kaydı
+/// da bir işlem tipidir ama tutarını kullanıcı girmez, kişi sayfasının menüsünden
+/// bakiyeye bakılarak kaydedilir.
+///
 /// Simgeler renkli bir karenin içinde: dört düğme yan yana dururken yalnızca
 /// renkli simge ve yazıdan oluşan hâlleri, dokunulabilir olduklarını
 /// söylemiyordu — çubuk bir açıklama satırı gibi okunuyordu.
@@ -42,7 +46,7 @@ class IslemDugmeleri extends StatelessWidget {
           ),
           child: Row(
             children: <Widget>[
-              for (final tip in IslemTipi.values)
+              for (final tip in IslemTipi.girisTipleri)
                 Expanded(child: _Dugme(tip: tip, onBasildi: onSecildi)),
             ],
           ),

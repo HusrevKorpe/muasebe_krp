@@ -17,8 +17,8 @@ import 'tahsilat_form_ekrani.dart';
 /// farkının dayanağı: `IslemRepository.guncelle` "eski" hâli buradan alır.
 ///
 /// Tipe göre iki forma dallanır — fatura satır taşır, tahsilat taşımaz.
-/// İptalli kayıt düzenlenmez: detay ekranı düğmeyi zaten göstermiyor, bu yol
-/// elle açılırsa da uyarıyla karşılanır.
+/// İptalli kayıt ve hesap görme kaydı düzenlenmez: detay ekranı düğmeyi zaten
+/// göstermiyor, bu yol elle açılırsa da uyarıyla karşılanır.
 class IslemDuzenleEkrani extends ConsumerWidget {
   const IslemDuzenleEkrani({
     required this.cariId,
@@ -58,6 +58,13 @@ class IslemDuzenleEkrani extends ConsumerWidget {
             simge: Icons.block_outlined,
             baslik: Metinler.iptalEdildi,
             aciklama: Metinler.iptalliIslemUyarisi,
+          );
+        }
+        if (!islem.tip.duzenlenebilirMi) {
+          return _bosEkran(
+            simge: Icons.handshake_outlined,
+            baslik: Metinler.hesapGoruldu,
+            aciklama: Metinler.hesapGormeDuzenlenmez,
           );
         }
 

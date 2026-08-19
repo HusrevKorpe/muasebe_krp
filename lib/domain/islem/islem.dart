@@ -4,13 +4,14 @@ import 'fatura_hesaplayici.dart';
 import 'islem_kalemi.dart';
 import 'islem_tipi.dart';
 
-/// Bir cariye işlenen fatura, tahsilat veya ödeme.
+/// Bir cariye işlenen fatura, tahsilat, ödeme veya hesap kapatma kaydı.
 ///
 /// Tutarlar kaydedildiği hâliyle saklanır ve okunurken **yeniden hesaplanmaz**:
 /// bugün kalem listesinden türetilen toplam, yarın yuvarlama kuralı değişirse
 /// başka çıkabilir ve geçmiş ekstre bozulurdu (bkz. KURALLAR.md §3.2).
 /// Hesaplama yalnızca kullanıcı kaydı kurarken — ekleme ya da düzenleme
-/// formunda — [Islem.fatura] ve [Islem.odeme] fabrikalarında yapılır. Düzenleme
+/// formunda — [Islem.fatura], [Islem.odeme] ve [Islem.hesapGorme]
+/// fabrikalarında yapılır. Düzenleme
 /// de kaydı bu fabrikalardan yeniden kurar; okuma yolu hiç hesap yapmaz.
 class Islem {
   const Islem({
@@ -56,6 +57,34 @@ class Islem {
     islemTarihi: islemTarihi,
     toplam: tutar,
   );
+
+  /// Kalan bakiyeyi sıfırlayan kapanış kaydı — kullanıcının deyişiyle
+  /// "hesap görme".
+  ///
+  /// Yön bakiyenin işaretinden gelir: cari bize borçluysa alacak, biz ona
+  /// borçluysak borç yazılır. Tutar bakiyenin mutlak değeridir, böylece kayıt
+  /// bakiyeyi tam olarak sıfıra indirir — [bakiyeEtkisi] tipin işaretiyle
+  /// çarpıldığında kalan bakiyenin tersi çıkar.
+  ///
+  /// Kapanacak bakiye yoksa çağrılmaz; hesabı zaten kapalı olan kişide bu
+  /// kaydın anlamı olmaz.
+  factory Islem.hesapGorme({
+    required Kurus bakiye,
+    required String baslik,
+    required DateTime islemTarihi,
+    String id = '',
+  }) {
+    assert(!bakiye.sifirMi, 'Kapanacak bakiye yok.');
+    return Islem(
+      id: id,
+      tip: bakiye.pozitifMi
+          ? IslemTipi.hesapGorulduAlacak
+          : IslemTipi.hesapGorulduBorc,
+      baslik: baslik,
+      islemTarihi: islemTarihi,
+      toplam: bakiye.mutlak,
+    );
+  }
 
   /// Firestore belgesinden okur.
   ///

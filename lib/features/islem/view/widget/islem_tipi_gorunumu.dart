@@ -19,6 +19,10 @@ extension IslemTipiGorunumu on IslemTipi {
     IslemTipi.alisFaturasi => Metinler.aldim,
     IslemTipi.tahsilat => Metinler.paraAldim,
     IslemTipi.odeme => Metinler.paraVerdim,
+    // İki yön de aynı adı taşır: kullanıcı için ikisi de "hesap görme", yön
+    // bakiyenin işaretinden geliyor (bkz. `Islem.hesapGorme`).
+    IslemTipi.hesapGorulduAlacak ||
+    IslemTipi.hesapGorulduBorc => Metinler.hesapGoruldu,
   };
 
   /// PDF hesap dökümünde basılan ad — belge dili.
@@ -30,6 +34,8 @@ extension IslemTipiGorunumu on IslemTipi {
     IslemTipi.alisFaturasi => Metinler.alisFaturasi,
     IslemTipi.tahsilat => Metinler.tahsilat,
     IslemTipi.odeme => Metinler.odeme,
+    IslemTipi.hesapGorulduAlacak ||
+    IslemTipi.hesapGorulduBorc => Metinler.hesapGoruldu,
   };
 
   /// Yeni kayıtta açıklama alanına gelen varsayılan metin.
@@ -38,6 +44,8 @@ extension IslemTipiGorunumu on IslemTipi {
   String get varsayilanBaslik => switch (this) {
     IslemTipi.tahsilat => Metinler.musteridenTahsilat,
     IslemTipi.odeme => Metinler.cariyeOdeme,
+    IslemTipi.hesapGorulduAlacak ||
+    IslemTipi.hesapGorulduBorc => Metinler.hesapGoruldu,
     _ => '',
   };
 
@@ -46,6 +54,10 @@ extension IslemTipiGorunumu on IslemTipi {
     IslemTipi.alisFaturasi => Icons.inventory_2_outlined,
     IslemTipi.tahsilat => Icons.south_west,
     IslemTipi.odeme => Icons.north_east,
+    // El sıkışma: para hareketi değil, anlaşma. Ok simgeleri "para girdi/çıktı"
+    // derdi ve hesap görmede para el değiştirmiyor.
+    IslemTipi.hesapGorulduAlacak ||
+    IslemTipi.hesapGorulduBorc => Icons.handshake_outlined,
   };
 
   /// Borç işlemleri bakiyeyi artırır ve borç rengiyle, alacak işlemleri

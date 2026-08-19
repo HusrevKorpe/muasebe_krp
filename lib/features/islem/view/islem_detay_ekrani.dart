@@ -11,6 +11,7 @@ import '../../../core/hata/hatalar.dart';
 import '../../../core/metin/metinler.dart';
 import '../../../data/islem/islem_kaydi.dart';
 import '../../../domain/islem/islem.dart';
+import '../../../domain/islem/islem_tipi.dart';
 import '../../ortak/view/bos_durum.dart';
 import '../../ortak/view/hata_durumu.dart';
 import '../viewmodel/islem_form_viewmodel.dart';
@@ -23,7 +24,9 @@ import 'widget/kalem_listesi.dart';
 /// Bir işlemin ayrıntısı: kalemler, tutar dökümü, düzenleme ve iptal düğmesi.
 ///
 /// Düzenleme ve iptal yalnızca yürürlükteki kayıtta görünür; iptal edilmiş bir
-/// kaydın ne tutarı değiştirilir ne de ikinci kez iptal edilir.
+/// kaydın ne tutarı değiştirilir ne de ikinci kez iptal edilir. Hesap görme
+/// kaydında düzenleme hiç açılmaz — tutarı bakiyeden türetildi, geri alma yolu
+/// iptaldir (bkz. [IslemTipi.duzenlenebilirMi]).
 class IslemDetayEkrani extends ConsumerWidget {
   const IslemDetayEkrani({
     required this.cariId,
@@ -38,24 +41,27 @@ class IslemDetayEkrani extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final anahtar = (cariId: cariId, islemId: islemId);
     final kayit = ref.watch(islemSaglayici(anahtar));
+    final islem = kayit.value?.islem;
+    final duzenlenebilir =
+        islem != null && !islem.iptalMi && islem.tip.duzenlenebilirMi;
 
     return Scaffold(
       appBar: AppBar(
         title: Text(kayit.value?.islem.tip.ad ?? Metinler.islemDetayi),
         actions: <Widget>[
-          if (kayit.value != null && !kayit.value!.islem.iptalMi) ...<Widget>[
+          if (duzenlenebilir)
             SimgeDugmesi(
               simge: Icons.edit_outlined,
               ipucu: Metinler.islemiDuzenle,
               onBasildi: () => _duzenlemeyeGit(context),
             ),
+          if (islem != null && !islem.iptalMi)
             SimgeDugmesi(
               simge: Icons.block_outlined,
               ipucu: Metinler.islemiIptalEt,
               tehlikeli: true,
-              onBasildi: () => _iptalEt(context, ref, kayit.value!.islem),
+              onBasildi: () => _iptalEt(context, ref, islem),
             ),
-          ],
         ],
       ),
       body: kayit.when(
@@ -73,10 +79,11 @@ class IslemDetayEkrani extends ConsumerWidget {
             : _Govde(
                 kayit: deger,
                 // Satıra dokununca da düzenleme açılır: kullanıcı fiyatı
-                // gördüğü yerden düzeltmek istiyor. İptalli kayıtta kapalı.
-                onDuzenle: deger.islem.iptalMi
-                    ? null
-                    : () => _duzenlemeyeGit(context),
+                // gördüğü yerden düzeltmek istiyor. İptalli kayıtta ve hesap
+                // görme kaydında kapalı.
+                onDuzenle: duzenlenebilir
+                    ? () => _duzenlemeyeGit(context)
+                    : null,
               ),
       ),
     );

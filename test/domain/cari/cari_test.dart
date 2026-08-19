@@ -1,5 +1,6 @@
 import 'package:fidancari/core/para/kurus.dart';
 import 'package:fidancari/domain/cari/cari.dart';
+import 'package:fidancari/domain/cari/cari_grubu.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -11,6 +12,7 @@ void main() {
     telefon: '0246 000 00 00',
     adres: 'Merkez Mah. No:1',
     notlar: 'Toptan alıyor',
+    grup: CariGrubu.fidanci,
     bakiye: const Kurus(9400000),
     sonIslemTarihi: DateTime.utc(2021, 9, 17),
     olusturmaTarihi: DateTime.utc(2021, 1, 1),
@@ -37,6 +39,11 @@ void main() {
       expect(cari.ad, 'Yeni Cari');
       expect(cari.bakiye, Kurus.sifir);
       expect(cari.aktif, isTrue, reason: 'aktif alanı yoksa aktif sayılır');
+      expect(
+        cari.grup,
+        CariGrubu.musteri,
+        reason: 'grup alanı yoksa müşteri sayılır — göç scripti yok',
+      );
       expect(cari.unvan, isNull);
       expect(cari.sonIslemTarihi, isNull);
     });
@@ -122,6 +129,16 @@ void main() {
       expect(alanlar['ad'], 'Ahmet Koyuncu');
       expect(alanlar['sehir'], 'Isparta');
       expect(alanlar['aramaAnahtari'], 'ahmet koyuncu');
+    });
+
+    test('grubu içerir — kişi formundan seçiliyor', () {
+      // Grup düzenlenebilir alan: kullanıcı bir kişiyi sonradan fidancı
+      // işaretleyebilmeli. Haritada yoksa `guncelle` alana hiç dokunmaz.
+      expect(ornek.duzenlenebilirAlanlar()['grup'], 'fidanci');
+      expect(
+        const Cari(id: 'x', ad: 'Veli').duzenlenebilirAlanlar()['grup'],
+        'musteri',
+      );
     });
   });
 

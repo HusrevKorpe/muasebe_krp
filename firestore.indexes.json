@@ -14,6 +14,16 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "aktif", "order": "ASCENDING" },
+        { "fieldPath": "grup", "order": "ASCENDING" },
+        { "fieldPath": "aramaAnahtari", "order": "ASCENDING" },
+        { "fieldPath": "__name__", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "cariler",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "aktif", "order": "ASCENDING" },
         { "fieldPath": "bakiyeKurus", "order": "DESCENDING" },
         { "fieldPath": "__name__", "order": "DESCENDING" }
       ]

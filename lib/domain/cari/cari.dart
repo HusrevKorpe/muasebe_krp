@@ -1,13 +1,18 @@
 import '../../core/metin/turkce.dart' as turkce;
 import '../../core/para/kurus.dart';
 import '../ortak/harita.dart';
+import 'cari_grubu.dart';
 
-/// Cari hesap — müşteri ya da tedarikçi.
+/// Cari hesap — deftere kayıtlı bir kişi.
 ///
 /// Fidancılıkta alım ve satım çoğu kez aynı kişiyle yapılır; bu yüzden ayrı
 /// "müşteri" ve "tedarikçi" tipi yoktur. Yön bakiyenin işaretinden okunur:
 /// pozitif bakiye carinin işletmeye, negatif bakiye işletmenin cariye borçlu
 /// olduğunu gösterir (bkz. KURALLAR.md §3.4).
+///
+/// [grup] bunun istisnası değil: müşteri/fidancı ayrımı **muhasebe yönü değil,
+/// liste ayrımıdır**. Fidancı işaretli bir kişiye de satış yapılır, ondan da
+/// alınır; ayrılan tek şey Kişiler ekranındaki sekmesidir (bkz. [CariGrubu]).
 class Cari {
   const Cari({
     required this.id,
@@ -17,6 +22,7 @@ class Cari {
     this.telefon,
     this.adres,
     this.notlar,
+    this.grup = CariGrubu.varsayilan,
     this.bakiye = Kurus.sifir,
     this.sonIslemTarihi,
     this.aktif = true,
@@ -35,6 +41,7 @@ class Cari {
     telefon: haritaMetinOpsiyonel(veri, alanTelefon),
     adres: haritaMetinOpsiyonel(veri, alanAdres),
     notlar: haritaMetinOpsiyonel(veri, alanNotlar),
+    grup: CariGrubu.anahtardan(haritaMetinOpsiyonel(veri, alanGrup)),
     bakiye: Kurus(haritaTamSayi(veri, alanBakiyeKurus)),
     sonIslemTarihi: haritaTarih(veri, alanSonIslemTarihi),
     aktif: haritaMantiksal(veri, alanAktif, varsayilan: true),
@@ -50,6 +57,7 @@ class Cari {
   static const String alanTelefon = 'telefon';
   static const String alanAdres = 'adres';
   static const String alanNotlar = 'notlar';
+  static const String alanGrup = 'grup';
   static const String alanBakiyeKurus = 'bakiyeKurus';
   static const String alanSonIslemTarihi = 'sonIslemTarihi';
   static const String alanAramaAnahtari = 'aramaAnahtari';
@@ -66,6 +74,10 @@ class Cari {
   final String? telefon;
   final String? adres;
   final String? notlar;
+
+  /// Kişinin müşteri mi fidancı mı olduğu — Kişiler ekranındaki sekmeyi
+  /// belirler. Muhasebeye etkisi yoktur (bkz. [CariGrubu]).
+  final CariGrubu grup;
 
   /// Önbelleklenmiş bakiye. Faz 1'de daima sıfırdır; Faz 2'de işlem kaydıyla
   /// birlikte transaction içinde güncellenir (bkz. KURALLAR.md §4.2).
@@ -100,6 +112,7 @@ class Cari {
     alanTelefon: telefon,
     alanAdres: adres,
     alanNotlar: notlar,
+    alanGrup: grup.anahtar,
     alanAramaAnahtari: aramaAnahtari,
   };
 
@@ -122,6 +135,7 @@ class Cari {
       other.telefon == telefon &&
       other.adres == adres &&
       other.notlar == notlar &&
+      other.grup == grup &&
       other.bakiye == bakiye &&
       other.sonIslemTarihi == sonIslemTarihi &&
       other.aktif == aktif &&
@@ -137,6 +151,7 @@ class Cari {
     telefon,
     adres,
     notlar,
+    grup,
     bakiye,
     sonIslemTarihi,
     aktif,

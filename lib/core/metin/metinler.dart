@@ -109,12 +109,21 @@ abstract final class Metinler {
   static const String kaydedilmediAciklama =
       'İnternet bağlantısı gelince gönderilecek.';
 
-  // ─── Açık hesaplar sekmesi ───────────────────────────────────────────────
+  // ─── Kişi listesi sekmeleri ──────────────────────────────────────────────
   //
   // "Açık hesap" = bakiyesi sıfır olmayan kişi. İki yön de açık sayılır:
-  // sana borcu olan da, senin borçlu olduğun da bu listede.
-  static const String cariSekmeTumu = 'Tümü';
+  // sana borcu olan da, senin borçlu olduğun da bu listede — ve iki gruptan da.
+  //
+  // Müşteri/fidancı ayrımı kullanıcının isteği: fidancılarla sürekli karşılıklı
+  // alışveriş var, müşteriyle bir kerelik satış. İkisi tek listede karışınca
+  // sürekli çalıştığı meslektaşları müşterilerin arasında aranıyordu.
+  static const String cariSekmeMusteriler = 'Müşteriler';
+  static const String cariSekmeFidancilar = 'Fidancılar';
   static const String cariSekmeAcikHesap = 'Açık Hesaplar';
+  static const String fidanciYokBaslik = 'Fidancı yok';
+  static const String fidanciYokAciklama =
+      'Bir kişiyi fidancı yapmak için kartını açıp Düzenle de, üstteki '
+      '"Fidancı" seçeneğini işaretle.';
   static const String acikHesapYokBaslik = 'Açık hesap yok';
   static const String acikHesapYokAciklama =
       'Herkesle hesap kapalı — kimsede alacağın, kimseye borcun görünmüyor.';
@@ -131,6 +140,15 @@ abstract final class Metinler {
   static String acikHesapAdedi(int adet) => '$adet açık hesap';
 
   // ─── Kişi formu ──────────────────────────────────────────────────────────
+  //
+  // Grup seçimi formun en üstünde: kişinin hangi sekmede duracağını belirliyor
+  // ve kaydettikten sonra "nereye gitti bu" sorusu doğmasın.
+  static const String cariGrubu = 'Bu kişi';
+  static const String cariGrubuMusteri = 'Müşteri';
+  static const String cariGrubuFidanci = 'Fidancı';
+  static const String cariGrubuAciklamasi =
+      'Fidancılar Kişiler ekranında ayrı sekmede listelenir; hesap işleyişi '
+      'ikisinde de aynıdır.';
   static const String cariAdi = 'Adı';
   static const String cariAdiIpucu = 'Ahmet Koyuncu';
   static const String cariUnvan = 'Firma adı';
@@ -177,6 +195,30 @@ abstract final class Metinler {
   /// Hesap dökümünde tahsilat satırının açıklaması.
   static const String musteridenTahsilat = 'Müşteriden Tahsilat';
   static const String cariyeOdeme = 'Ödeme';
+
+  // ─── Hesap görme ─────────────────────────────────────────────────────────
+  //
+  // Kullanıcının deyişi: "adamın bana 105.000 borcu var, 100.000'e düzlüyor;
+  // 100.000 aldıktan sonra hesap kapandı." Kalan fark bu adla kapanır ve
+  // ekstrede aynı adla görünür — kullanıcının seçtiği yazım.
+  static const String hesapGoruldu = 'Hesap görüldü';
+  static const String hesabiGor = 'Hesabı gör';
+  static const String hesapGorulduBildirimi = 'Hesap kapatıldı.';
+
+  /// Kişi bize borçluyken: kalan alacaktan vazgeçiliyor.
+  static String hesabiGorOnayAlacak(String tutar) =>
+      'Kalan $tutar alacağından vazgeçilsin mi? Hesap kapanır; kayıt silinmez, '
+      'ekstrede "Hesap görüldü" satırı olarak durur.';
+
+  /// Biz kişiye borçluyken: kalan borç siliniyor.
+  static String hesabiGorOnayBorc(String tutar) =>
+      'Ona kalan $tutar borcun kapatılsın mı? Hesap kapanır; kayıt silinmez, '
+      'ekstrede "Hesap görüldü" satırı olarak durur.';
+
+  /// Hesap görme kaydı düzenlenmez; geri alma yolu iptaldir.
+  static const String hesapGormeDuzenlenmez =
+      'Hesap görme kaydının tutarı o günkü bakiyeden geliyor, elle '
+      'değiştirilmez. Yanlışsa kaydı iptal et; bakiye eski hâline döner.';
 
   // ─── İşlem listesi ───────────────────────────────────────────────────────
   static const String islemDetayi = 'Hareket';

@@ -66,9 +66,35 @@ class _CariListeGorunumuDurumu extends ConsumerState<CariListeGorunumu> {
 
   Future<void> _yenile() => _viewModel.yenile();
 
+  /// Liste ekranı doldurmuyorsa sonraki sayfayı kendiliğinden ister.
+  ///
+  /// Müşteri sekmesinde sunucudan gelen sayfanın fidancıları elde ayıklanıyor
+  /// (bkz. `CariSuzgeci.kayitGirerMi`); 25 belgelik bir sayfadan geriye ekranı
+  /// doldurmayacak kadar az satır kalabilir. Kaydırma dinleyicisi ancak
+  /// kaydırma olayıyla çalıştığı için "daha yükle" o hâlde hiç tetiklenmezdi.
+  void _ekraniDoldur(CariListesiDurumu? veri) {
+    if (veri == null || !veri.dahaVar || veri.dahaYukleniyor) return;
+
+    // Liste boşken gövde boş durum ekranı; kaydırma denetleyicisi hiçbir listeye
+    // bağlı değil ve konumu sorulamaz. Sunucuda okunmamış belge varken boş
+    // durum göstermemek için sonraki sayfa doğrudan isteniyor.
+    if (veri.bosMu) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _dahaYukle();
+      });
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_kaydirmaKontrolcu.hasClients) return;
+      if (_kaydirmaKontrolcu.position.maxScrollExtent <= 0) _dahaYukle();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final durum = ref.watch(cariListesiViewModelSaglayici(widget.suzgec));
+    _ekraniDoldur(durum.value);
 
     return Column(
       children: [
@@ -84,7 +110,9 @@ class _CariListeGorunumuDurumu extends ConsumerState<CariListeGorunumu> {
     );
   }
 
-  /// Sekmenin üst şeridi: "Tümü"de arama kutusu, açık hesaplarda toplam satırı.
+  /// Sekmenin üst şeridi: kişi sekmelerinde arama kutusu, açık hesaplarda
+  /// toplam satırı. Açık hesapta arama yok — gerekçesi
+  /// `CariRepository.listeyiIzle`'de.
   Widget _baslik(CariListesiDurumu? veri) {
     if (!widget.suzgec.acikHesapMi) {
       return CariAramaAlani(
@@ -99,7 +127,13 @@ class _CariListeGorunumuDurumu extends ConsumerState<CariListeGorunumu> {
   }
 
   Widget _liste(CariListesiDurumu veri) {
-    if (veri.bosMu) return _bosDurum(veri);
+    if (veri.bosMu) {
+      // Sunucuda okunmamış belge varken liste henüz "boş" değil: sonraki sayfa
+      // yolda (bkz. [_ekraniDoldur]) ve boş durum yazısı bir anlığına yanıltır.
+      return veri.dahaVar
+          ? const Center(child: CircularProgressIndicator())
+          : _bosDurum(veri);
+    }
 
     // Son satır sonraki sayfanın göstergesi ya da hata satırı olur.
     final ekSatir = veri.dahaVar || veri.sayfaHatasi != null;
@@ -121,6 +155,9 @@ class _CariListeGorunumuDurumu extends ConsumerState<CariListeGorunumu> {
           final kayit = veri.kayitlar[sira];
           return CariSatiri(
             kayit: kayit,
+            // Grup rozeti yalnızca iki grubun karıştığı sekmede anlamlı;
+            // fidancı listesinde her satırda "Fidancı" yazmak gürültü olurdu.
+            grubuGoster: widget.suzgec.acikHesapMi,
             onTap: () => context.push(Yollar.cariDetayYolu(kayit.cari.id)),
           );
         },
@@ -160,6 +197,16 @@ class _CariListeGorunumuDurumu extends ConsumerState<CariListeGorunumu> {
         simge: Icons.search_off,
         baslik: Metinler.aramaSonucuYokBaslik,
         aciklama: Metinler.aramaSonucuYokAciklama,
+      );
+    }
+    // Fidancı sekmesi baştan boş: kimse fidancı işaretlenmemiş. Buradan "Kişi
+    // Ekle"ye yollamak yanlış olurdu — kişi zaten kayıtlı, yapılacak iş onu
+    // fidancı işaretlemek.
+    if (widget.suzgec == CariSuzgeci.fidancilar) {
+      return const BosDurum(
+        simge: Icons.storefront_outlined,
+        baslik: Metinler.fidanciYokBaslik,
+        aciklama: Metinler.fidanciYokAciklama,
       );
     }
     return BosDurum(

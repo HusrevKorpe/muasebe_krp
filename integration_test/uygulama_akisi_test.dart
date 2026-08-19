@@ -123,8 +123,9 @@ void main() {
     expect(find.text(Metinler.bakiyeKapali), findsOneWidget);
     expect(find.text(Metinler.islemYokBaslik), findsOneWidget);
 
-    // Dört giriş düğmesi tip seçme diyaloğunun yerini aldı.
-    for (final tip in IslemTipi.values) {
+    // Dört giriş düğmesi tip seçme diyaloğunun yerini aldı. Hesap görme bu
+    // listede yok: tutarını kullanıcı girmiyor, menüden bakiyeye göre yazılıyor.
+    for (final tip in IslemTipi.girisTipleri) {
       expect(
         find.text(tip.ad),
         findsOneWidget,

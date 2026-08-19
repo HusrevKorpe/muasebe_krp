@@ -9,11 +9,32 @@
 /// | Tahsilat | Alacak — cari borcunu öder |
 /// | Alış faturası | Alacak — biz cariye borçlanırız |
 /// | Ödeme | Borç — biz cariye öderiz |
+/// | Hesap görüldü | Kalan bakiyeyi kapatır, yönü bakiyenin işaretinden gelir |
 enum IslemTipi {
   satisFaturasi(anahtar: 'satisFaturasi', borcMu: true, faturaMi: true),
   alisFaturasi(anahtar: 'alisFaturasi', borcMu: false, faturaMi: true),
   tahsilat(anahtar: 'tahsilat', borcMu: false, faturaMi: false),
-  odeme(anahtar: 'odeme', borcMu: true, faturaMi: false);
+  odeme(anahtar: 'odeme', borcMu: true, faturaMi: false),
+
+  /// Alacağımızdan vazgeçtik: cari bize borçluydu, kalanı silindi.
+  ///
+  /// Kullanıcının deyişiyle "hesap görme": *"adamın bana 105.000 borcu var,
+  /// 100.000'e düzlüyor; 100.000 aldıktan sonra hesap kapandı."* 100.000
+  /// tahsilat olarak girilir, kalan 5.000 bu kayıtla kapanır. Para el
+  /// değiştirmediği için tahsilat değildir; kayıt silinmediğinden
+  /// (KURALLAR.md §4.2) fark ekstrede "Hesap görüldü" satırı olarak durur.
+  hesapGorulduAlacak(
+    anahtar: 'hesapGorulduAlacak',
+    borcMu: false,
+    faturaMi: false,
+  ),
+
+  /// Borcumuz silindi: biz cariye borçluyduk, kalandan vazgeçti.
+  ///
+  /// [hesapGorulduAlacak]'ın ters yönü. İki ayrı tip olmasının sebebi
+  /// [borcMu]'nun tipin sabiti olması: yön bakiyenin işaretine bağlı ve tek bir
+  /// tiple ifade edilemiyor. Kullanıcıya ikisi de "Hesap görüldü" diye görünür.
+  hesapGorulduBorc(anahtar: 'hesapGorulduBorc', borcMu: true, faturaMi: false);
 
   const IslemTipi({
     required this.anahtar,
@@ -35,6 +56,18 @@ enum IslemTipi {
 
   bool get alacakMi => !borcMu;
 
+  /// Kalan bakiyeyi kapatan kayıt mı — iki yönden biri.
+  bool get hesapGormeMi =>
+      this == hesapGorulduAlacak || this == hesapGorulduBorc;
+
+  /// Kayıt sonradan düzenlenebilir mi.
+  ///
+  /// Hesap görme kaydının tutarı kaydedildiği andaki bakiyeden türetildi; elle
+  /// değiştirilirse bakiye sıfırda kalmaz ve "hesap kapandı" yalanı olurdu.
+  /// Yanlışlıkla kapatılan hesabın geri alma yolu **iptaldir**: iptal edilen
+  /// kayıt bakiyeyi olduğu gibi geri getirir.
+  bool get duzenlenebilirMi => !hesapGormeMi;
+
   /// Tutarın bakiyeye eklenirken alacağı işaret: borç `+1`, alacak `-1`.
   int get isaret => borcMu ? 1 : -1;
 
@@ -48,6 +81,17 @@ enum IslemTipi {
     }
     return null;
   }
+
+  /// Kullanıcının kişi sayfasındaki düğmelerden doğrudan girdiği tipler.
+  ///
+  /// Hesap görme burada yok: tutarı kullanıcıdan değil bakiyeden geliyor ve
+  /// ayrı bir onay penceresinden kaydediliyor.
+  static const List<IslemTipi> girisTipleri = <IslemTipi>[
+    satisFaturasi,
+    alisFaturasi,
+    tahsilat,
+    odeme,
+  ];
 
   /// Fatura tipleri — form ekranının seçenek listesi.
   static const List<IslemTipi> faturalar = <IslemTipi>[

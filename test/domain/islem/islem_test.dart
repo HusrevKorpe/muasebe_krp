@@ -68,6 +68,86 @@ void main() {
     });
   });
 
+  group('Islem.hesapGorme', () {
+    // Kullanıcının deyişiyle "hesap görme": pazarlıkla silinen kalan bakiye.
+    // Kayıt bakiyeyi tam sıfıra indirmeli, yönü de bakiyenin işaretinden
+    // gelmeli (bkz. `fazlar/faz-2-islemler.md` → Hesap görme).
+    test('cari bize borçluyken alacak yazılır ve bakiyeyi sıfırlar', () {
+      final bakiye = Kurus.liradan(5000);
+      final kayit = Islem.hesapGorme(
+        bakiye: bakiye,
+        baslik: 'Hesap görüldü',
+        islemTarihi: DateTime(2026, 8, 19),
+      );
+
+      expect(kayit.tip, IslemTipi.hesapGorulduAlacak);
+      expect(kayit.toplam, bakiye);
+      expect(kayit.bakiyeEtkisi.deger, -bakiye.deger);
+      expect((bakiye + kayit.bakiyeEtkisi).sifirMi, isTrue);
+    });
+
+    test('biz cariye borçluyken borç yazılır ve bakiyeyi sıfırlar', () {
+      final bakiye = -Kurus.liradan(5000);
+      final kayit = Islem.hesapGorme(
+        bakiye: bakiye,
+        baslik: 'Hesap görüldü',
+        islemTarihi: DateTime(2026, 8, 19),
+      );
+
+      expect(kayit.tip, IslemTipi.hesapGorulduBorc);
+      expect(kayit.toplam, bakiye.mutlak, reason: 'tutar işaretsiz saklanır');
+      expect((bakiye + kayit.bakiyeEtkisi).sifirMi, isTrue);
+    });
+
+    test('kalemi yoktur ve kaydedilmemiş kurulur', () {
+      final kayit = Islem.hesapGorme(
+        bakiye: Kurus.liradan(100),
+        baslik: 'Hesap görüldü',
+        islemTarihi: DateTime(2026, 8, 19),
+      );
+
+      expect(kayit.kalemler, isEmpty);
+      expect(kayit.yeniMi, isTrue);
+      expect(kayit.iptalMi, isFalse);
+    });
+
+    test('iptal edilince bakiyeye katkısı kalmaz', () {
+      // "Geri alınabilsin" isteğinin karşılığı: kayıt silinmez, iptal edilir ve
+      // kapatılan bakiye eski hâline döner.
+      final kayit = Islem.hesapGorme(
+        bakiye: Kurus.liradan(5000),
+        baslik: 'Hesap görüldü',
+        islemTarihi: DateTime(2026, 8, 19),
+      );
+
+      expect(kayit.kopyala(iptal: true).bakiyeEtkisi, Kurus.sifir);
+    });
+
+    test('kapanacak bakiye yoksa kurulamaz', () {
+      expect(
+        () => Islem.hesapGorme(
+          bakiye: Kurus.sifir,
+          baslik: 'Hesap görüldü',
+          islemTarihi: DateTime(2026, 8, 19),
+        ),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+
+    test('gidiş-dönüşte tipi korunur', () {
+      final kayit = Islem.hesapGorme(
+        bakiye: Kurus.liradan(5000),
+        baslik: 'Hesap görüldü',
+        islemTarihi: DateTime(2026, 8, 19),
+      );
+      final okunan = Islem.fromMap('x', kayit.toMap());
+
+      expect(okunan.tip, IslemTipi.hesapGorulduAlacak);
+      expect(okunan.toplam, kayit.toplam);
+      expect(okunan.baslik, 'Hesap görüldü');
+    });
+  });
+
   group('fromMap / toMap', () {
     test('faturada gidiş-dönüşte alan kaybı olmaz', () {
       final veri = zeytinHurmaFaturasi.toMap();
@@ -182,6 +262,8 @@ void main() {
       expect(IslemTipi.alisFaturasi.anahtar, 'alisFaturasi');
       expect(IslemTipi.tahsilat.anahtar, 'tahsilat');
       expect(IslemTipi.odeme.anahtar, 'odeme');
+      expect(IslemTipi.hesapGorulduAlacak.anahtar, 'hesapGorulduAlacak');
+      expect(IslemTipi.hesapGorulduBorc.anahtar, 'hesapGorulduBorc');
     });
 
     test('anahtardan tipe çevirir', () {
@@ -200,8 +282,39 @@ void main() {
     test('işaret yönü tabloyla aynı', () {
       expect(IslemTipi.satisFaturasi.isaret, 1);
       expect(IslemTipi.odeme.isaret, 1);
+      expect(IslemTipi.hesapGorulduBorc.isaret, 1);
       expect(IslemTipi.tahsilat.isaret, -1);
       expect(IslemTipi.alisFaturasi.isaret, -1);
+      expect(IslemTipi.hesapGorulduAlacak.isaret, -1);
+    });
+
+    test('hesapGormeMi yalnızca kapanış kayıtlarında doğru', () {
+      expect(IslemTipi.hesapGorulduAlacak.hesapGormeMi, isTrue);
+      expect(IslemTipi.hesapGorulduBorc.hesapGormeMi, isTrue);
+      for (final tip in IslemTipi.girisTipleri) {
+        expect(tip.hesapGormeMi, isFalse);
+      }
+    });
+
+    test('hesap görme kaydı düzenlenemez, diğerleri düzenlenebilir', () {
+      // Tutarı o günkü bakiyeden türetildi; elle değişirse bakiye sıfırda
+      // kalmaz. Geri alma yolu iptal.
+      expect(IslemTipi.hesapGorulduAlacak.duzenlenebilirMi, isFalse);
+      expect(IslemTipi.hesapGorulduBorc.duzenlenebilirMi, isFalse);
+      for (final tip in IslemTipi.girisTipleri) {
+        expect(tip.duzenlenebilirMi, isTrue);
+      }
+    });
+
+    test('giriş düğmeleri yalnızca dört tipi gösterir', () {
+      // Hesap görme kullanıcının doğrudan girdiği bir tip değil; tutarı
+      // bakiyeden geliyor ve kişi sayfasının menüsünden kaydediliyor.
+      expect(IslemTipi.girisTipleri, <IslemTipi>[
+        IslemTipi.satisFaturasi,
+        IslemTipi.alisFaturasi,
+        IslemTipi.tahsilat,
+        IslemTipi.odeme,
+      ]);
     });
   });
 

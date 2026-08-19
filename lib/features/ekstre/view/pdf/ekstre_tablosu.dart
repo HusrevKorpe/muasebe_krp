@@ -215,9 +215,12 @@ pw.Widget _kalemSatiri(IslemKalemi kalem, EkstreStili stil) {
 
 /// Satırın solundaki işlem tipi simgesi.
 ///
-/// Material simgeleri PDF'e gömülemez (ayrı bir simge fontu gerekirdi); iki
+/// Material simgeleri PDF'e gömülemez (ayrı bir simge fontu gerekirdi); üç
 /// basit vektör çizim yeterli: fatura için köşesi kıvrık sayfa, tahsilat ve
-/// ödeme için madenî para.
+/// ödeme için madenî para, hesap görme için onay imi.
+///
+/// Hesap görme kaydı madenî parayla çizilmiyor: o satırda para el değiştirmedi,
+/// kalan bakiyeden vazgeçildi (bkz. `IslemTipi.hesapGormeMi`).
 pw.Widget _tipSimgesi(IslemTipi tip) {
   return pw.SizedBox(
     width: 10,
@@ -229,7 +232,15 @@ pw.Widget _tipSimgesi(IslemTipi tip) {
           ..setStrokeColor(EkstreStili.soluk)
           ..setLineWidth(0.6);
 
-        if (tip.faturaMi) {
+        if (tip.hesapGormeMi) {
+          // Onay imi: sol üstten aşağı, oradan sağ yukarı. PDF'te y ekseni
+          // yukarı doğru büyür.
+          canvas
+            ..moveTo(1.6, size.y / 2)
+            ..lineTo(size.x / 2 - 0.8, size.y / 2 - 2.6)
+            ..lineTo(size.x - 1.4, size.y / 2 + 2.8)
+            ..strokePath();
+        } else if (tip.faturaMi) {
           const kivrim = 2.4;
           canvas
             ..moveTo(0.5, 0.5)

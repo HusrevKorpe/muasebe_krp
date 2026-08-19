@@ -14,8 +14,8 @@ import 'cari_listesi_durumu.dart';
 /// Liste Firestore'u `snapshots()` ile dinler; gerekçesi
 /// [AkisListesiViewModel]'de.
 ///
-/// Her süzgecin kendi örneği var: Kişiler ekranındaki iki sekme aynı anda
-/// ağaçta duruyor ve ikisi de kendi sorgusunu, kendi sayfa sınırını taşıyor.
+/// Her süzgecin kendi örneği var: Kişiler ekranındaki üç sekme aynı anda
+/// ağaçta duruyor ve her biri kendi sorgusunu, kendi sayfa sınırını taşıyor.
 /// Sekme değiştirmek listeyi baştan kurmuyor.
 class CariListesiViewModel
     extends AkisListesiViewModel<CariListesiDurumu, CariSayfasi> {
@@ -25,8 +25,9 @@ class CariListesiViewModel
   /// ücretlendirir; "Ahmet" yazmak 5 sorgu değil 1 sorgu olmalı.
   static const Duration _aramaGecikmesi = Duration(milliseconds: 300);
 
-  /// Listede kimlerin görüneceği. Açık hesap sekmesinde arama kutusu yok —
-  /// gerekçesi `CariRepository.listeyiIzle`'de.
+  /// Listede kimlerin görüneceği: müşteriler, fidancılar ya da açık hesaplar.
+  /// Açık hesap sekmesinde arama kutusu yok — gerekçesi
+  /// `CariRepository.listeyiIzle`'de.
   final CariSuzgeci suzgec;
 
   Timer? _aramaZamanlayici;
@@ -34,7 +35,8 @@ class CariListesiViewModel
 
   @override
   int get sayfaBoyu => switch (suzgec) {
-    CariSuzgeci.tumu => CariRepository.varsayilanSayfaBoyu,
+    CariSuzgeci.musteriler ||
+    CariSuzgeci.fidancilar => CariRepository.varsayilanSayfaBoyu,
     CariSuzgeci.acikHesap => CariRepository.acikHesapSayfaBoyu,
   };
 
@@ -82,14 +84,15 @@ class CariListesiViewModel
 
   /// Sonraki sayfayı da akışa dahil eder. Eldeki kayıtlar ekranda kalır,
   /// altta yalnızca bir gösterge döner.
+  ///
+  /// Ölçüt yalnızca [CariListesiDurumu.dahaVar]: liste **boşken de** devamı
+  /// istenebilmeli. Müşteri sekmesinde sunucudan gelen sayfanın fidancıları
+  /// elde ayıklanıyor (`CariSuzgeci.kayitGirerMi`) ve ilk sayfanın tamamı
+  /// fidancıysa geriye hiç satır kalmaz; "boşsa yükleme" kuralı o hâlde listeyi
+  /// kalıcı olarak boş gösterirdi.
   Future<void> dahaYukle() async {
     final mevcut = state.value;
-    if (mevcut == null ||
-        !mevcut.dahaVar ||
-        mevcut.dahaYukleniyor ||
-        mevcut.bosMu) {
-      return;
-    }
+    if (mevcut == null || !mevcut.dahaVar || mevcut.dahaYukleniyor) return;
 
     state = AsyncValue<CariListesiDurumu>.data(
       mevcut.kopyala(dahaYukleniyor: true, hatayiTemizle: true),

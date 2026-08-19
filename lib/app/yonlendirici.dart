@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../data/kimlik/kimlik_repository.dart';
+import '../domain/cari/cari_grubu.dart';
 import '../domain/islem/islem_tipi.dart';
 import '../domain/secenek/secenek_tipi.dart';
 import '../features/ayarlar/view/ayarlar_ekrani.dart';
@@ -128,7 +129,13 @@ final yonlendiriciSaglayici = Provider<GoRouter>((ref) {
       // kimliği sanılır.
       GoRoute(
         path: Yollar.cariYeni,
-        builder: (context, durum) => const CariFormEkrani(),
+        // Grup sorgu parametresinden okunuyor: fidancı sekmesinden açılan form
+        // fidancı olarak başlasın. Parametre yoksa ya da tanınmıyorsa müşteri.
+        builder: (context, durum) => CariFormEkrani(
+          baslangicGrubu: CariGrubu.anahtardan(
+            durum.uri.queryParameters[Yollar.grupParametresi],
+          ),
+        ),
       ),
       // Düzenleme yolu iç içe değil, ayrı bir kök yol: `push` iç içe yolda
       // eşleşen tüm sayfaları yığına koyar ve detay ekranı iki kez açılırdı.

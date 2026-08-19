@@ -51,12 +51,20 @@ kimliği sabit; herkes aynı defteri açıyor (bkz. `faz-0` → "Revize 2").
 | `telefon` | string? | |
 | `adres` | string? | |
 | `notlar` | string? | |
+| `grup` | string | `"musteri"` \| `"fidanci"` — kişinin hangi sekmede listeleneceği |
 | `bakiyeKurus` | **int** | Önbellek. Faz 1'de hep `0`. Faz 2'de transaction ile güncellenir |
 | `sonIslemTarihi` | timestamp? | Sıralama için |
 | `aramaAnahtari` | string | Normalize edilmiş ad — Türkçe arama için |
 | `aktif` | bool | Silme yok, pasife alma var |
 | `olusturmaTarihi` | timestamp | `serverTimestamp()` |
 | `guncellemeTarihi` | timestamp | `serverTimestamp()` |
+
+> `grup` alanı **eski belgelerde yok** ve göç scripti de yazılmadı. Okurken
+> eksik alan `musteri` sayılıyor (`CariGrubu.anahtardan`), ama Firestore'un
+> eşitlik süzgeci alanı olmayan belgeyi eşleştirmediği için `grup == 'musteri'`
+> sorgusu **yazılamaz**: o sorgu bu özellikten önce kaydedilmiş herkesi listeden
+> düşürürdü. Bu yüzden sunucuda yalnızca fidancı listesi süzülüyor, müşteri
+> listesi elde ayıklanıyor (`CariSuzgeci.kayitGirerMi`).
 
 > `bakiyeKurus` neden şimdiden var: cari listesinde her kişinin bakiyesini göstermek
 > için o kişinin tüm işlemlerini çekmek Firestore'da hem yavaş hem pahalıdır
@@ -86,13 +94,25 @@ kimliği sabit; herkes aynı defteri açıyor (bkz. `faz-0` → "Revize 2").
 - [x] `features/cari/viewmodel/` — Riverpod notifier'ları
 
 ### Liste ekranı davranışı
-- [x] **İki sekme: "Tümü" ve "Açık Hesaplar"** (14 Ağustos 2026 eklemesi,
-      kullanıcı isteği: *"hesabı kapanmayanları ayrı bir sekmede görebilelim"*).
-      Açık hesap = `bakiyeKurus != 0`; yön ayrımı yok, iki taraf da açık sayılır.
-      Sekmenin başında yüklenmiş kayıtların alacak/borç toplamı duruyor.
-- [x] Arama kutusu — `aramaAnahtari` üzerinden, 300 ms gecikmeli. **Yalnızca
-      "Tümü" sekmesinde:** açık hesap sorgusu bakiyeye aralık süzgeci uyguluyor,
-      Firestore aynı sorguda ikinci bir aralık süzgecini sıralayamıyor.
+- [x] **Üç sekme: "Müşteriler", "Fidancılar" ve "Açık Hesaplar".**
+      Açık hesap sekmesi 14 Ağustos 2026'da eklendi (kullanıcı isteği:
+      *"hesabı kapanmayanları ayrı bir sekmede görebilelim"*); açık hesap =
+      `bakiyeKurus != 0`, yön ayrımı yok, iki taraf da açık sayılır ve sekmenin
+      başında yüklenmiş kayıtların alacak/borç toplamı duruyor.
+      Müşteri/fidancı ayrımı 19 Ağustos 2026'da eklendi (kullanıcı isteği:
+      *"fidancılarla sürekli alışveriş oluyor, birbirimizden alıp veriyoruz;
+      fidancıları başka bir sekmede yapalım"*). Ayrım yalnızca listede: iki
+      grubun muhasebesi birebir aynı. Grup kişi formunun en üstündeki
+      anahtardan seçiliyor, mevcut kayıtların hepsi müşteri sayılıyor.
+      Açık hesap sekmesi iki gruptan da besleniyor; orada fidancı satırları
+      küçük bir rozetle ayrışıyor.
+- [x] Arama kutusu — `aramaAnahtari` üzerinden, 300 ms gecikmeli. **Müşteri ve
+      fidancı sekmelerinde var, açık hesapta yok:** açık hesap sorgusu bakiyeye
+      aralık süzgeci uyguluyor, Firestore aynı sorguda ikinci bir aralık
+      süzgecini sıralayamıyor.
+- [x] Müşteri sekmesinde sunucudan gelen sayfa elde ayıklandığı için ekranı
+      doldurmayabiliyor; liste kaydırılamaz kalırsa sonraki sayfa
+      kendiliğinden isteniyor (`CariListeGorunumu._ekraniDoldur`).
 - [x] Sayfalama (sonsuz kaydırma), tek `get()` ile tüm koleksiyon çekilmez
 - [x] Sıralama: liste her zaman ada göre. Ekranda seçim menüsü yok; ölçüt
       repository'de duruyor (`CariSiralamasi`), çağrı yeri açıkça isterse verir.
@@ -153,12 +173,14 @@ flutter run --dart-define=EMULATOR=true
 
 | Dosya | Kapsam |
 |---|---|
-| `test/domain/cari/cari_test.dart` | `fromMap`/`toMap` gidiş-dönüş, arama anahtarı, alan sızıntısı |
+| `test/domain/cari/cari_test.dart` | `fromMap`/`toMap` gidiş-dönüş, arama anahtarı, alan sızıntısı, grup |
+| `test/domain/cari/cari_grubu_test.dart` | Grup anahtarları; alanı olmayan belge müşteri sayılır |
+| `test/domain/cari/cari_suzgeci_test.dart` | Hangi süzgeç sunucuda, hangisi elde uygulanıyor |
 | `test/domain/cari/cari_dogrulama_test.dart` | Ad ve telefon doğrulaması |
 | `test/domain/isletme/isletme_test.dart` | İşletme + banka hesabı gidiş-dönüş |
 | `test/domain/isletme/iban_test.dart` | IBAN mod-97 |
 | `test/data/firebase/firestore_donusum_test.dart` | `Timestamp` → `DateTime` sınırı |
-| `integration_test/cari_repository_test.dart` | Emulator: sayfalama, arama, sıralama, pasife alma |
+| `integration_test/cari_repository_test.dart` | Emulator: sayfalama, arama, sıralama, pasife alma, grup süzgeci |
 | `integration_test/guvenlik_kurallari_test.dart` | Emulator: `firestore.rules` izolasyonu |
 | `integration_test/uygulama_akisi_test.dart` | Kurulum → cari ekle → ara → detay tam akışı |
 

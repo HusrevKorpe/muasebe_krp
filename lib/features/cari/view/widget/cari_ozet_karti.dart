@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../app/tasarim/bas_harf_karesi.dart';
 import '../../../../app/tasarim/olculer.dart';
 import '../../../../app/tasarim/renkler.dart';
+import '../../../../app/tasarim/rozet.dart';
 import '../../../../core/metin/metinler.dart';
 import '../../../../core/para/kurus.dart';
 import '../../../../core/tarih/tarih_bicimi.dart';
@@ -114,7 +115,7 @@ class CariOzetKarti extends StatelessWidget {
   }
 }
 
-/// Baş harf karesi, ad ve firma adı.
+/// Baş harf karesi, ad, firma adı ve fidancı rozeti.
 class _Kimlik extends StatelessWidget {
   const _Kimlik({required this.cari});
 
@@ -134,6 +135,17 @@ class _Kimlik extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               Text(cari.ad, style: tema.textTheme.titleLarge),
+              // Grup yalnızca fidancıda yazılıyor: müşteri varsayılan, her
+              // sayfaya "Müşteri" basmak bilgi vermez.
+              if (cari.grup.fidanciMi) ...<Widget>[
+                const SizedBox(height: Olculer.bosluk8),
+                Rozet(
+                  metin: Metinler.cariGrubuFidanci,
+                  renk: tema.colorScheme.onSurfaceVariant,
+                  stil: tema.textTheme.labelSmall,
+                  kalin: false,
+                ),
+              ],
               if (cari.altBaslik != null) ...<Widget>[
                 const SizedBox(height: Olculer.bosluk4),
                 Text(

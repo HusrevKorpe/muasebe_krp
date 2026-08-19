@@ -1,3 +1,4 @@
+import '../domain/cari/cari_grubu.dart';
 import '../domain/islem/islem_tipi.dart';
 import '../domain/secenek/secenek_tipi.dart';
 
@@ -17,6 +18,12 @@ abstract final class Yollar {
   static const String isletme = '/isletme';
 
   static const String cariYeni = '/cari/yeni';
+
+  /// Yeni kişi formunun grubunu ön dolduran sorgu parametresi.
+  ///
+  /// Fidancılar sekmesinden "Kişi Ekle"ye basan kullanıcı fidancı eklemek
+  /// istiyor; form müşteri açılırsa kaydettiği kişi bulunduğu sekmeden kaybolur.
+  static const String grupParametresi = 'grup';
 
   /// Yol kalıpları. Gezinirken doğrudan kullanılmaz; [cariDetayYolu] ve
   /// [cariDuzenleYolu] ile üretilir.
@@ -52,6 +59,10 @@ abstract final class Yollar {
   static const String islemIdParametresi = 'islemId';
   static const String urunIdParametresi = 'urunId';
   static const String tipParametresi = 'tip';
+
+  /// Yeni kişi formu, grubu seçili gelecek şekilde.
+  static String cariYeniYolu(CariGrubu grup) =>
+      '$cariYeni?$grupParametresi=${grup.anahtar}';
 
   static String cariDetayYolu(String cariId) => '/cari/$cariId';
 

@@ -61,8 +61,13 @@ class CariRepository {
   ///
   /// [suzgec] açık hesapsa aynı kural bakiyeyi ilk sıralama alanı yapar ve
   /// [arama] ile [siralama] yok sayılır — bkz. [_etkinSiralama].
+  ///
+  /// Müşteri sekmesinde grup süzgeci **sunucuda değil elde** uygulanır;
+  /// gerekçesi [CariSuzgeci.sunucuGrubu]'nda. Sayfanın [CariSayfasi.dahaVar]
+  /// bayrağı ham belge sayısına bakar: elde ayıklanan kayıtlar sonraki sayfanın
+  /// var olduğunu gizlememeli.
   Stream<CariSayfasi> listeyiIzle({
-    CariSuzgeci suzgec = CariSuzgeci.tumu,
+    CariSuzgeci suzgec = CariSuzgeci.musteriler,
     CariSiralamasi siralama = CariSiralamasi.ad,
     String arama = '',
     int sinir = varsayilanSayfaBoyu,
@@ -83,7 +88,10 @@ class CariRepository {
         .snapshots()
         .map(
           (anlik) => CariSayfasi(
-            kayitlar: anlik.docs.map(_kayda).toList(growable: false),
+            kayitlar: anlik.docs
+                .map(_kayda)
+                .where((kayit) => suzgec.kayitGirerMi(kayit.cari.grup))
+                .toList(growable: false),
             dahaVar: anlik.docs.length == sinir,
           ),
         )
@@ -172,7 +180,10 @@ class CariRepository {
     String aramaAnahtari,
   ) => switch (suzgec) {
     CariSuzgeci.acikHesap => CariSiralamasi.bakiye,
-    CariSuzgeci.tumu => aramaAnahtari.isEmpty ? siralama : CariSiralamasi.ad,
+    CariSuzgeci.musteriler ||
+    CariSuzgeci.fidancilar => aramaAnahtari.isEmpty
+        ? siralama
+        : CariSiralamasi.ad,
   };
 
   Query<Map<String, dynamic>> _sorguKur(
@@ -189,6 +200,13 @@ class CariRepository {
     // yok, iki taraf da açık hesap sayılır.
     if (suzgec.acikHesapMi) {
       sorgu = sorgu.where(Cari.alanBakiyeKurus, isNotEqualTo: 0);
+    }
+
+    // Yalnızca fidancı listesi sunucuda süzülüyor; müşteri listesi elde
+    // ayıklanıyor (bkz. [CariSuzgeci.sunucuGrubu]).
+    final grup = suzgec.sunucuGrubu;
+    if (grup != null) {
+      sorgu = sorgu.where(Cari.alanGrup, isEqualTo: grup.anahtar);
     }
 
     if (aramaAnahtari.isNotEmpty) {

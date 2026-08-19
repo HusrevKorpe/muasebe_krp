@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fidancari/data/cari/cari_repository.dart';
 import 'package:fidancari/domain/cari/cari.dart';
+import 'package:fidancari/domain/cari/cari_grubu.dart';
 import 'package:fidancari/domain/cari/cari_siralamasi.dart';
 import 'package:fidancari/domain/cari/cari_suzgeci.dart';
 import 'package:fidancari/domain/isletme/isletme.dart';
@@ -55,7 +56,7 @@ void main() {
   /// onaylandığı ve yerel yazma önbelleğe anında düştüğü için o yayın da tam
   /// sonucu taşır.
   Future<List<String>> adlariListele({
-    CariSuzgeci suzgec = CariSuzgeci.tumu,
+    CariSuzgeci suzgec = CariSuzgeci.musteriler,
     CariSiralamasi siralama = CariSiralamasi.ad,
     String arama = '',
     int sinir = CariRepository.varsayilanSayfaBoyu,
@@ -203,6 +204,110 @@ void main() {
       final adlar = await adlariListele(siralama: CariSiralamasi.sonIslem);
       expect(adlar.first, 'İşlem Görmüş');
       expect(adlar, hasLength(2));
+    });
+  });
+
+  /// Cariyi fidancı olarak işaretler ve sunucu onayını bekler.
+  Future<void> grubuYaz(String cariId, CariGrubu grup) async {
+    await koleksiyon.doc(cariId).update(<String, Object?>{
+      Cari.alanGrup: grup.anahtar,
+    });
+    await sunucudaBekle(
+      koleksiyon.doc(cariId),
+      kosul: (veri) => veri[Cari.alanGrup] == grup.anahtar,
+    );
+  }
+
+  /// Belgeden `grup` alanını siler — bu özellikten önce yazılmış bir kaydı
+  /// taklit eder. Göç scripti yazılmadığı için o kayıtlar veritabanında böyle
+  /// duruyor (bkz. `CariSuzgeci.sunucuGrubu`).
+  Future<void> grubuSil(String cariId) async {
+    await koleksiyon.doc(cariId).update(<String, Object?>{
+      Cari.alanGrup: FieldValue.delete(),
+    });
+    await sunucudaBekle(
+      koleksiyon.doc(cariId),
+      kosul: (veri) => !veri.containsKey(Cari.alanGrup),
+    );
+  }
+
+  group('grup süzgeci', () {
+    test('fidancı listesi yalnızca fidancıları döner', () async {
+      final fidanciId = await cariEkle('Fidancı Meslektaş');
+      await cariEkle('Sıradan Müşteri');
+      await grubuYaz(fidanciId, CariGrubu.fidanci);
+
+      expect(await adlariListele(suzgec: CariSuzgeci.fidancilar), <String>[
+        'Fidancı Meslektaş',
+      ]);
+    });
+
+    test('müşteri listesi fidancıları göstermez', () async {
+      final fidanciId = await cariEkle('Fidancı Meslektaş');
+      await cariEkle('Sıradan Müşteri');
+      await grubuYaz(fidanciId, CariGrubu.fidanci);
+
+      expect(await adlariListele(suzgec: CariSuzgeci.musteriler), <String>[
+        'Sıradan Müşteri',
+      ]);
+    });
+
+    test('grup alanı hiç olmayan eski kayıt müşteri listesinde kalır', () async {
+      // Bu davranış özelliğin can damarı: `grup == 'musteri'` sunucu süzgeci
+      // yazılsaydı, alanı olmayan belgeler Firestore tarafından eşleştirilmez
+      // ve bu özellikten önce kaydedilmiş herkes listeden düşerdi.
+      final eskiId = await cariEkle('Eski Kayıt');
+      await grubuSil(eskiId);
+
+      expect(await adlariListele(suzgec: CariSuzgeci.musteriler), <String>[
+        'Eski Kayıt',
+      ]);
+    });
+
+    test('grup alanı hiç olmayan eski kayıt fidancı listesine girmez', () async {
+      final eskiId = await cariEkle('Eski Kayıt');
+      await grubuSil(eskiId);
+
+      expect(await adlariListele(suzgec: CariSuzgeci.fidancilar), isEmpty);
+    });
+
+    test('açık hesap listesi iki gruptan da besleniyor', () async {
+      final fidanciId = await cariEkle('Borçlu Fidancı');
+      final musteriId = await cariEkle('Borçlu Müşteri');
+      await grubuYaz(fidanciId, CariGrubu.fidanci);
+      await bakiyeYaz(fidanciId, 5000000);
+      await bakiyeYaz(musteriId, 9400000);
+
+      expect(
+        (await adlariListele(suzgec: CariSuzgeci.acikHesap)).toSet(),
+        <String>{'Borçlu Fidancı', 'Borçlu Müşteri'},
+      );
+    });
+
+    test('grup değişince kişi öteki sekmeye geçer', () async {
+      final cariId = await cariEkle('Ahmet Koyuncu');
+      expect(await adlariListele(suzgec: CariSuzgeci.musteriler), <String>[
+        'Ahmet Koyuncu',
+      ]);
+
+      await grubuYaz(cariId, CariGrubu.fidanci);
+
+      expect(await adlariListele(suzgec: CariSuzgeci.musteriler), isEmpty);
+      expect(await adlariListele(suzgec: CariSuzgeci.fidancilar), <String>[
+        'Ahmet Koyuncu',
+      ]);
+    });
+
+    test('fidancı listesinde arama çalışır', () async {
+      final birId = await cariEkle('Ahmet Fidancılık');
+      final ikiId = await cariEkle('Veli Fidancılık');
+      await grubuYaz(birId, CariGrubu.fidanci);
+      await grubuYaz(ikiId, CariGrubu.fidanci);
+
+      expect(
+        await adlariListele(suzgec: CariSuzgeci.fidancilar, arama: 'ahmet'),
+        <String>['Ahmet Fidancılık'],
+      );
     });
   });
 
