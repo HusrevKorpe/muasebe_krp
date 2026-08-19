@@ -253,6 +253,13 @@ Bu kural Firestore'da saklanan alanları da kapsar — veritabanına da `int` ya
 - Cari listesinde bakiye göstermek için o carinin işlemleri çekilmez; önbelleklenmiş
   bakiye alanı okunur.
 - Her sorgunun index'i `firestore.indexes.json` içinde tanımlıdır.
+- İstisna: **kişi listesinin başlığındaki sayı** sunucuda sayılır
+  (`count()` toplaması, `CariRepository.sayiyiOku`). Sayfalı liste tam sayıyı
+  bilemez; toplama belgeleri indirmez, ücreti 1000 belge başına tek okumadır.
+  Kişi eklenip çıkarıldığında sağlayıcı düşürülür — bu kaydetme yolunu
+  **bekletmez**, sayı arkadan gelir. Çevrimdışıyken toplama çalışmaz ve başlık
+  yüklenmiş kayıt sayısına düşer ("25+ kişi"). **Para toplamları bu yola
+  girmez:** eksik bir sayı kabul edilebilir, eksik bir tutar değil.
 - İstisna: **PDF ekstre** bilerek sunucuyu bekler (`get()`). Önbellek yalnızca
   daha önce görülmüş belgeleri tutar; eksik geçmişle üretilen ekstrenin açılış
   bakiyesi yanlış çıkar ve o belge müşteriye gider.

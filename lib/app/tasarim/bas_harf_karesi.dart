@@ -12,7 +12,11 @@ import 'olculer.dart';
 /// Harf Türkçe kurallarıyla büyütülüyor: `izmir` → `İ`, `ısparta` → `I`
 /// (bkz. KURALLAR.md §6.1).
 class BasHarfKaresi extends StatelessWidget {
-  const BasHarfKaresi({required this.ad, this.cap = 46, super.key});
+  const BasHarfKaresi({required this.ad, this.cap = varsayilanCap, super.key});
+
+  /// Liste satırındaki kenar uzunluğu. Satırın ayraç çizgisi bu ölçüye göre
+  /// girintileniyor (bkz. `CariSatiri.ayracGirintisi`).
+  static const double varsayilanCap = 46;
 
   final String ad;
 

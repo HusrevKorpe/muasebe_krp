@@ -19,6 +19,10 @@ abstract final class Yollar {
 
   static const String cariYeni = '/cari/yeni';
 
+  /// Ayarlar'dan açılan "Kaldırılan Kişiler" sayfası. Kişi kalıplarıyla
+  /// karışmasın diye çoğul kökte: `/cari/:cariId` ile eşleşmiyor.
+  static const String pasifCariler = '/cariler/kaldirilan';
+
   /// Yeni kişi formunun grubunu ön dolduran sorgu parametresi.
   ///
   /// Fidancılar sekmesinden "Kişi Ekle"ye basan kullanıcı fidancı eklemek

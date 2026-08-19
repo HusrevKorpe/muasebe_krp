@@ -161,6 +161,15 @@ tool/              # Varlık üreticileri (uygulama ikonu)
   sabiti, yön ise bakiyenin işaretine bağlı; kullanıcıya ikisi de "Hesap
   görüldü" görünür. Kayıt **düzenlenmez** — tutarı elle değişirse bakiye sıfırda
   kalmaz; geri alma yolu iptaldir.
+- **Pasife alınan kişi silinmez, Ayarlar → Kaldırılan Kişiler'de durur.**
+  "Listeden kaldır" belgeye `aktif: false` yazar; üç sekmenin de sorgusu
+  `aktif == true` ile başladığı için kişi listelerden düşer. Kaldırılanlar
+  sayfası aynı sorgunun `aktif == false` hâlidir (`CariSuzgeci.pasifler`) ve
+  aynı liste görünümünü kullanır — tek farkı satır sonundaki geri alma düğmesi
+  (`CariFormViewModel.geriAl`). Yeni index gerekmedi: alan iki hâlde de
+  eşitlikle süzülüyor. Kaldırılmış kişinin sayfası açılabiliyor; kimlik
+  satırında "Listeden kaldırıldı" rozeti var, çünkü o kişi hiçbir listede
+  görünmüyor ve bakiyesi Açık Hesaplar sekmesine de girmiyor.
 - **Kayıtlı işlem düzenlenebilir, ama silinemez.** Fiyat satışın ardından
   pazarlıkla değişiyor; geçmiş satışın fiyatı, adedi, tarihi ve açıklaması
   işlem detayındaki kalem düğmesinden düzeltilir (`IslemRepository.guncelle`).
@@ -299,6 +308,20 @@ tool/              # Varlık üreticileri (uygulama ikonu)
   (`AcikHesapOzeti`); sunucuda toplama (`aggregate`) çevrimdışı çalışmadığı için
   tercih edilmedi, onun yerine o sekmenin sayfa boyu 100'e çıkarıldı ve toplam
   eksikse satırın altında söyleniyor.
+- **Kişi sayısı sunucuda sayılıyor, para toplamları elde.** Liste satırları
+  numaralı (1-2-3) ve arama kutusunun altında "128 kişi" yazıyor; ikisi de
+  kullanıcı isteği: *"kaç farklı kişi olduğunu bilelim."* Numara satırın
+  listedeki yeri — arama ya da sekme değişince 1'den başlar. Sayı iki
+  kaynaktan gelir: liste sonuna kadar yüklüyse eldeki satırlar sayılır (bedava
+  ve kesin), kesikse `CariRepository.sayiyiOku` Firestore'un `count()`
+  toplamasını sorar. **Aynı toplama açık hesap tutarları için hâlâ
+  kullanılmıyor:** toplamanın önbellek kaynağı yok, çevrimdışıyken hata verir —
+  eksik bir sayı ("25+ kişi") kabul edilebilir, eksik bir para tutarı değil.
+  Müşteri sayısı tek sorguyla sorulamaz, `grup == 'musteri'` eşitliği alanı
+  olmayan eski kayıtları eşleştirmez; aktif kayıtların tamamından fidancılar
+  düşülüyor. Sayı canlı değil: kişi eklenip çıkarıldığında `CariFormViewModel`
+  sağlayıcıyı düşürüyor, öteki telefondan gelen kayıt ise listeyi aşağı çekince
+  yansıyor.
 - **Firestore metin araması öntakıyla sınırlı.** `aramaAnahtari` alanı adın
   normalize hâlini tutar; "koyuncu" yazarak "Ahmet Koyuncu" bulunamaz. Cari
   sayısı birkaç bini geçerse ayrı arama çözümü gerekir.

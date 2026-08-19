@@ -16,10 +16,14 @@ import 'widget/tema_satiri.dart';
 
 /// Ayarlar sekmesi.
 ///
-/// Dört bölüm: işletme bilgileri, tür/çeşit/anaç listeleri, görünüm ve hesap.
+/// Beş bölüm: işletme bilgileri, kaldırılan kişiler, tür/çeşit/anaç listeleri,
+/// görünüm ve hesap.
 /// İşletme satırının ayrı bir sekmede olmasının sebebi, önceden sağ üstteki üç
 /// nokta menüsünde saklı olmasıydı — hesap dökümünün başlığındaki bilgiyi
 /// düzeltmek isteyen kullanıcı onu bulamıyordu.
+///
+/// Kaldırılan kişiler de burada: pasife alınan kişi hiçbir sekmede görünmüyor
+/// ve geri almanın başka yolu yok (bkz. `PasifCariEkrani`).
 ///
 /// Listeler de burada: satış girerken kullanılıyorlar ama düzenlemeleri seyrek
 /// bir iş. Ayrı bir sekme açmak, günde bir kez bakılmayan bir şeye alt çubukta
@@ -55,6 +59,16 @@ class AyarlarEkrani extends ConsumerWidget {
                 baslik: Metinler.isletmeMenu,
                 aciklama: Metinler.isletmeAyarAciklama,
                 onBasildi: () => context.push(Yollar.isletme),
+              ),
+            ),
+            const SizedBox(height: Olculer.bosluk24),
+            BolumBasligi(baslik: Metinler.ayarKisilerBolumu),
+            Card(
+              child: AyarSatiri(
+                simge: Icons.person_off_outlined,
+                baslik: Metinler.pasifCariler,
+                aciklama: Metinler.pasifCarilerAyarAciklama,
+                onBasildi: () => context.push(Yollar.pasifCariler),
               ),
             ),
             const SizedBox(height: Olculer.bosluk24),

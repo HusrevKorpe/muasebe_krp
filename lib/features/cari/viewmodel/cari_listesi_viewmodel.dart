@@ -25,9 +25,9 @@ class CariListesiViewModel
   /// ücretlendirir; "Ahmet" yazmak 5 sorgu değil 1 sorgu olmalı.
   static const Duration _aramaGecikmesi = Duration(milliseconds: 300);
 
-  /// Listede kimlerin görüneceği: müşteriler, fidancılar ya da açık hesaplar.
-  /// Açık hesap sekmesinde arama kutusu yok — gerekçesi
-  /// `CariRepository.listeyiIzle`'de.
+  /// Listede kimlerin görüneceği: müşteriler, fidancılar, açık hesaplar ya da
+  /// listeden kaldırılmış kişiler. Açık hesap sekmesinde arama kutusu yok —
+  /// gerekçesi `CariRepository.listeyiIzle`'de.
   final CariSuzgeci suzgec;
 
   Timer? _aramaZamanlayici;
@@ -36,7 +36,8 @@ class CariListesiViewModel
   @override
   int get sayfaBoyu => switch (suzgec) {
     CariSuzgeci.musteriler ||
-    CariSuzgeci.fidancilar => CariRepository.varsayilanSayfaBoyu,
+    CariSuzgeci.fidancilar ||
+    CariSuzgeci.pasifler => CariRepository.varsayilanSayfaBoyu,
     CariSuzgeci.acikHesap => CariRepository.acikHesapSayfaBoyu,
   };
 

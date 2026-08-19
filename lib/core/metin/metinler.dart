@@ -51,6 +51,10 @@ abstract final class Metinler {
   static const String hesap = 'Hesap';
   static const String hesapAciklama = 'Bu cihazda açık olan oturum.';
 
+  /// Kaldırılan kişiler sayfasının bölüm başlığı. Sayfa alt sekmelerde değil
+  /// Ayarlar'da: kişi kaldırmak seyrek bir iş, geri almak daha da seyrek.
+  static const String ayarKisilerBolumu = 'Kişiler';
+
   static const String ayarGorunumBolumu = 'Görünüm';
   static const String koyuTema = 'Koyu tema';
 
@@ -139,6 +143,14 @@ abstract final class Metinler {
 
   static String acikHesapAdedi(int adet) => '$adet açık hesap';
 
+  /// Kişi listesinin başındaki sayı: "128 kişi".
+  ///
+  /// Kullanıcının isteği: kayıtlı kişi sayısı hesabı açık olsun olmasın
+  /// görünsün. [enAz] doğruysa sayı yalnızca yüklenmiş kayıtları kapsıyor ve
+  /// gerçeği daha büyük olabilir: "25+ kişi".
+  static String kisiSayisi(int adet, {bool enAz = false}) =>
+      enAz ? '$adet+ kişi' : '$adet kişi';
+
   // ─── Kişi formu ──────────────────────────────────────────────────────────
   //
   // Grup seçimi formun en üstünde: kişinin hangi sekmede duracağını belirliyor
@@ -157,9 +169,31 @@ abstract final class Metinler {
   static const String notlar = 'Notlar';
   static const String cariPasifeAl = 'Listeden kaldır';
   static const String cariPasifeAlOnay =
-      'Kişi listeden kaldırılsın mı? Kayıt silinmez, geçmiş kayıtları durur.';
+      'Kişi listeden kaldırılsın mı? Kayıt silinmez, geçmiş kayıtları durur. '
+      'Ayarlar → Kaldırılan Kişiler sayfasından geri alabilirsin.';
   static const String cariPasifeAlindi = 'Kişi listeden kaldırıldı.';
   static const String cariBulunamadi = 'Kişi bulunamadı.';
+
+  // ─── Kaldırılan kişiler ──────────────────────────────────────────────────
+  //
+  // Pasife alınan kişi hiçbir sekmede görünmüyordu ve geri alma yolu yoktu;
+  // kayıt Firestore'da duruyor ama kullanıcı için kaybolmuş oluyordu. Bu sayfa
+  // o kaydın tek kapısı.
+  static const String pasifCariler = 'Kaldırılan Kişiler';
+  static const String pasifCarilerAyarAciklama =
+      'Listeden kaldırdığın kişileri gör, istediğini geri al.';
+  static const String pasifCarilerAciklama =
+      'Bu kişiler listelerde görünmüyor ama kayıtları ve geçmiş hareketleri '
+      'duruyor. Geri almak için satırın sağındaki oka dokun.';
+  static const String cariGeriAl = 'Listeye geri al';
+
+  /// Kaldırılmış kişinin sayfasındaki rozet. Sayfa listelerden açılmıyor ama
+  /// eski bir bağlantıdan ya da kaldırılanlar sayfasından açılabiliyor.
+  static const String cariKaldirildi = 'Listeden kaldırıldı';
+  static const String cariGeriAlindi = 'Kişi listeye geri alındı.';
+  static const String pasifCariYokBaslik = 'Kaldırılan kişi yok';
+  static const String pasifCariYokAciklama =
+      'Listeden kaldırdığın bir kişi olsaydı burada dururdu.';
 
   // ─── Cari detayı ─────────────────────────────────────────────────────────
   static const String bakiye = 'Bakiye';

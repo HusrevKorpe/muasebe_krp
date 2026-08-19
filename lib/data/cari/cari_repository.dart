@@ -50,7 +50,10 @@ class CariRepository {
       .doc(_isletmeId)
       .collection(Cari.koleksiyon);
 
-  /// Aktif carilerin ilk [sinir] tanesini **canlı** yayar.
+  /// Süzgece uyan carilerin ilk [sinir] tanesini **canlı** yayar.
+  ///
+  /// [suzgec] `pasifler` değilse yalnızca aktif kayıtlar gelir; pasif liste
+  /// (Ayarlar → Kaldırılan Kişiler) aynı sorgunun `aktif == false` hâlidir.
   ///
   /// Akış önce yerel önbellekten yayar, sunucu cevabı gelince ikinci kez yayar.
   /// Sayfalama imleçle değil [sinir] büyütülerek yapılır — gerekçesi
@@ -99,6 +102,59 @@ class CariRepository {
           Log.hata('Cari listesi okunamadı', hata, yigin);
           throw _veriHatasi(hata);
         }, test: (hata) => hata is FirebaseException);
+  }
+
+  /// Süzgece uyan kayıtların **tam** sayısını sunucudan okur.
+  ///
+  /// Liste sayfa sayfa geldiği için sayı ekrandaki satırlardan çıkarılamıyor;
+  /// kullanıcının istediği ise tam sayı: *"kaç farklı kişi olduğunu bilelim."*
+  /// Firestore'un `count()` toplaması belgeleri indirmeden sayar — ücreti 1000
+  /// belge başına tek okuma, yani bu defter için tek okuma.
+  ///
+  /// **Yalnızca çevrimiçi çalışır.** Toplama sorgusunun önbellek kaynağı yok;
+  /// bağlantı yokken hata verir ve çağıran yüklenmiş kayıt sayısına düşer
+  /// (bkz. `KisiSayisiSatiri`). Aynı sebeple açık hesap toplamları hâlâ elde
+  /// hesaplanıyor: para tutarı çevrimdışı da doğru görünmek zorunda, sayı
+  /// eksik kalabilir.
+  ///
+  /// Bekleyen yerel yazmalar sunucuya ulaşana kadar beklenir: yeni eklenen
+  /// kişi listede anında görünüyor, sayının onu görmemesi kullanıcıya hata
+  /// gibi okunur.
+  ///
+  /// Yeni index gerekmedi: sayma sorgusunda sıralama yok, alanlar yalnızca
+  /// eşitlikle süzülüyor ve `aktif + grup` çifti mevcut bileşik index'in
+  /// öntakısı.
+  Future<int> sayiyiOku({required CariSuzgeci suzgec}) async {
+    try {
+      await _firestore.waitForPendingWrites();
+
+      // Müşteri sayısı tek sorguyla sorulamıyor: `grup == 'musteri'` eşitliği
+      // alanı hiç olmayan eski kayıtları eşleştirmez ve bu özellikten önce
+      // kaydedilmiş herkes sayının dışında kalırdı (bkz.
+      // [CariSuzgeci.sunucuGrubu]). Aktif kayıtların tamamından fidancılar
+      // düşülüyor; her kayıt iki gruptan birine ait.
+      if (suzgec != CariSuzgeci.musteriler) return await _sayiyiOku(suzgec);
+
+      final sayilar = await Future.wait(<Future<int>>[
+        // Müşteri süzgeci sunucuya grup eşitliği eklemiyor: bu sorgu aktif
+        // kayıtların tamamı.
+        _sayiyiOku(CariSuzgeci.musteriler),
+        _sayiyiOku(CariSuzgeci.fidancilar),
+      ]);
+
+      // İki sorgu arasında bir kayıt fidancı işaretlenirse fark negatife
+      // düşebilir; sayı olarak gösterilecek şey sıfırdır.
+      final musteri = sayilar.first - sayilar.last;
+      return musteri < 0 ? 0 : musteri;
+    } on FirebaseException catch (hata, yigin) {
+      Log.hata('Cari sayısı okunamadı', hata, yigin);
+      throw _veriHatasi(hata);
+    }
+  }
+
+  Future<int> _sayiyiOku(CariSuzgeci suzgec) async {
+    final anlik = await _suzgeciKur(suzgec, '').count().get();
+    return anlik.count ?? 0;
   }
 
   /// Tek bir cariyi canlı izler. Belge silinmiş ya da hiç yoksa `null` yayar.
@@ -181,19 +237,27 @@ class CariRepository {
   ) => switch (suzgec) {
     CariSuzgeci.acikHesap => CariSiralamasi.bakiye,
     CariSuzgeci.musteriler ||
-    CariSuzgeci.fidancilar => aramaAnahtari.isEmpty
+    CariSuzgeci.fidancilar ||
+    CariSuzgeci.pasifler => aramaAnahtari.isEmpty
         ? siralama
         : CariSiralamasi.ad,
   };
 
-  Query<Map<String, dynamic>> _sorguKur(
+  /// Sorgunun süzgeç bölümü — sıralama ve sınır olmadan.
+  ///
+  /// Sayma sorgusu da bunu kullanıyor ([_sayiyiOku]): sayılan küme listelenen
+  /// kümeyle birebir aynı olmalı, yoksa başlıktaki sayı listedeki satırları
+  /// tutmaz.
+  Query<Map<String, dynamic>> _suzgeciKur(
     CariSuzgeci suzgec,
-    CariSiralamasi siralama,
     String aramaAnahtari,
   ) {
+    // Pasif liste dışında her sorgu aktif kayıtları getirir. Alan iki hâlde de
+    // eşitlikle süzüldüğü için index değişmedi: `aktif == false` de aynı
+    // bileşik index'e oturuyor.
     Query<Map<String, dynamic>> sorgu = _koleksiyon.where(
       Cari.alanAktif,
-      isEqualTo: true,
+      isEqualTo: !suzgec.pasifMi,
     );
 
     // Hesabı kapanmayanlar: bakiyesi sıfırdan farklı olan herkes. Yön ayrımı
@@ -209,14 +273,22 @@ class CariRepository {
       sorgu = sorgu.where(Cari.alanGrup, isEqualTo: grup.anahtar);
     }
 
-    if (aramaAnahtari.isNotEmpty) {
-      sorgu = sorgu
-          .where(Cari.alanAramaAnahtari, isGreaterThanOrEqualTo: aramaAnahtari)
-          .where(
-            Cari.alanAramaAnahtari,
-            isLessThan: '$aramaAnahtari$_aramaUstSiniri',
-          );
-    }
+    if (aramaAnahtari.isEmpty) return sorgu;
+
+    return sorgu
+        .where(Cari.alanAramaAnahtari, isGreaterThanOrEqualTo: aramaAnahtari)
+        .where(
+          Cari.alanAramaAnahtari,
+          isLessThan: '$aramaAnahtari$_aramaUstSiniri',
+        );
+  }
+
+  Query<Map<String, dynamic>> _sorguKur(
+    CariSuzgeci suzgec,
+    CariSiralamasi siralama,
+    String aramaAnahtari,
+  ) {
+    Query<Map<String, dynamic>> sorgu = _suzgeciKur(suzgec, aramaAnahtari);
 
     // Ada göre sıralama artan, diğerleri azalan: en borçlu ve en son işlem
     // görmüş cari listenin başında olmalı.

@@ -12,6 +12,7 @@ import '../features/cari/view/cari_detay_ekrani.dart';
 import '../features/cari/view/cari_duzenle_ekrani.dart';
 import '../features/cari/view/cari_form_ekrani.dart';
 import '../features/cari/view/cari_listesi_ekrani.dart';
+import '../features/cari/view/pasif_cari_ekrani.dart';
 import '../features/ekstre/view/ekstre_ekrani.dart';
 import '../features/giris/view/giris_ekrani.dart';
 import '../features/islem/view/fatura_form_ekrani.dart';
@@ -123,6 +124,10 @@ final yonlendiriciSaglayici = Provider<GoRouter>((ref) {
       GoRoute(
         path: Yollar.isletme,
         builder: (context, durum) => const IsletmeEkrani(),
+      ),
+      GoRoute(
+        path: Yollar.pasifCariler,
+        builder: (context, durum) => const PasifCariEkrani(),
       ),
       // `/cari/yeni`, `/cari/:cariId` kalıbından **önce** tanımlanmalı;
       // go_router yolları sırayla eşleştirir ve aksi hâlde "yeni" bir cari

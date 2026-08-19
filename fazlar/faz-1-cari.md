@@ -116,6 +116,26 @@ kimliği sabit; herkes aynı defteri açıyor (bkz. `faz-0` → "Revize 2").
 - [x] Sayfalama (sonsuz kaydırma), tek `get()` ile tüm koleksiyon çekilmez
 - [x] Sıralama: liste her zaman ada göre. Ekranda seçim menüsü yok; ölçüt
       repository'de duruyor (`CariSiralamasi`), çağrı yeri açıkça isterse verir.
+- [x] **Kaldırılan kişiler ayrı bir sayfada: Ayarlar → Kaldırılan Kişiler.**
+      19 Ağustos 2026'da eklendi (kullanıcı sorusu: *"pasife aldığımız
+      müşteriler gözükmüyor"*). Üç sekmenin de sorgusu `aktif == true` ile
+      başladığı için pasife alınan kişi hiçbir listede görünmüyordu ve geri
+      alma yolu yoktu — kayıt Firestore'da duruyor ama kullanıcı için
+      kaybolmuş oluyordu. Sayfa aynı liste görünümünü kullanıyor
+      (`CariSuzgeci.pasifler`), tek farkı sorgunun `aktif == false` olması ve
+      satır sonundaki geri alma düğmesi. Yeni index gerekmedi: alan iki hâlde
+      de eşitlikle süzülüyor.
+- [x] **Satırlar numaralı, listenin başında kişi sayısı var.**
+      19 Ağustos 2026'da eklendi (kullanıcı isteği: *"14 açık hesap diyor ya,
+      eklediğimiz kişi sayısını göstersin... kaç farklı kişi olduğunu bilelim,
+      1-2-3 diye sıralasın herkesi"*). Numara satırın listedeki yeri, kişinin
+      kimliği değil: arama yapınca ya da sekme değişince yeniden 1'den başlıyor.
+      Sayı arama kutusunun altında duruyor; liste sonuna kadar yüklüyse eldeki
+      satırlardan, kesikse sunucudaki toplama sorgusundan geliyor
+      (`CariRepository.sayiyiOku`). Müşteri sayısı iki sorgunun farkı —
+      `grup == 'musteri'` sorgusu yazılamıyor, gerekçesi yukarıdaki grup
+      maddesinde. Toplama sorgusunun önbellek kaynağı yok: çevrimdışıyken sayı
+      yüklenen kayıtlardan veriliyor ve "25+ kişi" diye görünüyor.
 - [x] Boş durum ekranı — arama sonucu boşsa ayrı metin
 - [x] Çevrimdışı göstergesi (`hasPendingWrites`) — liste satırı ve detay kartı
 
@@ -133,6 +153,7 @@ kimliği sabit; herkes aynı defteri açıyor (bkz. `faz-0` → "Revize 2").
 | 6 | Cariye dokununca detay sayfası açılıyor, üstte ad/şehir/bakiye görünüyor | ✅ akış testi |
 | 7 | Uçak modunda cari eklenebiliyor, "kaydedilmedi" göstergesi çıkıyor, internet gelince yazılıyor | ⏳ kod hazır, cihazda elle denenmeli |
 | 8 | Pasife alınan cari listede görünmüyor ama veritabanında duruyor | ✅ emulator testi |
+| 9 | Kaldırılan kişi Ayarlar → Kaldırılan Kişiler'de görünüyor ve geri alınabiliyor | ✅ emulator testi |
 
 ### 5 ve 7 neden otomatik doğrulanmadı
 
@@ -180,7 +201,9 @@ flutter run --dart-define=EMULATOR=true
 | `test/domain/isletme/isletme_test.dart` | İşletme + banka hesabı gidiş-dönüş |
 | `test/domain/isletme/iban_test.dart` | IBAN mod-97 |
 | `test/data/firebase/firestore_donusum_test.dart` | `Timestamp` → `DateTime` sınırı |
-| `integration_test/cari_repository_test.dart` | Emulator: sayfalama, arama, sıralama, pasife alma, grup süzgeci |
+| `test/features/cari/cari_satiri_test.dart` | Satırdaki sıra numarası, üç hanede ad hizası bozulmuyor |
+| `test/features/cari/kisi_sayisi_satiri_test.dart` | "128 kişi" / eksik sayıda "25+ kişi" |
+| `integration_test/cari_repository_test.dart` | Emulator: sayfalama, arama, sıralama, pasife alma, geri alma, grup süzgeci, kişi sayısı |
 | `integration_test/guvenlik_kurallari_test.dart` | Emulator: `firestore.rules` izolasyonu |
 | `integration_test/uygulama_akisi_test.dart` | Kurulum → cari ekle → ara → detay tam akışı |
 

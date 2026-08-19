@@ -389,6 +389,131 @@ void main() {
     });
   });
 
+  /// Cariyi pasife alır ya da geri açar ve sunucu onayını bekler.
+  Future<void> aktifligiYaz(String cariId, {required bool aktif}) async {
+    await repository.aktifligiDegistir(cariId, aktif: aktif);
+    await sunucudaBekle(
+      koleksiyon.doc(cariId),
+      kosul: (veri) => veri[Cari.alanAktif] == aktif,
+    );
+  }
+
+  /// Ayarlar → Kaldırılan Kişiler sayfasının sorgusu. Aynı sorgunun
+  /// `aktif == false` hâli; kaldırılan kişinin uygulamadaki tek kapısı.
+  group('pasif süzgeci', () {
+    test('yalnızca kaldırılmış kişileri döner', () async {
+      await cariEkle('Aktif Cari');
+      final pasifId = await cariEkle('Kaldırılan Cari');
+      await aktifligiYaz(pasifId, aktif: false);
+
+      expect(await adlariListele(suzgec: CariSuzgeci.pasifler), <String>[
+        'Kaldırılan Cari',
+      ]);
+      expect(await adlariListele(suzgec: CariSuzgeci.musteriler), <String>[
+        'Aktif Cari',
+      ]);
+    });
+
+    test('iki gruptan da getirir', () async {
+      final musteriId = await cariEkle('Kaldırılan Müşteri');
+      final fidanciId = await cariEkle('Kaldırılan Fidancı');
+      await grubuYaz(fidanciId, CariGrubu.fidanci);
+      await aktifligiYaz(musteriId, aktif: false);
+      await aktifligiYaz(fidanciId, aktif: false);
+
+      expect(
+        (await adlariListele(suzgec: CariSuzgeci.pasifler)).toSet(),
+        <String>{'Kaldırılan Müşteri', 'Kaldırılan Fidancı'},
+      );
+    });
+
+    test('açık bakiyeli kayıt da listede kalır', () async {
+      // Kaldırılmış kişinin borcu Açık Hesaplar sekmesinde görünmüyor; geri
+      // almaya karar verebilmek için bakiyenin burada görünmesi gerekiyor.
+      final pasifId = await cariEkle('Borçlu Kaldırılan');
+      await bakiyeYaz(pasifId, 9400000);
+      await aktifligiYaz(pasifId, aktif: false);
+
+      expect(await adlariListele(suzgec: CariSuzgeci.pasifler), <String>[
+        'Borçlu Kaldırılan',
+      ]);
+      expect(await adlariListele(suzgec: CariSuzgeci.acikHesap), isEmpty);
+    });
+
+    test('geri alınan kişi kendi listesine döner', () async {
+      final cariId = await cariEkle('Geri Alınan');
+      await aktifligiYaz(cariId, aktif: false);
+      await aktifligiYaz(cariId, aktif: true);
+
+      expect(await adlariListele(suzgec: CariSuzgeci.pasifler), isEmpty);
+      expect(await adlariListele(suzgec: CariSuzgeci.musteriler), <String>[
+        'Geri Alınan',
+      ]);
+    });
+
+    test('pasif listede de ada göre arama yapılır', () async {
+      final ahmetId = await cariEkle('Ahmet Koyuncu');
+      final zeynepId = await cariEkle('Zeynep Ak');
+      await aktifligiYaz(ahmetId, aktif: false);
+      await aktifligiYaz(zeynepId, aktif: false);
+
+      expect(
+        await adlariListele(suzgec: CariSuzgeci.pasifler, arama: 'ahmet'),
+        <String>['Ahmet Koyuncu'],
+      );
+    });
+  });
+
+  /// Liste başlığındaki "128 kişi" sayısı.
+  ///
+  /// Sayı listeden ayrı bir toplama sorgusuyla geliyor; sayılan küme
+  /// listelenen kümeyle birebir aynı olmak zorunda.
+  group('sayiyiOku', () {
+    test('her süzgeç kendi kümesini sayar', () async {
+      await cariEkle('Sıradan Müşteri');
+      final fidanciId = await cariEkle('Fidancı Meslektaş');
+      final borcluId = await cariEkle('Borçlu Müşteri');
+      final pasifId = await cariEkle('Kaldırılan Kişi');
+      await grubuYaz(fidanciId, CariGrubu.fidanci);
+      await bakiyeYaz(borcluId, 9400000);
+      await aktifligiYaz(pasifId, aktif: false);
+
+      expect(await repository.sayiyiOku(suzgec: CariSuzgeci.musteriler), 2);
+      expect(await repository.sayiyiOku(suzgec: CariSuzgeci.fidancilar), 1);
+      expect(await repository.sayiyiOku(suzgec: CariSuzgeci.acikHesap), 1);
+      expect(await repository.sayiyiOku(suzgec: CariSuzgeci.pasifler), 1);
+    });
+
+    test('grup alanı hiç olmayan eski kayıt müşteri sayısına girer', () async {
+      // Sayı `grup == 'musteri'` sorgusuyla bulunsaydı bu kayıt sayılmaz,
+      // başlık listede görünen satırlardan azını söylerdi (bkz.
+      // `CariSuzgeci.sunucuGrubu`). Aktif kayıtların tamamından fidancılar
+      // düşülüyor, sebebi bu.
+      final eskiId = await cariEkle('Eski Kayıt');
+      await grubuSil(eskiId);
+      final fidanciId = await cariEkle('Fidancı Meslektaş');
+      await grubuYaz(fidanciId, CariGrubu.fidanci);
+
+      expect(await repository.sayiyiOku(suzgec: CariSuzgeci.musteriler), 1);
+      expect(
+        await adlariListele(suzgec: CariSuzgeci.musteriler),
+        hasLength(1),
+        reason: 'sayı listedeki satır sayısını tutmalı',
+      );
+    });
+
+    test('sayfa sınırından etkilenmez', () async {
+      for (var sira = 0; sira < 3; sira++) {
+        await cariEkle('Kişi $sira');
+      }
+
+      // Başlığın var oluş sebebi bu: liste ilk sayfayı gösterirken sayı
+      // listenin tamamını söylüyor.
+      expect(await adlariListele(sinir: 1), hasLength(1));
+      expect(await repository.sayiyiOku(suzgec: CariSuzgeci.musteriler), 3);
+    });
+  });
+
   group('arama', () {
     test('Türkçe yazım farkları aynı sonucu verir', () async {
       await cariEkle('İstanbul Fidancılık');

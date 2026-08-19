@@ -115,7 +115,7 @@ class CariOzetKarti extends StatelessWidget {
   }
 }
 
-/// Baş harf karesi, ad, firma adı ve fidancı rozeti.
+/// Baş harf karesi, ad, firma adı ve rozetler (fidancı, listeden kaldırıldı).
 class _Kimlik extends StatelessWidget {
   const _Kimlik({required this.cari});
 
@@ -136,14 +136,31 @@ class _Kimlik extends StatelessWidget {
             children: <Widget>[
               Text(cari.ad, style: tema.textTheme.titleLarge),
               // Grup yalnızca fidancıda yazılıyor: müşteri varsayılan, her
-              // sayfaya "Müşteri" basmak bilgi vermez.
-              if (cari.grup.fidanciMi) ...<Widget>[
+              // sayfaya "Müşteri" basmak bilgi vermez. "Listeden kaldırıldı"
+              // ise mutlaka: kaldırılmış kişinin sayfası ötekinden ayırt
+              // edilemiyordu, oysa o kişi hiçbir listede görünmüyor.
+              if (cari.grup.fidanciMi || !cari.aktif) ...<Widget>[
                 const SizedBox(height: Olculer.bosluk8),
-                Rozet(
-                  metin: Metinler.cariGrubuFidanci,
-                  renk: tema.colorScheme.onSurfaceVariant,
-                  stil: tema.textTheme.labelSmall,
-                  kalin: false,
+                Wrap(
+                  spacing: Olculer.bosluk8,
+                  runSpacing: Olculer.bosluk4,
+                  children: <Widget>[
+                    if (cari.grup.fidanciMi)
+                      Rozet(
+                        metin: Metinler.cariGrubuFidanci,
+                        renk: tema.colorScheme.onSurfaceVariant,
+                        stil: tema.textTheme.labelSmall,
+                        kalin: false,
+                      ),
+                    if (!cari.aktif)
+                      Rozet(
+                        metin: Metinler.cariKaldirildi,
+                        renk: tema.colorScheme.error,
+                        simge: Icons.person_off_outlined,
+                        stil: tema.textTheme.labelSmall,
+                        kalin: false,
+                      ),
+                  ],
                 ),
               ],
               if (cari.altBaslik != null) ...<Widget>[

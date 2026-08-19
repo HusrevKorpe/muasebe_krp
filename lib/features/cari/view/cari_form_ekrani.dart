@@ -158,7 +158,10 @@ class _CariFormEkraniDurumu extends ConsumerState<CariFormEkrani> {
       appBar: AppBar(
         title: Text(_duzenlemeMi ? Metinler.cariDuzenle : Metinler.cariEkle),
         actions: <Widget>[
-          if (_duzenlemeMi)
+          // Zaten kaldırılmış kişide düğme yok: ikinci kez kaldırmak bir şey
+          // değiştirmez, geri alma yeri de burası değil (Ayarlar → Kaldırılan
+          // Kişiler).
+          if (_duzenlemeMi && widget.mevcut!.aktif)
             SimgeDugmesi(
               simge: Icons.person_off_outlined,
               ipucu: Metinler.cariPasifeAl,
